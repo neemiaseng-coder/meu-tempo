@@ -1,7 +1,7 @@
 import React,{useEffect,useMemo,useState} from 'react';
 import{createRoot}from'react-dom/client';
 import{createClient}from'@supabase/supabase-js';
-import{LayoutDashboard,CalendarCheck,ClipboardList,Sunrise,,Briefcase,UserPlus,MessageSquareText,FolderKanban,Settings,Plus,Search,Bell,Check,Clock,ChevronLeft,ChevronRight,Sun,MoreHorizontal,Target,CalendarDays,Menu,X,Filter,Flag,ArrowUpRight,Leaf,Building2,KeyRound,Phone,Copy,Save}from'lucide-react';
+import{LayoutDashboard,CalendarCheck,ClipboardList,Sunrise,Briefcase,UserPlus,MessageSquareText,FolderKanban,Settings,Plus,Search,Bell,Check,Clock,ChevronLeft,ChevronRight,Sun,MoreHorizontal,Target,CalendarDays,Menu,X,Filter,Flag,ArrowUpRight,Leaf,Building2,KeyRound,Phone,Copy,Save}from'lucide-react';
 import'./style.css';
 const supabaseUrl=import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey=import.meta.env.VITE_SUPABASE_ANON_KEY;

@@ -26,7 +26,21 @@ function App(){
  const{data:{subscription}}=supabase.auth.onAuthStateChange((_e,s)=>{if(active)setUser(s?.user||null)});
  return()=>{active=false;subscription.unsubscribe()}
  },[]);
- const load=async()=>{if(!supabase||!user){setTasks([]);setBusy(false);return}setBusy(true);const [a,b,c,d,e,f]=await Promise.all([supabase.from('tasks').select('*').order('created_at',{ascending:false}),supabase.from('message_templates').select('*').order('created_at',{ascending:false}),supabase.from('quick_records').select('*').order('created_at',{ascending:false}),supabase.from('task_occurrences').select('*').eq('occurrence_date',today()),supabase.from('meetings').select('*').order('meeting_date',{ascending:true}),supabase.from('deadline_events').select('*').order('event_date',{ascending:true})]);if(a.error)notify(a.error.message);else setTasks(a.data||[]);if(b.error)notify(b.error.message);else{setTemplates(b.data||[]);setSelectedTemplateId(b.data?.[0]?.id||null)}if(c.error)notify(c.error.message);else setRecords(c.data||[]);if(d.error)notify(d.error.message);else setOccurrences(d.data||[]);if(e.error)notify(e.error.message);else setMeetings(e.data||[]);if(f.error)notify(f.error.message);else setDeadlineEvents(f.data||[]);setBusy(false)};
+ const load=async()=>{if(!supabase||!user){setTasks([]);setBusy(false);return}
+ setBusy(true);
+ try{
+  const timeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error('Tempo limite ao carregar os dados. Verifique a conexão com o Supabase.')),15000));
+  const results=await Promise.race([Promise.all([supabase.from('tasks').select('*').order('created_at',{ascending:false}),supabase.from('message_templates').select('*').order('created_at',{ascending:false}),supabase.from('quick_records').select('*').order('created_at',{ascending:false}),supabase.from('task_occurrences').select('*').eq('occurrence_date',today()),supabase.from('meetings').select('*').order('meeting_date',{ascending:true}),supabase.from('deadline_events').select('*').order('event_date',{ascending:true})]),timeout]);
+  const [a,b,c,d,e,f]=results;
+  if(a.error)notify(a.error.message);else setTasks(a.data||[]);
+  if(b.error)notify(b.error.message);else{setTemplates(b.data||[]);setSelectedTemplateId(b.data?.[0]?.id||null)}
+  if(c.error)notify(c.error.message);else setRecords(c.data||[]);
+  if(d.error)notify(d.error.message);else setOccurrences(d.data||[]);
+  if(e.error)notify(e.error.message);else setMeetings(e.data||[]);
+  if(f.error)notify(f.error.message);else setDeadlineEvents(f.data||[]);
+ }catch(error){notify(error.message||'Falha ao carregar os dados.')}
+ finally{setBusy(false)}
+ };
  useEffect(()=>{if(sessionReady)load()},[user,sessionReady]);
  const notify=t=>{setToast(t);setTimeout(()=>setToast(''),3500)};
  const dateToday=today(),todayDate=new Date(dateToday+'T12:00:00'),dayNumber=todayDate.getDate(),weekday=todayDate.getDay();

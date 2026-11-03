@@ -10,9 +10,12 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
-    "lucide-react": "^0.468.0"
+    "lucide-react": "^0.468.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "vite": "^6.3.5"
+    "vite": "^6.3.5",
+    "@vitejs/plugin-react": "^4.3.4"
   }
 }

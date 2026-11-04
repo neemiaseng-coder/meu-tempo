@@ -38,7 +38,8 @@ function App(){
   if(d.error)notify(d.error.message);else setOccurrences(d.data||[]);
   if(e.error)notify(e.error.message);else setMeetings(e.data||[]);
   if(f.error)notify(f.error.message);else setDeadlineEvents(f.data||[]);
-  if(g.error)notify(g.error.message);else setProcesses(g.data||[]);\n  if(h.error)notify(h.error.message);else setVacancies(h.data||[]);
+  if(g.error)notify(g.error.message);else setProcesses(g.data||[]);
+  if(h.error)notify(h.error.message);else setVacancies(h.data||[]);
  }catch(error){notify(error.message||'Falha ao carregar os dados.')}
  finally{setBusy(false)}
  };

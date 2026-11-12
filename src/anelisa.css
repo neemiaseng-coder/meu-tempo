@@ -9,14 +9,14 @@
   display: inline-flex; align-items: center; justify-content: center; gap: 7px;
   background: transparent; color: var(--aw-ink);
 }
-.aw-brand { font-weight: 800; padding: 8px 0; white-space: nowrap; }
+.aw-brand { font-weight: 400; padding: 8px 0; white-space: nowrap; }
 .aw-nav { display: flex; gap: 5px; }
-.aw-nav button, .aw-view button { border-radius: 11px; padding: 9px 11px; font-weight: 700; }
+.aw-nav button, .aw-view button { border-radius: 11px; padding: 9px 11px; font-weight: 400; }
 .aw-nav button[aria-current], .aw-view button[aria-pressed=true] { background: var(--aw-soft); color: #1459ad; }
 .aw-nav button:hover, .aw-view button:hover, .aw-day:hover { background: var(--aw-soft); }
 .aw-avatar {
   width: 42px; height: 42px; flex: none; border-radius: 50%;
-  background: #e7f0fe; color: #1459ad; overflow: hidden; padding: 0; font-weight: 800;
+  background: #e7f0fe; color: #1459ad; overflow: hidden; padding: 0; font-weight: 400;
 }
 .aw-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .aw-heading { margin: 0 0 16px; flex-wrap: wrap; }
@@ -78,7 +78,7 @@
   margin: 0;
   padding: 0 0 40px;
   color: var(--aw-ink);
-  background: #f2f6fb;
+  background: linear-gradient(145deg, #eef5ff 0%, #f8faff 55%, #f2f5fc 100%);
 }
 .anelisa-workspace .aw-header {
   position: sticky;
@@ -90,11 +90,11 @@
   padding: 0 clamp(12px, 3vw, 36px);
   background: #fff;
   border-bottom: 1px solid var(--aw-line);
-  box-shadow: 0 2px 9px #183b6b12;
+  box-shadow: 0 2px 7px #183b6b0a;
 }
 .aw-brand { justify-self: start; color: var(--aw-blue); font-size: 1.08rem; }
 .aw-logo, .aw-icon { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 50%; }
-.aw-logo { color: white; background: var(--aw-blue); }
+.aw-logo { color: white; background: linear-gradient(140deg, #4387e3, #325bb6); }
 .aw-header .aw-avatar { justify-self: end; }
 .aw-nav { align-self: stretch; gap: 4px; }
 .aw-nav button {
@@ -112,17 +112,17 @@
   border: 1px solid var(--aw-line);
   box-shadow: 0 2px 8px #1f4b7a0c !important;
 }
-.aw-progress { padding: 17px 18px; margin-bottom: 14px; border-radius: 14px; }
+.aw-progress { padding: 20px; margin-bottom: 16px; border-radius: 16px; background: linear-gradient(115deg, #fff 18%, #f1f5ff 100%); }
 .aw-progress-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
 .aw-progress h2, .aw-progress p { margin: 0; }
 .aw-progress h2 { font-size: 1.02rem; }
 .aw-progress p { color: var(--aw-muted); margin-top: 3px; font-size: .9rem; }
-.aw-progress strong { color: var(--aw-blue); font-size: 1.22rem; }
-.aw-progress progress { appearance: none; display: block; width: 100%; height: 9px; border: 0; border-radius: 12px; overflow: hidden; background: #e4effd; }
-.aw-progress progress::-webkit-progress-bar { background: #e4effd; }
-.aw-progress progress::-webkit-progress-value { background: #2e80ec; border-radius: 12px; transition: width .25s ease; }
-.aw-progress progress::-moz-progress-bar { background: #2e80ec; border-radius: 12px; }
-.anelisa-workspace .primary { background: var(--aw-blue); color: #fff; }
+.aw-progress strong { color: #264c95; font-size: 1.4rem; font-variant-numeric: tabular-nums; padding: 4px 11px; border-radius: 20px; background: #e8efff; }
+.aw-progress progress { appearance: none; display: block; width: 100%; height: 15px; border: 0; border-radius: 20px; overflow: hidden; background: #dfe9fa; }
+.aw-progress progress::-webkit-progress-bar { background: #dfe9fa; }
+.aw-progress progress::-webkit-progress-value { background: linear-gradient(90deg, #2876dd, #5169d9 58%, #7155c7); border-radius: 20px; transition: width .25s ease; }
+.aw-progress progress::-moz-progress-bar { background: linear-gradient(90deg, #2876dd, #5169d9 58%, #7155c7); border-radius: 20px; }
+.anelisa-workspace .primary { background: linear-gradient(125deg, #1465cf, #3b5abb); color: #fff; }
 .anelisa-workspace .primary:hover { background: #0e54b0; }
 .anelisa-workspace .myday-check.checked { background: var(--aw-blue); border-color: var(--aw-blue); }
 .anelisa-workspace .meeting-date { color: #1459ad; background: var(--aw-soft); }
@@ -156,8 +156,23 @@
 .aw-activity-dialog fieldset { border: 0; padding: 0; margin: 14px 0; min-width: 0; }
 .aw-activity-dialog label { display: grid; gap: 5px; margin-bottom: 11px; }
 .aw-activity-dialog :is(input:not([type=checkbox]), select, textarea) {
-  width: 100%; min-width: 0; padding: 8px; border: 1px solid var(--aw-line); border-radius: 7px; font: inherit;
+  width: 100%; min-width: 0; padding: 8px; border: 1px solid var(--aw-line); border-radius: 10px; font: inherit;
 }
 .aw-activity-dialog .aw-weekdays { display: flex; flex-wrap: wrap; gap: 8px; }
 .aw-activity-dialog .aw-weekdays label { display: flex; align-items: center; gap: 4px; }
 .aw-activity-dialog [role=alert] { color: #9f3838; }
+
+.anelisa-workspace :is(h1, h2, h3, h4, b, strong, label, button, summary, legend) {
+  font-weight: 400;
+}
+.anelisa-workspace .meeting-editor :is(input, textarea, select) {
+  border: 1px solid var(--aw-line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #fbfdff;
+  color: var(--aw-ink);
+}
+.anelisa-workspace .meeting-editor :is(input, textarea, select):focus-visible {
+  outline: 2px solid #6596df;
+  outline-offset: 1px;
+}

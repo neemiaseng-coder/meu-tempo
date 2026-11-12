@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, CalendarCheck, CalendarDays, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ClipboardList,
+import { ArrowLeft, Bell, CalendarCheck, CalendarDays, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ClipboardList,
   CirclePlus, House, List, LogOut, MessageCircle, Music2, Pencil, Repeat2, Settings, SquarePen, Video, X } from 'lucide-react';
 import ActivityEditor from './ActivityEditor.jsx';
 import DailyQuotes from './DailyQuotes.jsx';
+import { AgendaSidebar } from './AgendaExtras.jsx';
 import './anelisa.css';
 
 const appearance = {
@@ -55,7 +56,7 @@ function TaskRows({ tasks, date, isDone, toggle, onEdit }) {
   });
 }
 
-function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holidaysForMonth }) {
+export function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holidaysForMonth, events = [], occursOn, onReminder, onEvent }) {
   const [selected, setSelected] = useState(date);
   const [month, setMonth] = useState(() => new Date(toDate(date).getFullYear(), toDate(date).getMonth(), 1, 12));
   const year = month.getFullYear();
@@ -67,6 +68,7 @@ function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holidaysForM
     return [
       ...tasks.filter(task => isRoutine(task) ? routineOccurs(task, day) : task.due_date === day)
         .map(task => ({ ...task, kind: isRoutine(task) ? 'Rotina' : 'Tarefa' })),
+      ...events.filter(event => occursOn(event, day)).map(event => ({ ...event, kind: event.event_type === 'other' ? 'Lembrete' : 'Evento' })),
       ...meetings.filter(meeting => meeting.meeting_date === day).map(meeting => ({ ...meeting, kind: 'Reunião' })),
     ];
   }
@@ -107,18 +109,23 @@ function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holidaysForM
       <span data-day-type="saturday">Sábado</span><span data-day-type="sunday">Domingo</span><span data-day-type="holiday">Feriado</span>
     </div>
     <div className="aw-agenda">
-      <h3>{fullDate.format(toDate(selected))}</h3>
+      <div className="agenda-day-heading"><h3>{fullDate.format(toDate(selected))}</h3>
+        {onReminder && <button className="secondary" onClick={() => onReminder(selected)}><Bell size={16}/> Incluir lembrete</button>}
+      </div>
       {holidays[selected] && <p className="aw-holiday-name">{holidays[selected]}</p>}
       {agenda.length ? <ul>{agenda.map(item => <li key={item.kind + item.id}>
         <span>{item.kind}</span>
-        {item.kind === 'Reunião' ? <button onClick={() => onMeeting(item.id)}>{item.title}</button> : <button onClick={() => onEdit(item)}>{item.title}</button>}
+        {item.kind === 'Reunião' ? <button onClick={() => onMeeting(item.id)}>{item.title}</button>
+          : item.kind === 'Lembrete' ? <button onClick={() => onReminder(selected, item)}>{item.description || item.title}</button>
+          : item.kind === 'Evento' ? (onEvent ? <button onClick={() => onEvent(item)}>{item.title}</button> : <strong>{item.title}</strong>)
+          : onEdit ? <button onClick={() => onEdit(item)}>{item.title}</button> : <strong>{item.title}</strong>}
       </li>)}</ul> : <p className="aw-empty">Nenhum item para este dia.</p>}
     </div>
   </section>;
 }
 
 export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveActivity,
-  meetings, renderMeetings, signOut, userId, email, holidaysForMonth }) {
+  meetings, renderMeetings, signOut, userId, email, holidaysForMonth, events, occursOn, onReminder, reminderDialog }) {
   const themeKey = 'meu-tempo-theme-' + userId;
   const [theme, setTheme] = useState(() => {
     try {
@@ -153,6 +160,8 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
   const progress = plannedToday.length ? Math.round(completedToday / plannedToday.length * 100) : 0;
   const todaysMeetings = meetings.filter(meeting => meeting.meeting_date === date);
   const agendaToday = [...due, ...routines];
+  const recentMeetings = [...meetings].filter(meeting => meeting.finalized_at)
+    .sort((a, b) => b.finalized_at.localeCompare(a.finalized_at)).slice(0, 3);
   const remainingActivities = active.filter(task => !agendaToday.includes(task));
 
   useEffect(() => {
@@ -208,7 +217,7 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
         onClick={() => menu.current.showModal()}>{photo ? <img src={photo} alt=""/> : 'A'}</button>
     </header>
 
-    <div className="aw-layout">
+    <div className="aw-layout agenda-layout">
       <div className="aw-feed">
         <div className="aw-meeting-nav">
           {meetingRoute && <button className="secondary aw-home-back" onClick={goHome}><ArrowLeft size={17}/> Início</button>}
@@ -232,6 +241,7 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
           <div className="aw-action-cards">
             <button onClick={() => onAdd('demand')}><span className="aw-action-icon"><Task size={20}/></span> Incluir tarefa</button>
             <button onClick={() => onAdd('routine')}><span className="aw-action-icon"><Routine size={20}/></span> Incluir rotina</button>
+            <button onClick={() => onReminder(date)}><span className="aw-action-icon"><Bell size={20}/></span> Incluir lembrete</button>
           </div>
           <section className="aw-progress" aria-labelledby="aw-progress-title">
             <div className="aw-progress-head">
@@ -244,9 +254,13 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
           </section>
           <div className="aw-home-agenda">
           {view === 'calendar' ? <AgendaCalendar date={date} tasks={active} holidaysForMonth={holidaysForMonth}
-            meetings={meetings} onEdit={onEdit} onMeeting={openMeeting}/> : <section className="task-panel">
+            meetings={meetings} onEdit={onEdit} onMeeting={openMeeting} events={events} occursOn={occursOn} onReminder={onReminder}/> : <section className="task-panel">
             <div className="panel-head"><h2>Minha agenda de hoje</h2></div>
             <TaskRows tasks={agendaToday} date={date} isDone={isDone} toggle={toggle} onEdit={onEdit}/>
+            {events.filter(event => event.event_type === 'other' && occursOn(event, date)).map(event =>
+              <button className="aw-meeting-row" key={event.id} onClick={() => onReminder(date, event)}>
+                <Bell size={18}/><strong>{event.description || event.title}</strong><span>Lembrete</span>
+              </button>)}
             {todaysMeetings.map(meeting => <button className="aw-meeting-row" key={meeting.id} onClick={() => openMeeting(meeting.id)}>
               <Meeting size={18}/><strong>{meeting.title}</strong><span>Reunião</span>
             </button>)}
@@ -259,8 +273,15 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
           </div>
         </>}
       </div>
+      <AgendaSidebar events={events} date={date} occursOn={occursOn} onReminder={onReminder}>
+        <p>O calendário agora permite incluir lembretes rápidos.</p>
+        {recentMeetings.length > 0 && <ul>{recentMeetings.map(meeting => <li key={meeting.id}>
+          <button onClick={() => openMeeting(meeting.id)}>{meeting.title}</button><small>Reunião realizada</small>
+        </li>)}</ul>}
+      </AgendaSidebar>
     </div>
 
+    {reminderDialog}
     {activity && <ActivityEditor task={activity} date={date} onSave={onSaveActivity} onClose={goHome}/>}
 
     <dialog ref={menu} className="aw-profile" aria-labelledby="aw-profile-title"

@@ -1,0 +1,54 @@
+.agenda-sidebar { display: none; }
+.agenda-day-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.agenda-day-heading button, .agenda-view-switch button, .agenda-sidebar section > button { display: inline-flex; align-items: center; gap: 6px; }
+.neemias-main.main { padding-right: 0 !important; padding-bottom: 24px; }
+.neemias-layout { max-width: 1500px; margin: 0 auto; }
+.neemias-layout .content { width: 100%; min-width: 0; }
+.neemias-main .aw-calendar { --aw-ink: #26334b; --aw-muted: #53657d; --aw-line: #dce6f3; --aw-soft: #edf4ff; --aw-blue: #1465cf; }
+.neemias-shortcuts { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 9px; margin: 0 0 14px; }
+.neemias-shortcuts button {
+  display: flex; align-items: center; gap: 7px; min-height: 46px; padding: 10px;
+  text-align: left; color: #314c68; background: #fff; border: 1px solid #dce6ef; border-radius: 10px;
+}
+.neemias-shortcuts button:hover { background: #eef5ff; }
+.neemias-shortcuts svg { flex: none; color: #376eac; }
+.agenda-view-switch { display: flex; gap: 6px; margin-bottom: 12px; }
+.agenda-view-switch button[aria-pressed=true] { background: #e4efff; color: #21558e; }
+.agenda-reminder-dialog {
+  width: min(92vw, 430px); padding: 0; border: 1px solid var(--aw-line, #dce6ef);
+  border-radius: 15px; background: var(--aw-surface, #fff); color: var(--aw-ink, #25364a);
+}
+.agenda-reminder-dialog::backdrop { background: #18294066; }
+.agenda-reminder-dialog form { padding: 17px; }
+.agenda-reminder-dialog header, .agenda-reminder-dialog footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.agenda-reminder-dialog footer { justify-content: flex-end; }
+.agenda-reminder-dialog h2 { margin: 0; font-size: 1.12rem; }
+.agenda-reminder-dialog label { display: grid; gap: 5px; margin: 12px 0; }
+.agenda-reminder-dialog :is(input, textarea) {
+  width: 100%; padding: 8px; border: 1px solid var(--aw-line, #dce6ef); border-radius: 9px;
+  color: inherit; background: var(--aw-page, #f8fafd); font: inherit;
+}
+.agenda-reminder-dialog [role=alert] { color: #ae3b38; }
+.aw-action-cards > button:nth-child(3) { background: var(--aw-alt-soft); }
+@media (min-width: 1100px) {
+  .agenda-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 20px; align-items: start; }
+  .neemias-layout { padding-right: 20px; }
+  .neemias-layout .agenda-sidebar { margin-top: 24px; }
+  .agenda-sidebar { display: grid; gap: 12px; position: sticky; top: 70px; min-width: 0; }
+  .agenda-sidebar section {
+    padding: 13px; border: 1px solid var(--aw-line, #dce6ef);
+    border-radius: 12px; background: var(--aw-surface, #fff); color: var(--aw-ink, #25364a);
+  }
+  .agenda-sidebar h2 { display: flex; align-items: center; gap: 6px; font-size: .92rem; margin: 0 0 9px; }
+  .agenda-sidebar h2 svg { flex: none; color: var(--aw-blue, #376eac); }
+  .agenda-sidebar p, .agenda-sidebar small { color: var(--aw-muted, #5b6b7b); font-size: .82rem; }
+  .agenda-sidebar p { margin: 8px 0; }
+  .agenda-sidebar ul { list-style: none; padding: 0; margin: 0 0 8px; }
+  .agenda-sidebar li { border-top: 1px solid var(--aw-line, #dce6ef); padding: 6px 0; font-size: .85rem; overflow-wrap: anywhere; }
+  .agenda-sidebar li small { display: block; margin-top: 3px; }
+  .agenda-sidebar li button { width: 100%; display: flex; align-items: baseline; gap: 7px; padding: 4px 0; background: transparent; color: inherit; text-align: left; }
+  .agenda-sidebar time { color: var(--aw-blue, #376eac); font-size: .8rem; white-space: nowrap; }
+}
+.agenda-reminder-link { padding: 0; text-align: left; color: inherit; background: transparent; text-decoration: underline; }
+[data-aw-theme="facebook"] .aw-action-cards { grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr)); }
+[data-aw-theme="instagram"] .aw-action-cards { grid-template-columns: repeat(3, minmax(0, 120px)); }

@@ -52,3 +52,44 @@
 .agenda-reminder-link { padding: 0; text-align: left; color: inherit; background: transparent; text-decoration: underline; }
 [data-aw-theme="facebook"] .aw-action-cards { grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr)); }
 [data-aw-theme="instagram"] .aw-action-cards { grid-template-columns: repeat(3, minmax(0, 120px)); }
+
+.neemias-main .topbar { position: relative; z-index: 30; }
+.neemias-main .header-dropdown, .neemias-main .search-results { max-width: calc(100vw - 24px); }
+.app:has(> .neemias-main) > .overlay { z-index: 120; overflow-y: auto; }
+.app:has(> .neemias-main) > .overlay > .modal {
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.app:has(> .neemias-main) > .toast { z-index: 130; }
+
+@media (min-width: 900px) {
+  .neemias-main .topbar { height: 76px; }
+  .neemias-layout .content { zoom: 1.1; }
+  .neemias-layout .agenda-sidebar { font-size: 1rem; }
+  .neemias-layout .agenda-sidebar h2 { font-size: 1rem; }
+  .neemias-layout .agenda-sidebar li { font-size: .92rem; }
+  .neemias-shortcuts { display: flex; flex-wrap: wrap; gap: 10px; }
+  .neemias-shortcuts button {
+    justify-content: center;
+    width: 49px;
+    min-height: 49px;
+    padding: 0;
+    color: var(--shortcut-ink);
+    background: var(--shortcut-bg);
+    border-color: transparent;
+    border-radius: 13px;
+  }
+  .neemias-shortcuts button:hover { background: var(--shortcut-bg); border-color: var(--shortcut-ink); }
+  .neemias-shortcuts button:focus-visible { outline: 2px solid var(--shortcut-ink); outline-offset: 2px; }
+  .neemias-shortcuts button > span { display: none; }
+  .neemias-shortcuts button svg { color: inherit; }
+  .neemias-shortcuts [data-tone="0"] { --shortcut-ink: #185cbd; --shortcut-bg: #e4efff; }
+  .neemias-shortcuts [data-tone="1"] { --shortcut-ink: #167154; --shortcut-bg: #e0f4e9; }
+  .neemias-shortcuts [data-tone="2"] { --shortcut-ink: #6941a0; --shortcut-bg: #f0e7fb; }
+  .neemias-shortcuts [data-tone="3"] { --shortcut-ink: #9a580b; --shortcut-bg: #fff0d4; }
+  .neemias-shortcuts [data-tone="4"] { --shortcut-ink: #a64158; --shortcut-bg: #fce8ee; }
+  .neemias-shortcuts [data-tone="5"] { --shortcut-ink: #08747b; --shortcut-bg: #dff3f4; }
+  .neemias-shortcuts [data-tone="6"] { --shortcut-ink: #4c579f; --shortcut-bg: #e9edff; }
+  .neemias-shortcuts [data-tone="7"] { --shortcut-ink: #7c502b; --shortcut-bg: #f6ece1; }
+}

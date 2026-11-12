@@ -183,3 +183,11 @@ input,select,textarea{font-size:14px!important}
   .anelisa-task span { max-width: 100px; }
   .meeting-editor, .meeting-history, .meeting-error { margin-inline: 10px; }
 }
+
+.login-card .login-password-toggle {
+  justify-self: start; padding: 0; color: #1459ad; background: transparent; text-decoration: underline;
+}
+.login-card .login-error {
+  margin: 0; padding: 10px 12px; border-radius: 8px; background: #fff0ef; color: #922a24; font-size: .9rem;
+}
+.login-card button:disabled { opacity: .72; cursor: wait; }

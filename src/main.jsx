@@ -5,6 +5,7 @@ import{LayoutDashboard,CalendarCheck,ClipboardList,Sunrise,Briefcase,UserPlus,Me
 import'./style.css';
 import Meetings from './Meetings.jsx';
 import AnelisaWorkspace from './AnelisaWorkspace.jsx';
+import Login from './Login.jsx';
 const supabaseUrl=import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey=import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase=supabaseUrl&&supabaseKey?createClient(supabaseUrl,supabaseKey):null;
@@ -82,7 +83,6 @@ function App(){
  async function showCredential(r){const p=window.prompt('Digite a senha mestra');if(!p)return;try{const plain=await decryptValue(r.encrypted_payload,p);window.alert('Login: '+(r.metadata?.login||'')+'\\nSenha: '+plain+'\\nOutros: '+(r.metadata?.other||''))}catch{notify('Senha mestra incorreta')}}
  function mask(value,type){let v=value.replace(/\D/g,'');if(type==='cnpj')return v.slice(0,14).replace(/^(\d{2})(\d)/,'$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/,'$1.$2.$3').replace(/\.(\d{3})(\d)/,'.$1/$2').replace(/(\d{4})(\d)/,'$1-$2');if(type==='cep')return v.slice(0,8).replace(/^(\d{5})(\d)/,'$1-$2');if(type==='phone'){v=v.slice(0,11);return v.length>10?v.replace(/^(\d{2})(\d{5})(\d{0,4}).*/,'($1) $2-$3'):v.replace(/^(\d{2})(\d{4})(\d{0,4}).*/,'($1) $2-$3')}return value}
  async function copyValue(value){try{await navigator.clipboard.writeText(value);notify('Copiado para a área de transferência')}catch{notify('Não foi possível copiar')}}
- async function signIn(e){e.preventDefault();const email=e.target.email.value,password=e.target.password.value;const{error}=await supabase.auth.signInWithPassword({email,password});if(error)notify(error.message)}
  const searchItems=useMemo(()=>[...tasks.map(x=>({label:x.title,detail:'Atividade',section:'Meu Dia',search:x.title+' '+(x.description||'')})),...meetings.map(x=>({label:x.title,detail:'Reunião',section:'Reuniões',search:x.title+' '+(x.agenda||'')})),...deadlineEvents.map(x=>({label:x.title,detail:'Calendário',section:'Meu Dia',search:x.title+' '+(x.description||'')})),...templates.map(x=>({label:x.title,detail:'Mensagem pronta',section:'Mensagens prontas',search:x.title+' '+x.body})),...records.map(x=>({label:x.title,detail:'Cadastro',section:'Cadastros',search:x.title+' '+(x.metadata?.description||'')})),...processes.map(x=>({label:x.person_name,detail:x.process_type==='admission'?'Admissão':'Rescisão',section:'Processos',search:x.person_name+' '+(x.role||'')+' '+(x.unit||'')})),...nav.map(([label])=>({label,detail:'Menu',section:label,search:label}))].filter(x=>query.trim()&&x.search.toLowerCase().includes(query.toLowerCase())).slice(0,8),[query,tasks,meetings,deadlineEvents,templates,records,processes]);
  const overdueNotifications=[...overdueTasks.map(t=>({title:t.title,detail:'Atividade em atraso',date:t.due_date,section:'Meu Dia'})),...deadlineEvents.filter(e=>e.event_date<dateToday).map(e=>({title:e.title,detail:'Lançamento do calendário em atraso',date:e.event_date,section:'Meu Dia'})),...processes.filter(p=>p.status!=='completed'&&p.due_date&&p.due_date<dateToday).map(p=>({title:p.person_name,detail:'Processo com prazo vencido',date:p.due_date,section:'Processos'}))];
  const meetingNotifications=meetings.filter(m=>m.meeting_date>=dateToday&&m.meeting_date<=new Date(Date.now()+86400000).toLocaleDateString('en-CA')).map(m=>({title:m.title,detail:'Lembrete de reunião',date:m.meeting_date,section:'Reuniões'}));
@@ -100,7 +100,7 @@ function App(){
  const dateLabel=new Intl.DateTimeFormat('pt-BR',{weekday:'long',day:'numeric',month:'long'}).format(new Date());
  if(!sessionReady||busy||(user&&loadedUserId!==user.id))return <div className="loading"><div className="brand-mark"><Leaf/></div><span>Preparando seu espaço...</span></div>;
  if(!supabase)return <main className="setup"><h1>Meu Tempo</h1><p>Configure as variáveis do Supabase para iniciar.</p><code>VITE_SUPABASE_URL</code><code>VITE_SUPABASE_ANON_KEY</code></main>;
- if(!user)return <main className="login"><div className="login-card"><div className="brand-mark"><Leaf/></div><p className="eyebrow">SEU ESPAÇO PESSOAL</p><h1>Bem-vindo ao<br/><em>Meu Tempo.</em></h1><p className="muted">Entre para organizar suas prioridades e cuidar do seu tempo.</p><form onSubmit={signIn}><label>E-mail<input name="email" type="email" required placeholder="seu@email.com"/></label><label>Senha<input name="password" type="password" required placeholder="Sua senha"/></label><button className="primary full">Entrar</button></form><small>O acesso é individual e protegido pelo Supabase.</small></div></main>;
+ if(!user)return <Login client={supabase} connectionError={toast}/>;
  const anelisa=user.app_metadata?.meu_tempo_workspace==='anelisa';
  const renderMeetings=(initialMeetingId=null)=><Meetings key={user.id+(initialMeetingId||'')} initialMeetingId={initialMeetingId} client={supabase} userId={user.id} today={dateToday}
    meetings={meetings} tasks={tasks}

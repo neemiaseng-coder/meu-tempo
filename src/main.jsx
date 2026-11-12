@@ -159,11 +159,17 @@ function App(){
    }}
    signOut={async()=>{await supabase.auth.signOut();setSection('Meu Dia');setShowAdd(false)}}/>:<>
  <main className="main neemias-main"><header className="topbar"><div className="top-left"><button className="home-button" onClick={()=>setSection('Meu Dia')}><Home size={18}/><span>Home</span></button><b>{section}</b></div><div className="top-actions"><div className="search search-live"><Search size={17}/><input value={query} onFocus={()=>{setProfileOpen(false);setNotificationOpen(false)}} onChange={e=>setQuery(e.target.value)} placeholder="Buscar em todo o sistema..."/>{query&&<button className="search-clear" onClick={()=>setQuery('')}><X size={14}/></button>}{searchItems.length>0&&<div className="search-results">{searchItems.map((item,i)=><button key={i} onClick={()=>{setSection(item.section);setQuery('')}}><b>{item.label}</b><small>{item.detail}</small></button>)}</div>}</div><div className="header-pop"><button className="icon-btn" title="Notificações" aria-expanded={notificationOpen} onClick={()=>{setNotificationOpen(!notificationOpen);setProfileOpen(false);setQuery('')}}><Bell size={18}/>{notifications.length>0&&<i/>}</button>{notificationOpen&&<div className="header-dropdown notification-dropdown"><b>Notificações</b>{notifications.length?notifications.map((n,i)=><button key={i} onClick={()=>{setSection(n.section);setNotificationOpen(false)}}><strong>{n.title}</strong><small>{n.detail} · {new Date(n.date+'T12:00:00').toLocaleDateString('pt-BR')}</small></button>):<small>Você não tem notificações no momento.</small>}</div>}</div><div className="header-pop"><button className="avatar avatar-button" aria-label="Minha conta" aria-expanded={profileOpen} onClick={()=>{setProfileOpen(!profileOpen);setNotificationOpen(false);setQuery('')}}>{profilePhoto?<img src={profilePhoto}/>:(user.email||'U')[0].toUpperCase()}</button>{profileOpen&&<div className="header-dropdown profile-dropdown"><b>Minha conta</b><label className="photo-upload">Incluir foto<input type="file" accept="image/*" onChange={e=>{const file=e.target.files?.[0];if(file){const reader=new FileReader();reader.onload=()=>setProfilePhoto(reader.result);reader.readAsDataURL(file)}}}/></label><button onClick={()=>{setSection('Meus dados');setProfileOpen(false)}}>Meus dados de cadastro</button><button onClick={()=>setTheme(theme==='light'?'dark':'light')}>Alterar tema</button><button onClick={async()=>{await supabase.auth.signOut();setProfileOpen(false)}}>Sair</button></div>}</div></div></header>
- <div className="agenda-layout neemias-layout"><div className="content"><div className="welcome"><div><p className="eyebrow">{dateLabel.toUpperCase()}</p><h1>{section==='Meu Dia'?'Vamos fazer acontecer?':section}</h1><p className="muted">{section==='Meu Dia'?'Seu plano de hoje, uma tarefa de cada vez.':'Organize e acompanhe suas informações.'}</p></div></div>
+ <div className="agenda-layout neemias-layout"><div className="content"><div className="welcome"><div><p className="eyebrow">{dateLabel.toUpperCase()}</p><h1>{section}</h1></div></div>
  {section==='Meu Dia'&&<>
-  <div className="neemias-shortcuts" aria-label="Atalhos">
-   {shortcuts.map(([Icon,label,action],index)=><button key={label} data-tone={index} aria-label={label} title={label} onClick={action}><Icon size={23} aria-hidden="true"/><span>{label}</span></button>)}
-  </div>
+  <section className="neemias-actions" aria-labelledby="neemias-actions-title">
+   <h2 id="neemias-actions-title">Ações rápidas</h2>
+   <div className="neemias-shortcuts">
+    {shortcuts.map(([Icon,label,action],index)=><button key={label} data-tone={index} onClick={action}>
+     <span className="neemias-shortcut-icon"><Icon size={22} aria-hidden="true"/></span>
+     <span>{label}</span>
+    </button>)}
+   </div>
+  </section>
   <div className="agenda-view-switch" role="group" aria-label="Visualização da agenda">
    <button className="secondary" aria-pressed={agendaView==='list'} onClick={()=>setAgendaView('list')}><ClipboardList size={16}/> Lista</button>
    <button className="secondary" aria-pressed={agendaView==='calendar'} onClick={()=>setAgendaView('calendar')}><CalendarDays size={16}/> Calendário</button>

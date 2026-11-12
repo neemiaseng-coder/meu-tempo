@@ -63,28 +63,7 @@
 }
 .app:has(> .neemias-main) > .toast { z-index: 130; }
 
-@media (min-width: 900px) {
-  .neemias-main .topbar { height: 76px; }
-  .neemias-layout .content { zoom: 1.1; }
-  .neemias-layout .agenda-sidebar { font-size: 1rem; }
-  .neemias-layout .agenda-sidebar h2 { font-size: 1rem; }
-  .neemias-layout .agenda-sidebar li { font-size: .92rem; }
-  .neemias-shortcuts { display: flex; flex-wrap: wrap; gap: 10px; }
-  .neemias-shortcuts button {
-    justify-content: center;
-    width: 49px;
-    min-height: 49px;
-    padding: 0;
-    color: var(--shortcut-ink);
-    background: var(--shortcut-bg);
-    border-color: transparent;
-    border-radius: 13px;
-  }
-  .neemias-shortcuts button:hover { background: var(--shortcut-bg); border-color: var(--shortcut-ink); }
-  .neemias-shortcuts button:focus-visible { outline: 2px solid var(--shortcut-ink); outline-offset: 2px; }
-  .neemias-shortcuts button > span { display: none; }
-  .neemias-shortcuts button svg { color: inherit; }
-  .neemias-shortcuts [data-tone="0"] { --shortcut-ink: #185cbd; --shortcut-bg: #e4efff; }
+.neemias-shortcuts [data-tone="0"] { --shortcut-ink: #185cbd; --shortcut-bg: #e4efff; }
   .neemias-shortcuts [data-tone="1"] { --shortcut-ink: #167154; --shortcut-bg: #e0f4e9; }
   .neemias-shortcuts [data-tone="2"] { --shortcut-ink: #6941a0; --shortcut-bg: #f0e7fb; }
   .neemias-shortcuts [data-tone="3"] { --shortcut-ink: #9a580b; --shortcut-bg: #fff0d4; }
@@ -92,4 +71,51 @@
   .neemias-shortcuts [data-tone="5"] { --shortcut-ink: #08747b; --shortcut-bg: #dff3f4; }
   .neemias-shortcuts [data-tone="6"] { --shortcut-ink: #4c579f; --shortcut-bg: #e9edff; }
   .neemias-shortcuts [data-tone="7"] { --shortcut-ink: #7c502b; --shortcut-bg: #f6ece1; }
+
+.neemias-actions { margin-bottom: 18px; }
+.neemias-actions h2 { margin: 0 0 9px; font-size: 1rem; color: #314258; }
+.neemias-actions .neemias-shortcuts { margin: 0; }
+.neemias-shortcut-icon {
+  display: grid; place-items: center; flex: none; width: 35px; height: 35px;
+  border-radius: 9px; color: var(--shortcut-ink); background: var(--shortcut-bg);
+}
+.neemias-shortcut-icon svg { color: inherit; }
+.neemias-shortcuts button:focus-visible { outline: 2px solid var(--shortcut-ink); outline-offset: 2px; }
+@media (min-width: 900px) {
+  .neemias-main { background: #f3f6fa; }
+  .neemias-main .topbar { height: 72px; }
+  .neemias-main .top-left, .neemias-main .search input { font-size: 14px; }
+  .neemias-layout { max-width: 1640px; }
+  .neemias-layout .content { padding-inline: clamp(18px, 2.4vw, 38px) !important; }
+  .neemias-layout .welcome { margin-bottom: 18px; }
+  .neemias-layout .welcome h1 { font-size: 32px; letter-spacing: -.65px; }
+  .neemias-layout .welcome .eyebrow { font-size: 12px; margin-bottom: 5px; }
+  .neemias-actions { margin-bottom: 20px; }
+  .neemias-actions h2 { font-size: 18px; margin-bottom: 11px; }
+  .neemias-shortcuts { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 11px; }
+  .neemias-shortcuts button {
+    min-width: 0; min-height: 76px; padding: 11px 12px; gap: 10px; font-size: 15px;
+    font-weight: 600; line-height: 1.25; color: #283a51; border-radius: 13px;
+    box-shadow: 0 2px 7px #29415e0a;
+  }
+  .neemias-shortcuts button:hover { background: var(--shortcut-bg); border-color: var(--shortcut-ink); }
+  .neemias-shortcut-icon { width: 40px; height: 40px; border-radius: 11px; }
+  .neemias-layout .agenda-view-switch button { min-height: 40px; font-size: 14px; }
+  .neemias-layout .agenda-sidebar h2 { font-size: 16px; }
+  .neemias-layout .agenda-sidebar :is(p, li, small, time) { font-size: 14px; }
+  .neemias-layout .agenda-sidebar section { padding: 16px; }
+  .neemias-layout :is(.myday-task-copy b, .agenda-item b, .record-category b) { font-size: 16px; }
+  .neemias-layout :is(.myday-task-copy small, .agenda-item small, .myday-task-status, .muted) { font-size: 14px; }
+  .neemias-layout .aw-calendar-grid .aw-day { min-height: 52px; font-size: 16px; }
+  .neemias-layout .aw-agenda li { font-size: 15px; }
+}
+@media (min-width: 1440px) {
+  .neemias-layout { grid-template-columns: minmax(0, 1fr) 300px; }
+  .neemias-layout .myday-shell {
+    display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(240px, 1fr); column-gap: 16px;
+    align-items: start;
+  }
+  .neemias-layout .myday-hero, .neemias-layout .myday-progress { grid-column: 1 / -1; }
+  .neemias-layout .myday-list-head, .neemias-layout .myday-list { grid-column: 1; }
+  .neemias-layout .day-agenda { grid-column: 2; grid-row: 3 / span 2; margin-top: 0; min-width: 0; }
 }

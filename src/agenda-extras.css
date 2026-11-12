@@ -109,13 +109,50 @@
   .neemias-layout .aw-calendar-grid .aw-day { min-height: 52px; font-size: 16px; }
   .neemias-layout .aw-agenda li { font-size: 15px; }
 }
-@media (min-width: 1440px) {
-  .neemias-layout { grid-template-columns: minmax(0, 1fr) 300px; }
-  .neemias-layout .myday-shell {
-    display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(240px, 1fr); column-gap: 16px;
-    align-items: start;
+
+.neemias-desktop-menu { display: none; }
+@media (min-width: 1100px) {
+  .neemias-main { background: #eaf1fb; }
+  .neemias-main .topbar {
+    background: #174fa6; border-bottom: 0; color: #fff; box-shadow: 0 3px 12px #163b7224;
   }
-  .neemias-layout .myday-hero, .neemias-layout .myday-progress { grid-column: 1 / -1; }
-  .neemias-layout .myday-list-head, .neemias-layout .myday-list { grid-column: 1; }
-  .neemias-layout .day-agenda { grid-column: 2; grid-row: 3 / span 2; margin-top: 0; min-width: 0; }
+  .neemias-main .top-left b, .neemias-main .top-actions > .header-pop > .icon-btn { color: #fff; }
+  .neemias-main .home-button { color: #fff; background: #ffffff20; }
+  .neemias-main .search-live { background: #fff; color: #3764a3; }
+  .neemias-main .header-dropdown { color: #263750; }
+  .agenda-layout.neemias-layout {
+    grid-template-columns: clamp(184px, 16vw, 228px) minmax(0, 1fr) clamp(245px, 22vw, 310px);
+    max-width: 1740px; padding: 22px clamp(14px, 2vw, 30px); gap: clamp(12px, 1.5vw, 22px);
+  }
+  .neemias-layout .content { padding: 0 !important; }
+  .neemias-layout .agenda-sidebar { margin-top: 0; position: static; }
+  .neemias-layout .neemias-actions { display: none; }
+  .neemias-desktop-menu {
+    display: grid; align-content: start; gap: 9px; min-width: 0; padding: 9px;
+    background: #fff; border: 1px solid #cbdcf2; border-radius: 15px;
+    box-shadow: 0 5px 14px #1d438911;
+  }
+  .neemias-desktop-menu .neemias-shortcuts { grid-template-columns: minmax(0, 1fr); gap: 4px; margin: 0; }
+  .neemias-desktop-menu .neemias-shortcuts button { min-height: 49px; padding: 5px 7px; gap: 8px; font-size: 14px; box-shadow: none; border-color: transparent; }
+  .neemias-desktop-menu .neemias-shortcut-icon { width: 33px; height: 33px; border-radius: 9px; }
+  .neemias-desktop-menu button[aria-current="page"] { background: #e2eeff; color: #124c9c; }
+  .neemias-menu-home {
+    display: flex; align-items: center; gap: 9px; padding: 11px; border-radius: 10px;
+    text-align: left; color: #174e9c; background: #f1f6ff; font-size: 15px; font-weight: 700;
+  }
+  .neemias-menu-home:hover { background: #d8e9ff; }
+  .neemias-layout .agenda-sidebar section { border-color: #cbdcf2; box-shadow: 0 4px 12px #1d43890d; }
+  .neemias-layout .agenda-sidebar h2 { color: #174f9f; }
+  .neemias-layout .agenda-sidebar-news { order: 1; }
+  .neemias-layout .agenda-sidebar-reminders { order: 2; }
+  .neemias-mini-calendar .mini-calendar-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 5px; margin-bottom: 8px; }
+  .mini-calendar-toolbar span { font-size: 14px; font-weight: 600; text-transform: capitalize; }
+  .mini-calendar-toolbar button { display: grid; place-items: center; width: 28px; height: 28px; background: #e9f2ff; color: #174f9f; border-radius: 7px; }
+  .mini-calendar-grid { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 3px; text-align: center; }
+  .mini-calendar-grid > span { font-size: 11px; color: #536680; }
+  .mini-calendar-grid button { min-height: 28px; border-radius: 6px; background: #f1f6ff; color: #223a56; font-size: 13px; }
+  .mini-calendar-grid button[data-weekend] { background: #e5edff; color: #304e9a; }
+  .mini-calendar-grid button[data-holiday] { background: #ffe3e9; color: #952f50; }
+  .mini-calendar-grid button[aria-current="date"] { outline: 1px solid #1966cf; }
+  .mini-calendar-grid button[aria-pressed="true"], .mini-calendar-grid button:hover { background: #2366cb; color: #fff; }
 }

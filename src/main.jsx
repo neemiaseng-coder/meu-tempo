@@ -5,7 +5,7 @@ import{LayoutDashboard,CalendarCheck,ClipboardList,Sunrise,Briefcase,UserPlus,Me
 import'./style.css';
 import Meetings from './Meetings.jsx';
 import AnelisaWorkspace, { AgendaCalendar } from './AnelisaWorkspace.jsx';
-import { AgendaSidebar, ReminderDialog } from './AgendaExtras.jsx';
+import { AgendaSidebar, MiniCalendar, ReminderDialog } from './AgendaExtras.jsx';
 import './agenda-extras.css';
 import Login from './Login.jsx';
 const supabaseUrl=import.meta.env.VITE_SUPABASE_URL;
@@ -22,6 +22,7 @@ function App(){
  const [section,setSection]=useState('Meu Dia'),[tasks,setTasks]=useState([]),[occurrences,setOccurrences]=useState([]),[busy,setBusy]=useState(true),[user,setUser]=useState(null),[sessionReady,setSessionReady]=useState(false),[query,setQuery]=useState(''),[showAdd,setShowAdd]=useState(false),[title,setTitle]=useState(''),[taskType,setTaskType]=useState('demand'),[due,setDue]=useState(today()),[recurrence,setRecurrence]=useState('daily'),[recurrenceDays,setRecurrenceDays]=useState([new Date().getDay()]),[monthDay,setMonthDay]=useState(Number(today().slice(-2))),[toast,setToast]=useState(''),[theme,setTheme]=useState('light'),[mobile,setMobile]=useState(false),[templates,setTemplates]=useState([]),[records,setRecords]=useState([]),[templateTitle,setTemplateTitle]=useState(''),[templateBody,setTemplateBody]=useState(''),[templateHasDate,setTemplateHasDate]=useState(false),[selectedTemplateId,setSelectedTemplateId]=useState(null),[recipient,setRecipient]=useState(''),[sendDate,setSendDate]=useState(today()),[generated,setGenerated]=useState(''),[showTemplateForm,setShowTemplateForm]=useState(false),[showRecordForm,setShowRecordForm]=useState(false),[recordType,setRecordType]=useState('company'),[recordTitle,setRecordTitle]=useState(''),[recordDescription,setRecordDescription]=useState(''),[company,setCompany]=useState({razao:'',fantasia:'',cnpj:'',ie:'',cep:'',street:'',number:'',complement:'',district:'',city:'',state:'',phone:'',email:'',responsible:''}),[contact,setContact]=useState({phone:'',name:'',email:''}),[login,setLogin]=useState({username:'',password:'',other:''}),[masterPassword,setMasterPassword]=useState('');
  const [loadedUserId,setLoadedUserId]=useState(null);
  const [agendaView,setAgendaView]=useState('list');
+ const [calendarSelection,setCalendarSelection]=useState(null);
  const [reminder,setReminder]=useState(null);
  const [meetings,setMeetings]=useState([]),[deadlineEvents,setDeadlineEvents]=useState([]);
  const [showDeadlineForm,setShowDeadlineForm]=useState(false),[editingDeadlineId,setEditingDeadlineId]=useState(null),[deadlineTitle,setDeadlineTitle]=useState(''),[deadlineDate,setDeadlineDate]=useState(today()),[deadlineType,setDeadlineType]=useState('payment'),[deadlineDescription,setDeadlineDescription]=useState(''),[deadlineRecurrence,setDeadlineRecurrence]=useState('none'),[deadlineEnd,setDeadlineEnd]=useState('');
@@ -159,7 +160,18 @@ function App(){
    }}
    signOut={async()=>{await supabase.auth.signOut();setSection('Meu Dia');setShowAdd(false)}}/>:<>
  <main className="main neemias-main"><header className="topbar"><div className="top-left"><button className="home-button" onClick={()=>setSection('Meu Dia')}><Home size={18}/><span>Home</span></button><b>{section}</b></div><div className="top-actions"><div className="search search-live"><Search size={17}/><input value={query} onFocus={()=>{setProfileOpen(false);setNotificationOpen(false)}} onChange={e=>setQuery(e.target.value)} placeholder="Buscar em todo o sistema..."/>{query&&<button className="search-clear" onClick={()=>setQuery('')}><X size={14}/></button>}{searchItems.length>0&&<div className="search-results">{searchItems.map((item,i)=><button key={i} onClick={()=>{setSection(item.section);setQuery('')}}><b>{item.label}</b><small>{item.detail}</small></button>)}</div>}</div><div className="header-pop"><button className="icon-btn" title="Notificações" aria-expanded={notificationOpen} onClick={()=>{setNotificationOpen(!notificationOpen);setProfileOpen(false);setQuery('')}}><Bell size={18}/>{notifications.length>0&&<i/>}</button>{notificationOpen&&<div className="header-dropdown notification-dropdown"><b>Notificações</b>{notifications.length?notifications.map((n,i)=><button key={i} onClick={()=>{setSection(n.section);setNotificationOpen(false)}}><strong>{n.title}</strong><small>{n.detail} · {new Date(n.date+'T12:00:00').toLocaleDateString('pt-BR')}</small></button>):<small>Você não tem notificações no momento.</small>}</div>}</div><div className="header-pop"><button className="avatar avatar-button" aria-label="Minha conta" aria-expanded={profileOpen} onClick={()=>{setProfileOpen(!profileOpen);setNotificationOpen(false);setQuery('')}}>{profilePhoto?<img src={profilePhoto}/>:(user.email||'U')[0].toUpperCase()}</button>{profileOpen&&<div className="header-dropdown profile-dropdown"><b>Minha conta</b><label className="photo-upload">Incluir foto<input type="file" accept="image/*" onChange={e=>{const file=e.target.files?.[0];if(file){const reader=new FileReader();reader.onload=()=>setProfilePhoto(reader.result);reader.readAsDataURL(file)}}}/></label><button onClick={()=>{setSection('Meus dados');setProfileOpen(false)}}>Meus dados de cadastro</button><button onClick={()=>setTheme(theme==='light'?'dark':'light')}>Alterar tema</button><button onClick={async()=>{await supabase.auth.signOut();setProfileOpen(false)}}>Sair</button></div>}</div></div></header>
- <div className="agenda-layout neemias-layout"><div className="content"><div className="welcome"><div><p className="eyebrow">{dateLabel.toUpperCase()}</p><h1>{section}</h1></div></div>
+ <div className="agenda-layout neemias-layout">
+ <nav className="neemias-desktop-menu" aria-label="Navegação do Meu Tempo">
+  <button className="neemias-menu-home" aria-current={section==='Meu Dia'?'page':undefined}
+   onClick={()=>{setSection('Meu Dia');setAgendaView('list')}}><Home size={20}/> Meu Dia</button>
+  <div className="neemias-shortcuts">
+   {shortcuts.map(([Icon,label,action],index)=><button key={label} data-tone={index}
+    aria-current={section===label?'page':undefined} onClick={action}>
+    <span className="neemias-shortcut-icon"><Icon size={20} aria-hidden="true"/></span><span>{label}</span>
+   </button>)}
+  </div>
+ </nav>
+ <div className="content"><div className="welcome"><div><p className="eyebrow">{dateLabel.toUpperCase()}</p><h1>{section}</h1></div></div>
  {section==='Meu Dia'&&<>
   <section className="neemias-actions" aria-labelledby="neemias-actions-title">
    <h2 id="neemias-actions-title">Ações rápidas</h2>
@@ -174,7 +186,7 @@ function App(){
    <button className="secondary" aria-pressed={agendaView==='list'} onClick={()=>setAgendaView('list')}><ClipboardList size={16}/> Lista</button>
    <button className="secondary" aria-pressed={agendaView==='calendar'} onClick={()=>setAgendaView('calendar')}><CalendarDays size={16}/> Calendário</button>
   </div>
-  {agendaView==='calendar'&&<AgendaCalendar date={dateToday} tasks={tasks.filter(t=>t.is_active!==false&&t.status!=='cancelled')}
+  {agendaView==='calendar'&&<AgendaCalendar key={calendarSelection?.version} date={dateToday} initialDate={calendarSelection?.day} tasks={tasks.filter(t=>t.is_active!==false&&t.status!=='cancelled')}
    meetings={meetings} holidaysForMonth={holidaysForMonth} events={deadlineEvents} occursOn={eventOccursOn}
    onReminder={openReminder} onMeeting={()=>setSection('Reuniões')} onEvent={openDeadlineEditor}/>}
  </>}
@@ -187,7 +199,12 @@ function App(){
  {section==='Mensagens prontas'&&<div className="task-panel"><div className="panel-head"><div><h2>Modelos de mensagens</h2><p className="muted">Preencha os dados e gere o texto para copiar</p></div><button className="primary" onClick={()=>setShowTemplateForm(true)}><Plus size={16}/> Novo modelo</button></div><div className="template-workspace"><div className="template-list">{templates.map(t=><button key={t.id} className={selectedTemplateId===t.id?'template-option selected':'template-option'} onClick={()=>{setSelectedTemplateId(t.id);setGenerated('');setRecipient('')}}><MessageSquareText/><span><b>{t.title}</b><small>{t.body.slice(0,70)}{t.body.length>70?'…':''}</small></span></button>)}{!templates.length&&<p className="muted">Nenhum modelo cadastrado.</p>}</div>{templates.filter(t=>t.id===selectedTemplateId).map(t=><section className="template-editor" key={t.id}><h3>{t.title}</h3><label>Nome de quem vai receber<input value={recipient} onChange={e=>setRecipient(e.target.value)} placeholder="Nome do destinatário"/></label>{(t.variables||[]).includes('data')&&<label>Data do agendamento<input type="date" value={sendDate} onChange={e=>setSendDate(e.target.value)}/></label>}<button className="primary" onClick={()=>makeMessage(t)}>Gerar mensagem</button>{generated&&<><label>Mensagem gerada<textarea rows="6" value={generated} readOnly/></label><button className="secondary" onClick={()=>copyValue(generated)}><Copy size={16}/> Copiar mensagem</button></>}</section>)}</div></div>}
  {section==='Cadastros'&&<div className="task-panel"><div className="panel-head"><div><h2>Central de cadastros</h2><p className="muted">Organize empresas, acessos e contatos</p></div></div><div className="record-grid"><button className="record-category" onClick={()=>{setRecordType('company');setShowRecordForm(true)}}><Building2/><b>Empresas</b><small>{records.filter(r=>r.record_type==='company').length} cadastradas</small></button><button className="record-category" onClick={()=>{setRecordType('credential');setShowRecordForm(true)}}><KeyRound/><b>Logins e senhas</b><small>{records.filter(r=>r.record_type==='credential').length} cadastrados</small></button><button className="record-category" onClick={()=>{setRecordType('contact');setShowRecordForm(true)}}><Phone/><b>Contatos</b><small>{records.filter(r=>r.record_type==='contact').length} cadastrados</small></button></div><div className="task-list">{records.map(r=><div className="task-row" key={r.id}><div className="task-info"><b>{r.title}</b><small>{r.record_type==='company'?'Empresa':r.record_type==='credential'?'Login':'Contato'} · {r.metadata?.description||''}</small></div>{r.record_type==='credential'&&<button className="secondary" onClick={()=>showCredential(r)}>Ver login</button>}{r.record_type!=='credential'&&<button className="secondary" onClick={()=>copyValue(r.content)}>Copiar dados</button>}</div>)}</div>{!records.length&&<div className="empty"><b>Nenhum cadastro realizado</b><p>Escolha uma categoria acima para começar.</p></div>}</div>}
  </div>
- <AgendaSidebar events={deadlineEvents} date={dateToday} occursOn={eventOccursOn} onReminder={openReminder}>
+ <AgendaSidebar events={deadlineEvents} date={dateToday} occursOn={eventOccursOn} onReminder={openReminder}
+  calendar={<MiniCalendar today={dateToday} selected={agendaView==='calendar'&&section==='Meu Dia'?calendarSelection?.day:null}
+   holidaysForMonth={holidaysForMonth} onSelect={day=>{
+    setCalendarSelection(old=>({day,version:(old?.version??0)+1}));
+    setAgendaView('calendar');setSection('Meu Dia');
+   }}/>}>
   {openVacancies.length? <ul>{openVacancies.slice(0,8).map(v=><li key={v.id}><span>{v.title}{v.unit?' · '+v.unit:''}</span><small>{vacancyOpenCount(v)} vaga(s)</small></li>)}</ul>
    :<p>Nenhuma vaga em aberto no momento.</p>}
   <button className="secondary" onClick={()=>{setSection('Processos');setShowVacancyForm(true)}}><Plus size={15}/> Abrir vaga</button>

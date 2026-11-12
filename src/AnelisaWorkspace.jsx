@@ -56,9 +56,9 @@ function TaskRows({ tasks, date, isDone, toggle, onEdit }) {
   });
 }
 
-export function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holidaysForMonth, events = [], occursOn, onReminder, onEvent }) {
-  const [selected, setSelected] = useState(date);
-  const [month, setMonth] = useState(() => new Date(toDate(date).getFullYear(), toDate(date).getMonth(), 1, 12));
+export function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holidaysForMonth, events = [], occursOn, onReminder, onEvent, initialDate = date }) {
+  const [selected, setSelected] = useState(initialDate);
+  const [month, setMonth] = useState(() => new Date(toDate(initialDate).getFullYear(), toDate(initialDate).getMonth(), 1, 12));
   const year = month.getFullYear();
   const monthNumber = month.getMonth();
   const days = new Date(year, monthNumber + 1, 0).getDate();

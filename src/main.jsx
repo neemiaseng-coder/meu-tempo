@@ -108,7 +108,7 @@ function App(){
      .sort((a,b)=>a.meeting_date.localeCompare(b.meeting_date)))}
    onTask={task=>setTasks(old=>[task,...old.filter(item=>item.id!==task.id)])}/>;
  return <div className={`app theme-${theme}${anelisa?' aw-app':''}`}>
- {anelisa?<AnelisaWorkspace key={user.id} userId={user.id} email={user.email} section={section} onSection={setSection} tasks={tasks} date={dateToday}
+ {anelisa?<AnelisaWorkspace holidaysForMonth={holidaysForMonth} dailyQuote={dailyQuote} key={user.id} userId={user.id} email={user.email} section={section} onSection={setSection} tasks={tasks} date={dateToday}
    isDone={isDone} toggle={toggle} meetings={meetings} renderMeetings={renderMeetings}
    onSaveActivity={async(id,values)=>{
     const table=supabase.from('tasks');

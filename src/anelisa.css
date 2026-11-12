@@ -176,3 +176,19 @@
   outline: 2px solid #6596df;
   outline-offset: 1px;
 }
+
+.aw-daily-quote {
+  display: flex; align-items: center; gap: 9px; margin: 0 0 14px; padding: 10px 13px;
+  background: linear-gradient(110deg, #e8f2ff, #f1ebfd); color: #374c79; border-radius: 12px;
+}
+.aw-daily-quote svg { flex: none; color: #5861b6; }
+[data-day-type="saturday"] { --aw-day-tint: #e0edff; --aw-day-ink: #254d84; }
+[data-day-type="sunday"] { --aw-day-tint: #ece3fb; --aw-day-ink: #624686; }
+[data-day-type="holiday"] { --aw-day-tint: #ffe8e1; --aw-day-ink: #883d34; }
+.aw-day[data-day-type], .aw-calendar-legend span {
+  background: var(--aw-day-tint); color: var(--aw-day-ink);
+}
+.aw-day[data-day-type][aria-pressed=true] { outline: 2px solid var(--aw-blue); outline-offset: -2px; }
+.aw-calendar-legend { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.aw-calendar-legend span { border-radius: 10px; padding: 3px 8px; font-size: .78rem; }
+.aw-holiday-name { color: #883d34; margin: 5px 0 0; }

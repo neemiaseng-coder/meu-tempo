@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { CalendarCheck, CalendarDays, Check, ChevronLeft, ChevronRight, ClipboardList,
-  House, List, LogOut, Pencil, Plus, Settings, X } from 'lucide-react';
+  House, List, LogOut, Pencil, Plus, Settings, Sparkles, X } from 'lucide-react';
 import ActivityEditor from './ActivityEditor.jsx';
 import './anelisa.css';
 
@@ -49,12 +49,13 @@ function TaskRows({ tasks, date, isDone, toggle, onEdit }) {
   });
 }
 
-function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit }) {
+function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holidaysForMonth }) {
   const [selected, setSelected] = useState(date);
   const [month, setMonth] = useState(() => new Date(toDate(date).getFullYear(), toDate(date).getMonth(), 1, 12));
   const year = month.getFullYear();
   const monthNumber = month.getMonth();
   const days = new Date(year, monthNumber + 1, 0).getDate();
+  const holidays = holidaysForMonth(year, monthNumber);
 
   function entries(day) {
     return [
@@ -86,16 +87,22 @@ function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit }) {
         const day = new Date(year, monthNumber, index + 1, 12);
         const value = isoDate(day);
         const count = entries(value).length;
-        return <button key={value} className="aw-day" aria-pressed={selected === value}
+        const holiday = holidays[value];
+        const dayType = holiday ? 'holiday' : day.getDay() === 6 ? 'saturday' : day.getDay() === 0 ? 'sunday' : undefined;
+        return <button key={value} className="aw-day" data-day-type={dayType} title={holiday} aria-pressed={selected === value}
           aria-current={date === value ? 'date' : undefined}
-          aria-label={fullDate.format(day) + (count ? ', ' + count + (count === 1 ? ' item' : ' itens') : '')}
+          aria-label={fullDate.format(day) + (holiday ? ', ' + holiday : '') + (count ? ', ' + count + (count === 1 ? ' item' : ' itens') : '')}
           onClick={() => setSelected(value)}>
           {index + 1}{count > 0 && <span className="aw-day-dot"/>}
         </button>;
       })}
     </div>
+    <div className="aw-calendar-legend" aria-label="Legenda do calendário">
+      <span data-day-type="saturday">Sábado</span><span data-day-type="sunday">Domingo</span><span data-day-type="holiday">Feriado</span>
+    </div>
     <div className="aw-agenda">
       <h3>{fullDate.format(toDate(selected))}</h3>
+      {holidays[selected] && <p className="aw-holiday-name">{holidays[selected]}</p>}
       {agenda.length ? <ul>{agenda.map(item => <li key={item.kind + item.id}>
         <span>{item.kind}</span>
         {item.kind === 'Reunião' ? <button onClick={() => onMeeting(item.id)}>{item.title}</button> : <button onClick={() => onEdit(item)}>{item.title}</button>}
@@ -105,7 +112,7 @@ function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit }) {
 }
 
 export default function AnelisaWorkspace({ section, onSection, tasks, date, isDone, toggle, onSaveActivity,
-  meetings, renderMeetings, signOut, userId, email }) {
+  meetings, renderMeetings, signOut, userId, email, holidaysForMonth, dailyQuote }) {
   const current = tabs.some(([label]) => label === section) ? section : 'Home';
   const [activity, setActivity] = useState(null);
   const onAdd = type => setActivity({ task_type: type });
@@ -171,6 +178,7 @@ export default function AnelisaWorkspace({ section, onSection, tasks, date, isDo
           </div>
         </div>
 
+        {current === 'Home' && <p className="aw-daily-quote"><Sparkles size={17} aria-hidden="true"/>{dailyQuote}</p>}
         {current === 'Home' && <section className="aw-progress" aria-labelledby="aw-progress-title">
           <div className="aw-progress-head">
             <div><h2 id="aw-progress-title">Progresso do dia</h2>
@@ -181,7 +189,7 @@ export default function AnelisaWorkspace({ section, onSection, tasks, date, isDo
           <progress aria-labelledby="aw-progress-title" value={progress} max="100">{progress}%</progress>
         </section>}
 
-        {view === 'calendar' && <AgendaCalendar key={current} date={date} tasks={calendarTasks} onEdit={setActivity}
+        {view === 'calendar' && <AgendaCalendar key={current} date={date} tasks={calendarTasks} holidaysForMonth={holidaysForMonth} onEdit={setActivity}
           meetings={current === 'Home' || current === 'Reuniões' ? meetings : []}
           onMeeting={id => { onSection('Reuniões'); setOpenedMeeting(id); setView('list'); }}/>}
         {view === 'list' && current === 'Home' && <section className="task-panel">

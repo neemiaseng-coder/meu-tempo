@@ -106,6 +106,9 @@ export default function AnelisaWorkspace({ section, onSection, tasks, date, isDo
   const routines = active.filter(task => routineOccurs(task, date));
   const due = active.filter(task => !isRoutine(task) && task.due_date &&
     (task.due_date === date || (task.due_date < date && !isDone(task))));
+  const plannedToday = [...due.filter(task => task.due_date === date), ...routines];
+  const completedToday = plannedToday.filter(isDone).length;
+  const progress = plannedToday.length ? Math.round(completedToday / plannedToday.length * 100) : 0;
   const todaysMeetings = meetings.filter(meeting => meeting.meeting_date === date);
   const list = active.filter(task => current === 'Rotinas' ? isRoutine(task) : !isRoutine(task));
   const calendarTasks = current === 'Home' ? active : current === 'Reuniões' ? [] : list;
@@ -137,7 +140,7 @@ export default function AnelisaWorkspace({ section, onSection, tasks, date, isDo
 
   return <main className="anelisa-workspace">
     <header className="aw-header">
-      <button className="aw-brand" onClick={() => go('Home')}><House size={18}/> Meu Tempo</button>
+      <button className="aw-brand" onClick={() => go('Home')}><span className="aw-logo"><House size={19}/></span> <span>Meu Tempo</span></button>
       <nav aria-label="Módulos" className="aw-nav">
         {tabs.map(([label, Icon]) => <button key={label} aria-current={current === label ? 'page' : undefined}
           onClick={() => go(label)}><Icon size={21}/><span>{label}</span></button>)}
@@ -146,41 +149,63 @@ export default function AnelisaWorkspace({ section, onSection, tasks, date, isDo
         onClick={() => menu.current.showModal()}>{photo ? <img src={photo} alt=""/> : 'A'}</button>
     </header>
 
-    <div className="aw-heading">
-      <div><p>{fullDate.format(toDate(date))}</p><h1>{current === 'Home' ? 'Olá, Anelisa' : current}</h1></div>
-      <div className="aw-view" role="group" aria-label="Modo de visualização">
-        <button aria-pressed={view === 'list'} onClick={() => setView('list')}><List size={17}/> Lista</button>
-        <button aria-pressed={view === 'calendar'} onClick={() => setView('calendar')}><CalendarDays size={17}/> Calendário</button>
+    <div className={'aw-layout' + (current === 'Home' ? ' aw-home-layout' : '')}>
+      {current === 'Home' && <aside className="aw-shortcuts" aria-label="Ações rápidas">
+        <h2>Ações rápidas</h2>
+        <button onClick={() => onAdd('demand')}><span className="aw-icon aw-blue"><ClipboardList size={19}/></span>Nova tarefa</button>
+        <button onClick={() => onAdd('routine')}><span className="aw-icon aw-green"><CalendarCheck size={19}/></span>Nova rotina</button>
+      </aside>}
+      <div className="aw-feed">
+        <div className="aw-heading">
+          <div><p>{fullDate.format(toDate(date))}</p><h1>{current === 'Home' ? 'Olá, Anelisa' : current}</h1></div>
+          <div className="aw-view" role="group" aria-label="Modo de visualização">
+            <button aria-pressed={view === 'list'} onClick={() => setView('list')}><List size={17}/> Lista</button>
+            <button aria-pressed={view === 'calendar'} onClick={() => setView('calendar')}><CalendarDays size={17}/> Calendário</button>
+          </div>
+        </div>
+
+        {current === 'Home' && <section className="aw-progress" aria-labelledby="aw-progress-title">
+          <div className="aw-progress-head">
+            <div><h2 id="aw-progress-title">Progresso do dia</h2>
+              <p>{completedToday} de {plannedToday.length} {plannedToday.length === 1 ? 'atividade concluída' : 'atividades concluídas'}</p>
+            </div>
+            <strong>{progress}%</strong>
+          </div>
+          <progress aria-labelledby="aw-progress-title" value={progress} max="100">{progress}%</progress>
+        </section>}
+
+        {view === 'calendar' && <AgendaCalendar key={current} date={date} tasks={calendarTasks}
+          meetings={current === 'Home' || current === 'Reuniões' ? meetings : []}
+          onMeeting={id => { onSection('Reuniões'); setOpenedMeeting(id); setView('list'); }}/>}
+        {view === 'list' && current === 'Home' && <section className="task-panel">
+          <div className="panel-head"><h2>Minha agenda de hoje</h2></div>
+          <TaskRows tasks={[...due, ...routines]} date={date} isDone={isDone} toggle={toggle}/>
+          {todaysMeetings.map(meeting => <button className="aw-meeting-row" key={meeting.id}
+            onClick={() => { onSection('Reuniões'); setOpenedMeeting(meeting.id); }}>
+            <CalendarDays size={18}/><strong>{meeting.title}</strong><span>Reunião</span>
+          </button>)}
+        </section>}
+        {view === 'list' && ['Rotinas', 'Tarefas'].includes(current) && <section className="task-panel">
+          <div className="panel-head"><h2>{current === 'Rotinas' ? 'Minhas rotinas' : 'Minhas tarefas'}</h2>
+            <button className="primary" onClick={() => onAdd(current === 'Rotinas' ? 'routine' : 'demand')}>
+              <Plus size={16}/>{current === 'Rotinas' ? 'Nova rotina' : 'Nova tarefa'}
+            </button>
+          </div>
+          <TaskRows tasks={list} date={date} isDone={isDone} toggle={toggle}/>
+        </section>}
+        {current === 'Reuniões' && <div hidden={view !== 'list'}>{renderMeetings(openedMeeting)}</div>}
+
       </div>
+      {current === 'Home' && <aside className="aw-summary" aria-label="Resumo do dia">
+        <h2>Resumo do dia</h2>
+        <div className="aw-overview">
+          {[[ClipboardList, 'Tarefas', due.filter(task => !isDone(task)).length, 'aw-blue'],
+            [CalendarCheck, 'Rotinas', routines.filter(task => !isDone(task)).length, 'aw-green'],
+            [CalendarDays, 'Reuniões', todaysMeetings.length, 'aw-purple']].map(([Icon, label, count, color]) =>
+            <button key={label} onClick={() => go(label)}><span className={'aw-icon ' + color}><Icon size={19}/></span><span>{label}</span><strong>{count}</strong></button>)}
+        </div>
+      </aside>}
     </div>
-
-    {current === 'Home' && <div className="aw-overview">
-      {[[ClipboardList, 'Tarefas', due.filter(task => !isDone(task)).length],
-        [CalendarCheck, 'Rotinas', routines.filter(task => !isDone(task)).length],
-        [CalendarDays, 'Reuniões', todaysMeetings.length]].map(([Icon, label, count]) =>
-        <button key={label} onClick={() => go(label)}><Icon size={19}/><strong>{count}</strong><span>{label}</span></button>)}
-    </div>}
-
-    {view === 'calendar' && <AgendaCalendar key={current} date={date} tasks={calendarTasks}
-      meetings={current === 'Home' || current === 'Reuniões' ? meetings : []}
-      onMeeting={id => { onSection('Reuniões'); setOpenedMeeting(id); setView('list'); }}/>}
-    {view === 'list' && current === 'Home' && <section className="task-panel">
-      <div className="panel-head"><h2>Minha agenda de hoje</h2></div>
-      <TaskRows tasks={[...due, ...routines]} date={date} isDone={isDone} toggle={toggle}/>
-      {todaysMeetings.map(meeting => <button className="aw-meeting-row" key={meeting.id}
-        onClick={() => { onSection('Reuniões'); setOpenedMeeting(meeting.id); }}>
-        <CalendarDays size={18}/><strong>{meeting.title}</strong><span>Reunião</span>
-      </button>)}
-    </section>}
-    {view === 'list' && ['Rotinas', 'Tarefas'].includes(current) && <section className="task-panel">
-      <div className="panel-head"><h2>{current === 'Rotinas' ? 'Minhas rotinas' : 'Minhas tarefas'}</h2>
-        <button className="primary" onClick={() => onAdd(current === 'Rotinas' ? 'routine' : 'demand')}>
-          <Plus size={16}/>{current === 'Rotinas' ? 'Nova rotina' : 'Nova tarefa'}
-        </button>
-      </div>
-      <TaskRows tasks={list} date={date} isDone={isDone} toggle={toggle}/>
-    </section>}
-    {current === 'Reuniões' && <div hidden={view !== 'list'}>{renderMeetings(openedMeeting)}</div>}
 
     <dialog ref={menu} className="aw-profile" aria-labelledby="aw-profile-title"
       onClick={event => { if (event.target === event.currentTarget) menu.current.close(); }}>

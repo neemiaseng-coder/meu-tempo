@@ -1,19 +1,10 @@
-.anelisa-workspace {
-  --aw-ink: #243830;
-  --aw-muted: #576b61;
-  --aw-line: #e0ebe3;
-  --aw-soft: #e9f3eb;
-  color: var(--aw-ink);
-  width: min(100%, 1040px);
-  padding: 20px clamp(14px, 4vw, 44px) 44px;
-}
 .aw-header, .aw-heading, .aw-calendar-heading, .aw-profile-heading {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
 }
-.aw-header { border-bottom: 1px solid var(--aw-line); padding-bottom: 14px; }
+
 .aw-brand, .aw-nav button, .aw-view button {
   display: inline-flex; align-items: center; justify-content: center; gap: 7px;
   background: transparent; color: var(--aw-ink);
@@ -21,26 +12,17 @@
 .aw-brand { font-weight: 800; padding: 8px 0; white-space: nowrap; }
 .aw-nav { display: flex; gap: 5px; }
 .aw-nav button, .aw-view button { border-radius: 11px; padding: 9px 11px; font-weight: 700; }
-.aw-nav button[aria-current], .aw-view button[aria-pressed=true] { background: var(--aw-soft); color: #255e45; }
+.aw-nav button[aria-current], .aw-view button[aria-pressed=true] { background: var(--aw-soft); color: #1459ad; }
 .aw-nav button:hover, .aw-view button:hover, .aw-day:hover { background: var(--aw-soft); }
 .aw-avatar {
   width: 42px; height: 42px; flex: none; border-radius: 50%;
-  background: #dcebe0; color: #254c37; overflow: hidden; padding: 0; font-weight: 800;
+  background: #e7f0fe; color: #1459ad; overflow: hidden; padding: 0; font-weight: 800;
 }
 .aw-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.aw-heading { margin: 27px 0 18px; flex-wrap: wrap; }
+.aw-heading { margin: 0 0 16px; flex-wrap: wrap; }
 .aw-heading p { color: var(--aw-muted); margin: 0 0 4px; text-transform: capitalize; }
 .aw-heading h1 { margin: 0; font-size: clamp(30px, 6vw, 46px); letter-spacing: -.035em; }
 .aw-view { display: flex; padding: 3px; gap: 3px; border: 1px solid var(--aw-line); border-radius: 14px; background: white; }
-.aw-overview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
-.aw-overview button {
-  display: grid; gap: 6px; justify-items: start; text-align: left; padding: clamp(11px, 3vw, 20px);
-  background: white; color: var(--aw-ink); border: 1px solid var(--aw-line); border-radius: 16px;
-}
-.aw-overview button:hover { border-color: #8eb9a0; }
-.aw-overview svg { color: #387455; }
-.aw-overview strong { font-size: 25px; line-height: 1; }
-.aw-overview span, .aw-empty { color: var(--aw-muted); }
 .aw-empty { margin: 0; padding: 13px 20px 18px; }
 .aw-late { color: #9f3838; }
 .aw-meeting-row {
@@ -53,16 +35,16 @@
 .aw-calendar-heading > div { display: flex; gap: 5px; }
 .aw-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-top: 15px; text-align: center; }
 .aw-calendar-grid > small { color: var(--aw-muted); padding-bottom: 5px; }
-.aw-day { min-height: 39px; position: relative; border-radius: 9px; background: #f5f8f5; color: var(--aw-ink); }
-.aw-day[aria-current=date] { outline: 1px solid #50916d; }
-.aw-day[aria-pressed=true] { background: #2c6349; color: white; }
+.aw-day { min-height: 39px; position: relative; border-radius: 9px; background: #f4f7fc; color: var(--aw-ink); }
+.aw-day[aria-current=date] { outline: 1px solid #4387dc; }
+.aw-day[aria-pressed=true] { background: #1766ca; color: white; }
 .aw-day-dot { position: absolute; bottom: 4px; left: calc(50% - 2px); width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
 .aw-agenda { border-top: 1px solid var(--aw-line); margin-top: 15px; padding-top: 15px; }
 .aw-agenda .aw-empty { padding-left: 0; }
 .aw-agenda ul { list-style: none; padding: 0; margin-bottom: 0; }
 .aw-agenda li { display: flex; align-items: baseline; gap: 9px; padding: 8px 0; }
 .aw-agenda li span { color: var(--aw-muted); font-size: .85rem; }
-.aw-agenda li button { text-align: left; background: transparent; color: #255e45; text-decoration: underline; padding: 0; }
+.aw-agenda li button { text-align: left; background: transparent; color: #1459ad; text-decoration: underline; padding: 0; }
 .aw-profile {
   position: fixed; inset: 0 0 0 auto; margin: 0; width: min(360px, 92vw); max-width: none;
   height: 100dvh; max-height: none; padding: 0; border: 0; color: var(--aw-ink);
@@ -84,3 +66,101 @@
   .aw-avatar { grid-column: 2; grid-row: 1; }
 }
 @media (prefers-reduced-motion: reduce) { .aw-profile[open] { animation: none; } }
+
+.anelisa-workspace {
+  --aw-ink: #172338;
+  --aw-muted: #51627a;
+  --aw-line: #dbe6f4;
+  --aw-soft: #e7f1ff;
+  --aw-blue: #1465cf;
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0 0 40px;
+  color: var(--aw-ink);
+  background: #eef4fc;
+}
+.anelisa-workspace .aw-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) auto minmax(130px, 1fr);
+  min-height: 64px;
+  padding: 0 clamp(12px, 3vw, 36px);
+  background: #fff;
+  border-bottom: 1px solid var(--aw-line);
+  box-shadow: 0 2px 9px #183b6b12;
+}
+.aw-brand { justify-self: start; color: var(--aw-blue); font-size: 1.08rem; }
+.aw-logo, .aw-icon { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 50%; }
+.aw-logo { color: white; background: var(--aw-blue); }
+.aw-header .aw-avatar { justify-self: end; }
+.aw-nav { align-self: stretch; gap: 4px; }
+.aw-nav button {
+  min-width: clamp(75px, 10vw, 122px);
+  border-radius: 8px 8px 0 0;
+  border-bottom: 3px solid transparent;
+  padding: 8px 10px 5px;
+  color: var(--aw-muted);
+}
+.aw-nav button[aria-current] { border-bottom-color: var(--aw-blue); color: var(--aw-blue); }
+.aw-layout { width: min(100%, 1340px); margin: 0 auto; padding: 24px clamp(12px, 3vw, 34px); }
+.aw-feed { min-width: 0; width: min(100%, 790px); margin: 0 auto; }
+.aw-home-layout { display: grid; grid-template-columns: minmax(155px, 1fr) minmax(0, 2.9fr) minmax(160px, 1fr); gap: 22px; align-items: start; }
+.aw-home-layout .aw-feed { width: 100%; }
+.aw-shortcuts, .aw-summary { min-width: 0; padding: 11px 0; }
+.aw-shortcuts h2, .aw-summary h2 { font-size: 1rem; color: var(--aw-muted); margin: 0 0 10px; }
+.aw-shortcuts button, .aw-overview button {
+  width: 100%; display: flex; align-items: center; text-align: left; gap: 8px;
+  background: transparent; color: var(--aw-ink); border-radius: 10px;
+  padding: 7px 4px; font-weight: 700;
+}
+.aw-shortcuts button:hover, .aw-overview button:hover { background: #e1edfc; }
+.aw-overview strong { margin-left: auto; font-variant-numeric: tabular-nums; }
+.aw-blue { background: #dbeafe; color: #1459ad; }
+.aw-green { background: #dcf5e8; color: #0d6c50; }
+.aw-purple { background: #eee4ff; color: #6033a6; }
+.aw-progress, .anelisa-workspace .task-panel {
+  background: #fff;
+  border: 1px solid var(--aw-line);
+  box-shadow: 0 2px 8px #1f4b7a0c !important;
+}
+.aw-progress { padding: 17px 18px; margin-bottom: 14px; border-radius: 14px; }
+.aw-progress-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
+.aw-progress h2, .aw-progress p { margin: 0; }
+.aw-progress h2 { font-size: 1.02rem; }
+.aw-progress p { color: var(--aw-muted); margin-top: 3px; font-size: .9rem; }
+.aw-progress strong { color: var(--aw-blue); font-size: 1.22rem; }
+.aw-progress progress { appearance: none; display: block; width: 100%; height: 9px; border: 0; border-radius: 12px; overflow: hidden; background: #e4effd; }
+.aw-progress progress::-webkit-progress-bar { background: #e4effd; }
+.aw-progress progress::-webkit-progress-value { background: #2e80ec; border-radius: 12px; transition: width .25s ease; }
+.aw-progress progress::-moz-progress-bar { background: #2e80ec; border-radius: 12px; }
+.anelisa-workspace .primary { background: var(--aw-blue); color: #fff; }
+.anelisa-workspace .primary:hover { background: #0e54b0; }
+.anelisa-workspace .myday-check.checked { background: var(--aw-blue); border-color: var(--aw-blue); }
+.anelisa-workspace .meeting-date { color: #1459ad; background: var(--aw-soft); }
+.anelisa-workspace .anelisa-task, .anelisa-workspace .meeting-editor { border-color: var(--aw-line); }
+@media (max-width: 900px) {
+  .aw-home-layout { grid-template-columns: minmax(0, 1fr); max-width: 790px; gap: 12px; }
+  .aw-shortcuts { order: 2; display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 0; }
+  .aw-shortcuts h2, .aw-summary h2 { width: 100%; margin: 0; }
+  .aw-shortcuts button { width: auto; }
+  .aw-summary { order: 3; }
+  .aw-overview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .aw-overview button { padding-inline: 3px; }
+}
+@media (max-width: 620px) {
+  .anelisa-workspace .aw-header { grid-template-columns: minmax(0, 1fr) auto; gap: 2px; }
+  .aw-brand { padding-block: 5px; }
+  .aw-nav button { min-width: 0; }
+  .aw-header .aw-avatar { width: 36px; height: 36px; }
+  .aw-layout { padding-top: 16px; }
+  .aw-overview button { display: grid; grid-template-columns: auto 1fr; gap: 4px; }
+  .aw-overview button > span:nth-child(2) { grid-column: 1 / -1; font-size: .8rem; }
+  .aw-overview strong { grid-column: 2; grid-row: 1; margin: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .aw-progress progress::-webkit-progress-value { transition: none; } }
+.app.aw-app { overflow-x: clip; }
+.aw-app .modal .primary { background: #1465cf; color: #fff; }
+.aw-app .modal .primary:hover { background: #0e54b0; }

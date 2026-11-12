@@ -4,9 +4,9 @@ import { CalendarDays, Check, Plus, Sparkles } from 'lucide-react';
 const formatDate = date => new Date(date + 'T12:00:00').toLocaleDateString('pt-BR');
 const newDraft = date => ({ meeting_date: date, title: '', agenda: '', participants: '', discussion_notes: '' });
 
-export default function Meetings({ client, userId, today, meetings, tasks, onMeeting, onTask }) {
+export default function Meetings({ client, userId, today, meetings, tasks, onMeeting, onTask, initialMeetingId }) {
   const [draft, setDraft] = useState(null);
-  const [open, setOpen] = useState(null);
+  const [open, setOpen] = useState(initialMeetingId ?? null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const selected = meetings.find(meeting => meeting.id === open);

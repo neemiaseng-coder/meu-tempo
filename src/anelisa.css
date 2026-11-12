@@ -19,9 +19,9 @@
   background: #e7f0fe; color: #1459ad; overflow: hidden; padding: 0; font-weight: 400;
 }
 .aw-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.aw-heading { margin: 0 0 16px; flex-wrap: wrap; }
+.aw-heading { margin: 0 0 12px; flex-wrap: wrap; }
 .aw-heading p { color: var(--aw-muted); margin: 0 0 4px; text-transform: capitalize; }
-.aw-heading h1 { margin: 0; font-size: clamp(30px, 6vw, 46px); letter-spacing: -.035em; }
+.aw-heading h1 { margin: 0; font-size: clamp(26px, 4vw, 36px); letter-spacing: -.028em; }
 .aw-view { display: flex; padding: 3px; gap: 3px; border: 1px solid var(--aw-line); border-radius: 14px; background: white; }
 .aw-empty { margin: 0; padding: 13px 20px 18px; }
 .aw-late { color: #9f3838; }
@@ -35,7 +35,7 @@
 .aw-calendar-heading > div { display: flex; gap: 5px; }
 .aw-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-top: 15px; text-align: center; }
 .aw-calendar-grid > small { color: var(--aw-muted); padding-bottom: 5px; }
-.aw-day { min-height: 39px; position: relative; border-radius: 9px; background: #f4f7fc; color: var(--aw-ink); }
+.aw-day { min-height: 36px; position: relative; border-radius: 9px; background: #f4f7fc; color: var(--aw-ink); }
 .aw-day[aria-current=date] { outline: 1px solid #4387dc; }
 .aw-day[aria-pressed=true] { background: #1766ca; color: white; }
 .aw-day-dot { position: absolute; bottom: 4px; left: calc(50% - 2px); width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
@@ -73,6 +73,8 @@
   --aw-line: #dbe6f4;
   --aw-soft: #e7f1ff;
   --aw-blue: #1465cf;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 14px;
   width: 100%;
   min-height: 100vh;
   margin: 0;
@@ -86,7 +88,7 @@
   z-index: 30;
   display: grid;
   grid-template-columns: minmax(130px, 1fr) auto minmax(130px, 1fr);
-  min-height: 64px;
+  min-height: 56px;
   padding: 0 clamp(12px, 3vw, 36px);
   background: #fff;
   border-bottom: 1px solid var(--aw-line);
@@ -105,14 +107,14 @@
   color: var(--aw-muted);
 }
 .aw-nav button[aria-current] { border-bottom-color: var(--aw-blue); color: var(--aw-blue); }
-.aw-layout { width: min(100%, 1340px); margin: 0 auto; padding: 24px clamp(12px, 3vw, 34px); }
+.aw-layout { width: min(100%, 1340px); margin: 0 auto; padding: 18px clamp(12px, 3vw, 34px); }
 .aw-feed { min-width: 0; width: min(100%, 1180px); margin: 0 auto; }
 .aw-progress, .anelisa-workspace .task-panel {
   background: #fff;
   border: 1px solid var(--aw-line);
   box-shadow: 0 2px 8px #1f4b7a0c !important;
 }
-.aw-progress { padding: 20px; margin-bottom: 16px; border-radius: 16px; background: linear-gradient(115deg, #fff 18%, #f1f5ff 100%); }
+.aw-progress { padding: 16px; margin-bottom: 12px; border-radius: 16px; background: linear-gradient(115deg, #fff 18%, #f1f5ff 100%); }
 .aw-progress-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
 .aw-progress h2, .aw-progress p { margin: 0; }
 .aw-progress h2 { font-size: 1.02rem; }
@@ -163,6 +165,7 @@
 .aw-activity-dialog [role=alert] { color: #9f3838; }
 
 .anelisa-workspace :is(h1, h2, h3, h4, b, strong, label, button, summary, legend) {
+  font-family: inherit;
   font-weight: 400;
 }
 .anelisa-workspace .meeting-editor :is(input, textarea, select) {
@@ -178,7 +181,7 @@
 }
 
 .aw-daily-quote {
-  display: flex; align-items: center; gap: 9px; margin: 0 0 14px; padding: 10px 13px;
+  display: flex; align-items: center; gap: 9px; margin: 0 0 14px; padding: 8px 11px;
   background: linear-gradient(110deg, #e8f2ff, #f1ebfd); color: #374c79; border-radius: 12px;
 }
 .aw-daily-quote svg { flex: none; color: #5861b6; }
@@ -192,3 +195,11 @@
 .aw-calendar-legend { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .aw-calendar-legend span { border-radius: 10px; padding: 3px 8px; font-size: .78rem; }
 .aw-holiday-name { color: #883d34; margin: 5px 0 0; }
+
+.anelisa-workspace .panel-head { padding: 13px 16px; gap: 8px; }
+.anelisa-workspace .anelisa-task, .aw-meeting-row { padding-block: 10px; }
+.anelisa-workspace :is(.primary, .secondary) { padding-block: 8px; }
+.anelisa-workspace .aw-nav button svg { width: 19px; height: 19px; }
+@media (max-width: 620px) {
+  .anelisa-workspace :is(input:not([type=checkbox]), select, textarea) { font-size: 16px; }
+}

@@ -1,9 +1,11 @@
 import React, { useRef, useState } from 'react';
 import { CalendarCheck, CalendarDays, Check, ChevronLeft, ChevronRight, ClipboardList,
-  House, List, LogOut, Plus, Settings, X } from 'lucide-react';
+  House, List, LogOut, Pencil, Plus, Settings, X } from 'lucide-react';
+import ActivityEditor from './ActivityEditor.jsx';
 import './anelisa.css';
 
 const tabs = [['Home', House], ['Tarefas', ClipboardList], ['Rotinas', CalendarCheck], ['Reuniões', CalendarDays]];
+const shortWeekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const frequencies = { daily: 'Diária', weekly: 'Semanal', monthly: 'Mensal' };
 const fullDate = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
 const monthLabel = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' });
@@ -18,28 +20,36 @@ export function routineOccurs(task, date) {
   const schedule = task.recurrence_days ?? [];
   return task.recurrence_type === 'daily'
     || (task.recurrence_type === 'weekly' && schedule.includes(day.getDay()))
-    || (task.recurrence_type === 'monthly' && schedule.includes(day.getDate()));
+    || (task.recurrence_type === 'monthly' && (schedule.length ? schedule.includes(day.getDate()) : task.scheduled_date === date));
 }
 
-function TaskRows({ tasks, date, isDone, toggle }) {
+function TaskRows({ tasks, date, isDone, toggle, onEdit }) {
   if (!tasks.length) return <p className="aw-empty">Nenhuma atividade nesta lista.</p>;
   return tasks.map(task => {
     const routine = isRoutine(task);
     const scheduled = !routine || routineOccurs(task, date);
     const done = isDone(task);
-    const status = done ? 'Concluída' : routine ? scheduled ? 'Hoje' : 'Fora da programação de hoje'
+    const variableMonth = routine && task.recurrence_type === 'monthly' && !task.recurrence_days?.length;
+    const status = done ? 'Concluída' : routine ? scheduled ? 'Hoje' : variableMonth && !task.scheduled_date ? 'Data a definir' : 'Fora da programação de hoje'
       : !task.due_date ? 'Sem prazo' : task.due_date < date ? 'Em atraso' : task.due_date === date ? 'Hoje' : 'Agendada';
+    const scheduledLabel = routine && task.recurrence_type === 'weekly'
+      ? (task.recurrence_days ?? []).map(day => shortWeekdays[day]).join(', ')
+      : variableMonth && task.scheduled_date ? toDate(task.scheduled_date).toLocaleDateString('pt-BR') : '';
+    const subtitle = routine ? [frequencies[task.recurrence_type], scheduledLabel].filter(Boolean).join(' · ')
+      : task.due_date && toDate(task.due_date).toLocaleDateString('pt-BR');
     return <div className="anelisa-task" key={task.id}>
       <button className={'myday-check' + (done ? ' checked' : '')} disabled={!scheduled}
         aria-pressed={done} aria-label={task.title} onClick={() => toggle(task)}>{done && <Check size={16}/>}</button>
-      <div><strong>{task.title}</strong><small>{routine ? frequencies[task.recurrence_type] : task.due_date &&
-        toDate(task.due_date).toLocaleDateString('pt-BR')}</small></div>
+      <div><strong>{task.title}</strong><small>{subtitle}</small>
+        {task.description && <details className="aw-task-description"><summary>Detalhes</summary><p>{task.description}</p></details>}
+      </div>
       <span className={status === 'Em atraso' ? 'aw-late' : undefined}>{status}</span>
+      <button className="aw-edit" aria-label={'Editar ' + task.title} onClick={() => onEdit(task)}><Pencil size={16}/></button>
     </div>;
   });
 }
 
-function AgendaCalendar({ date, tasks, meetings, onMeeting }) {
+function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit }) {
   const [selected, setSelected] = useState(date);
   const [month, setMonth] = useState(() => new Date(toDate(date).getFullYear(), toDate(date).getMonth(), 1, 12));
   const year = month.getFullYear();
@@ -88,15 +98,17 @@ function AgendaCalendar({ date, tasks, meetings, onMeeting }) {
       <h3>{fullDate.format(toDate(selected))}</h3>
       {agenda.length ? <ul>{agenda.map(item => <li key={item.kind + item.id}>
         <span>{item.kind}</span>
-        {item.kind === 'Reunião' ? <button onClick={() => onMeeting(item.id)}>{item.title}</button> : <strong>{item.title}</strong>}
+        {item.kind === 'Reunião' ? <button onClick={() => onMeeting(item.id)}>{item.title}</button> : <button onClick={() => onEdit(item)}>{item.title}</button>}
       </li>)}</ul> : <p className="aw-empty">Nenhum item para este dia.</p>}
     </div>
   </section>;
 }
 
-export default function AnelisaWorkspace({ section, onSection, tasks, date, isDone, toggle, onAdd,
+export default function AnelisaWorkspace({ section, onSection, tasks, date, isDone, toggle, onSaveActivity,
   meetings, renderMeetings, signOut, userId, email }) {
   const current = tabs.some(([label]) => label === section) ? section : 'Home';
+  const [activity, setActivity] = useState(null);
+  const onAdd = type => setActivity({ task_type: type });
   const [view, setView] = useState('list');
   const [openedMeeting, setOpenedMeeting] = useState(null);
   const [photo, setPhoto] = useState(() => localStorage.getItem('meu-tempo-photo-' + userId) || '');
@@ -149,12 +161,7 @@ export default function AnelisaWorkspace({ section, onSection, tasks, date, isDo
         onClick={() => menu.current.showModal()}>{photo ? <img src={photo} alt=""/> : 'A'}</button>
     </header>
 
-    <div className={'aw-layout' + (current === 'Home' ? ' aw-home-layout' : '')}>
-      {current === 'Home' && <aside className="aw-shortcuts" aria-label="Ações rápidas">
-        <h2>Ações rápidas</h2>
-        <button onClick={() => onAdd('demand')}><span className="aw-icon aw-blue"><ClipboardList size={19}/></span>Nova tarefa</button>
-        <button onClick={() => onAdd('routine')}><span className="aw-icon aw-green"><CalendarCheck size={19}/></span>Nova rotina</button>
-      </aside>}
+    <div className="aw-layout">
       <div className="aw-feed">
         <div className="aw-heading">
           <div><p>{fullDate.format(toDate(date))}</p><h1>{current === 'Home' ? 'Olá, Anelisa' : current}</h1></div>
@@ -174,12 +181,17 @@ export default function AnelisaWorkspace({ section, onSection, tasks, date, isDo
           <progress aria-labelledby="aw-progress-title" value={progress} max="100">{progress}%</progress>
         </section>}
 
-        {view === 'calendar' && <AgendaCalendar key={current} date={date} tasks={calendarTasks}
+        {view === 'calendar' && <AgendaCalendar key={current} date={date} tasks={calendarTasks} onEdit={setActivity}
           meetings={current === 'Home' || current === 'Reuniões' ? meetings : []}
           onMeeting={id => { onSection('Reuniões'); setOpenedMeeting(id); setView('list'); }}/>}
         {view === 'list' && current === 'Home' && <section className="task-panel">
-          <div className="panel-head"><h2>Minha agenda de hoje</h2></div>
-          <TaskRows tasks={[...due, ...routines]} date={date} isDone={isDone} toggle={toggle}/>
+          <div className="panel-head"><h2>Minha agenda de hoje</h2>
+            <div className="aw-quick-actions">
+              <button className="secondary" onClick={() => onAdd('demand')}><Plus size={15}/> Tarefa</button>
+              <button className="secondary" onClick={() => onAdd('routine')}><Plus size={15}/> Rotina</button>
+            </div>
+          </div>
+          <TaskRows tasks={[...due, ...routines]} date={date} isDone={isDone} toggle={toggle} onEdit={setActivity}/>
           {todaysMeetings.map(meeting => <button className="aw-meeting-row" key={meeting.id}
             onClick={() => { onSection('Reuniões'); setOpenedMeeting(meeting.id); }}>
             <CalendarDays size={18}/><strong>{meeting.title}</strong><span>Reunião</span>
@@ -191,21 +203,14 @@ export default function AnelisaWorkspace({ section, onSection, tasks, date, isDo
               <Plus size={16}/>{current === 'Rotinas' ? 'Nova rotina' : 'Nova tarefa'}
             </button>
           </div>
-          <TaskRows tasks={list} date={date} isDone={isDone} toggle={toggle}/>
+          <TaskRows tasks={list} date={date} isDone={isDone} toggle={toggle} onEdit={setActivity}/>
         </section>}
         {current === 'Reuniões' && <div hidden={view !== 'list'}>{renderMeetings(openedMeeting)}</div>}
 
       </div>
-      {current === 'Home' && <aside className="aw-summary" aria-label="Resumo do dia">
-        <h2>Resumo do dia</h2>
-        <div className="aw-overview">
-          {[[ClipboardList, 'Tarefas', due.filter(task => !isDone(task)).length, 'aw-blue'],
-            [CalendarCheck, 'Rotinas', routines.filter(task => !isDone(task)).length, 'aw-green'],
-            [CalendarDays, 'Reuniões', todaysMeetings.length, 'aw-purple']].map(([Icon, label, count, color]) =>
-            <button key={label} onClick={() => go(label)}><span className={'aw-icon ' + color}><Icon size={19}/></span><span>{label}</span><strong>{count}</strong></button>)}
-        </div>
-      </aside>}
     </div>
+
+    {activity && <ActivityEditor task={activity} date={date} onSave={onSaveActivity} onClose={() => setActivity(null)}/>}
 
     <dialog ref={menu} className="aw-profile" aria-labelledby="aw-profile-title"
       onClick={event => { if (event.target === event.currentTarget) menu.current.close(); }}>

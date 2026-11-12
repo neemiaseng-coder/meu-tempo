@@ -78,7 +78,7 @@
   margin: 0;
   padding: 0 0 40px;
   color: var(--aw-ink);
-  background: #eef4fc;
+  background: #f2f6fb;
 }
 .anelisa-workspace .aw-header {
   position: sticky;
@@ -106,21 +106,7 @@
 }
 .aw-nav button[aria-current] { border-bottom-color: var(--aw-blue); color: var(--aw-blue); }
 .aw-layout { width: min(100%, 1340px); margin: 0 auto; padding: 24px clamp(12px, 3vw, 34px); }
-.aw-feed { min-width: 0; width: min(100%, 790px); margin: 0 auto; }
-.aw-home-layout { display: grid; grid-template-columns: minmax(155px, 1fr) minmax(0, 2.9fr) minmax(160px, 1fr); gap: 22px; align-items: start; }
-.aw-home-layout .aw-feed { width: 100%; }
-.aw-shortcuts, .aw-summary { min-width: 0; padding: 11px 0; }
-.aw-shortcuts h2, .aw-summary h2 { font-size: 1rem; color: var(--aw-muted); margin: 0 0 10px; }
-.aw-shortcuts button, .aw-overview button {
-  width: 100%; display: flex; align-items: center; text-align: left; gap: 8px;
-  background: transparent; color: var(--aw-ink); border-radius: 10px;
-  padding: 7px 4px; font-weight: 700;
-}
-.aw-shortcuts button:hover, .aw-overview button:hover { background: #e1edfc; }
-.aw-overview strong { margin-left: auto; font-variant-numeric: tabular-nums; }
-.aw-blue { background: #dbeafe; color: #1459ad; }
-.aw-green { background: #dcf5e8; color: #0d6c50; }
-.aw-purple { background: #eee4ff; color: #6033a6; }
+.aw-feed { min-width: 0; width: min(100%, 1180px); margin: 0 auto; }
 .aw-progress, .anelisa-workspace .task-panel {
   background: #fff;
   border: 1px solid var(--aw-line);
@@ -141,26 +127,37 @@
 .anelisa-workspace .myday-check.checked { background: var(--aw-blue); border-color: var(--aw-blue); }
 .anelisa-workspace .meeting-date { color: #1459ad; background: var(--aw-soft); }
 .anelisa-workspace .anelisa-task, .anelisa-workspace .meeting-editor { border-color: var(--aw-line); }
-@media (max-width: 900px) {
-  .aw-home-layout { grid-template-columns: minmax(0, 1fr); max-width: 790px; gap: 12px; }
-  .aw-shortcuts { order: 2; display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 0; }
-  .aw-shortcuts h2, .aw-summary h2 { width: 100%; margin: 0; }
-  .aw-shortcuts button { width: auto; }
-  .aw-summary { order: 3; }
-  .aw-overview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-  .aw-overview button { padding-inline: 3px; }
-}
 @media (max-width: 620px) {
   .anelisa-workspace .aw-header { grid-template-columns: minmax(0, 1fr) auto; gap: 2px; }
   .aw-brand { padding-block: 5px; }
   .aw-nav button { min-width: 0; }
   .aw-header .aw-avatar { width: 36px; height: 36px; }
   .aw-layout { padding-top: 16px; }
-  .aw-overview button { display: grid; grid-template-columns: auto 1fr; gap: 4px; }
-  .aw-overview button > span:nth-child(2) { grid-column: 1 / -1; font-size: .8rem; }
-  .aw-overview strong { grid-column: 2; grid-row: 1; margin: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .aw-progress progress::-webkit-progress-value { transition: none; } }
 .app.aw-app { overflow-x: clip; }
 .aw-app .modal .primary { background: #1465cf; color: #fff; }
 .aw-app .modal .primary:hover { background: #0e54b0; }
+.aw-quick-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.anelisa-workspace .anelisa-task { grid-template-columns: auto minmax(0, 1fr) auto auto; }
+.aw-task-description {
+  margin: 3px 0 0; color: var(--aw-muted);
+  white-space: pre-line; overflow-wrap: anywhere; font-size: .88rem;
+}
+.aw-task-description summary { cursor: pointer; }
+.aw-task-description p { margin: 4px 0 0; }
+.aw-edit { display: grid; place-items: center; border-radius: 8px; min-width: 34px; height: 34px; color: var(--aw-blue); background: var(--aw-soft); }
+.aw-activity-dialog {
+  width: min(94vw, 510px); max-height: 90dvh; padding: 0; border: 1px solid var(--aw-line);
+  border-radius: 15px; color: var(--aw-ink); background: #fff;
+}
+.aw-activity-dialog::backdrop { background: #14274466; }
+.aw-activity-dialog form { padding: 20px; }
+.aw-activity-dialog fieldset { border: 0; padding: 0; margin: 14px 0; min-width: 0; }
+.aw-activity-dialog label { display: grid; gap: 5px; margin-bottom: 11px; }
+.aw-activity-dialog :is(input:not([type=checkbox]), select, textarea) {
+  width: 100%; min-width: 0; padding: 8px; border: 1px solid var(--aw-line); border-radius: 7px; font: inherit;
+}
+.aw-activity-dialog .aw-weekdays { display: flex; flex-wrap: wrap; gap: 8px; }
+.aw-activity-dialog .aw-weekdays label { display: flex; align-items: center; gap: 4px; }
+.aw-activity-dialog [role=alert] { color: #9f3838; }

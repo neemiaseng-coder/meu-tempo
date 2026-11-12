@@ -1,8 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, CalendarCheck, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, ClipboardList,
-  House, List, LogOut, Pencil, Settings, Sparkles, X } from 'lucide-react';
+import { ArrowLeft, CalendarCheck, CalendarDays, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ClipboardList,
+  CirclePlus, House, List, LogOut, MessageCircle, Music2, Pencil, Repeat2, Settings, Sparkles, SquarePen, Video, X } from 'lucide-react';
 import ActivityEditor from './ActivityEditor.jsx';
 import './anelisa.css';
+
+const appearance = {
+  facebook: { label: 'Facebook', Brand: House, Task: ClipboardList, Routine: CalendarCheck, Meeting: CalendarDays },
+  instagram: { label: 'Instagram', Brand: Camera, Task: SquarePen, Routine: Repeat2, Meeting: MessageCircle },
+  tiktok: { label: 'TikTok', Brand: Music2, Task: CirclePlus, Routine: Repeat2, Meeting: Video },
+};
 
 const shortWeekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const frequencies = { daily: 'Diária', weekly: 'Semanal', monthly: 'Mensal' };
@@ -112,6 +118,21 @@ function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holidaysForM
 
 export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveActivity,
   meetings, renderMeetings, signOut, userId, email, holidaysForMonth, dailyQuote }) {
+  const themeKey = 'meu-tempo-theme-' + userId;
+  const [theme, setTheme] = useState(() => {
+    try {
+      const saved = localStorage.getItem(themeKey);
+      return Object.hasOwn(appearance, saved) ? saved : 'facebook';
+    } catch {
+      return 'facebook';
+    }
+  });
+  const { Brand, Task, Routine, Meeting } = appearance[theme];
+  function selectTheme(next) {
+    setTheme(next);
+    try { localStorage.setItem(themeKey, next); } catch { /* A escolha continua valendo na sessão. */ }
+  }
+
   const [route, setRoute] = useState(null);
   const [view, setView] = useState('list');
   const meetingMenu = route?.screen === 'meeting-menu';
@@ -177,10 +198,10 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
     reader.readAsDataURL(file);
   }
 
-  return <main className="anelisa-workspace">
+  return <main className="anelisa-workspace" data-aw-theme={theme}>
     <header className="aw-header">
       <button className="aw-brand" aria-label="Início do Meu Tempo" onClick={goHome}>
-        <span className="aw-logo"><House size={19}/></span> <span>Meu Tempo</span>
+        <span className="aw-logo"><Brand size={19}/></span> <span>Meu Tempo</span>
       </button>
       <button className="aw-avatar" aria-label="Abrir configurações do perfil" aria-haspopup="dialog"
         onClick={() => menu.current.showModal()}>{photo ? <img src={photo} alt=""/> : 'A'}</button>
@@ -191,7 +212,7 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
         <div className="aw-meeting-nav">
           {meetingRoute && <button className="secondary aw-home-back" onClick={goHome}><ArrowLeft size={17}/> Início</button>}
           <button className="secondary aw-meeting-trigger" aria-expanded={meetingMenu} aria-controls="aw-meeting-options"
-            onClick={() => meetingMenu ? goHome() : openRoute({ screen: 'meeting-menu' })}><CalendarDays size={18}/> Reunião <ChevronDown size={15}/></button>
+            onClick={() => meetingMenu ? goHome() : openRoute({ screen: 'meeting-menu' })}><Meeting size={18}/> Reunião <ChevronDown size={15}/></button>
           {meetingMenu && <div id="aw-meeting-options" className="aw-meeting-options">
             <button onClick={() => openRoute({ screen: 'meeting', mode: 'start' })}>Iniciar reunião</button>
             <button onClick={() => openRoute({ screen: 'meeting', mode: 'history' })}>Reuniões realizadas</button>
@@ -206,9 +227,10 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
             </div>
           </div>
           <p className="aw-daily-quote"><Sparkles size={17} aria-hidden="true"/>{dailyQuote}</p>
+          <div className="aw-home-content">
           <div className="aw-action-cards">
-            <button onClick={() => onAdd('demand')}><ClipboardList size={20}/> Incluir tarefa</button>
-            <button onClick={() => onAdd('routine')}><CalendarCheck size={20}/> Incluir rotina</button>
+            <button onClick={() => onAdd('demand')}><span className="aw-action-icon"><Task size={20}/></span> Incluir tarefa</button>
+            <button onClick={() => onAdd('routine')}><span className="aw-action-icon"><Routine size={20}/></span> Incluir rotina</button>
           </div>
           <section className="aw-progress" aria-labelledby="aw-progress-title">
             <div className="aw-progress-head">
@@ -219,18 +241,21 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
             </div>
             <progress aria-labelledby="aw-progress-title" value={progress} max="100">{progress}%</progress>
           </section>
+          <div className="aw-home-agenda">
           {view === 'calendar' ? <AgendaCalendar date={date} tasks={active} holidaysForMonth={holidaysForMonth}
             meetings={meetings} onEdit={onEdit} onMeeting={openMeeting}/> : <section className="task-panel">
             <div className="panel-head"><h2>Minha agenda de hoje</h2></div>
             <TaskRows tasks={agendaToday} date={date} isDone={isDone} toggle={toggle} onEdit={onEdit}/>
             {todaysMeetings.map(meeting => <button className="aw-meeting-row" key={meeting.id} onClick={() => openMeeting(meeting.id)}>
-              <CalendarDays size={18}/><strong>{meeting.title}</strong><span>Reunião</span>
+              <Meeting size={18}/><strong>{meeting.title}</strong><span>Reunião</span>
             </button>)}
           </section>}
           {remainingActivities.length > 0 && <details className="task-panel aw-other-activities">
             <summary>Outras tarefas e rotinas</summary>
             <TaskRows tasks={remainingActivities} date={date} isDone={isDone} toggle={toggle} onEdit={onEdit}/>
           </details>}
+          </div>
+          </div>
         </>}
       </div>
     </div>
@@ -245,6 +270,13 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
           <button className="secondary" aria-label="Fechar configurações" onClick={() => menu.current.close()}><X size={18}/></button>
         </div>
         <p><strong>Anelisa</strong><br/>{email}</p>
+        <fieldset className="aw-theme-picker">
+          <legend>Tema</legend>
+          {Object.entries(appearance).map(([key, option]) => <label key={key}>
+            <input type="radio" name="aw-theme" value={key} checked={theme === key} onChange={() => selectTheme(key)}/>
+            <option.Brand size={17} aria-hidden="true"/> {option.label}
+          </label>)}
+        </fieldset>
         <label>Alterar foto neste navegador<input type="file" accept="image/jpeg,image/png,image/webp" onChange={changePhoto}/></label>
         {photoError && <p role="alert">{photoError}</p>}
         <button className="secondary" onClick={signOut}><LogOut size={17}/> Sair da conta</button>

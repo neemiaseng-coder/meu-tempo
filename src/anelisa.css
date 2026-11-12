@@ -77,7 +77,7 @@
   margin: 0;
   padding: 0 0 40px;
   color: var(--aw-ink);
-  background: linear-gradient(145deg, #eef5ff 0%, #f8faff 55%, #f2f5fc 100%);
+  background: var(--aw-page);
 }
 .anelisa-workspace .aw-header {
   position: sticky;
@@ -93,7 +93,7 @@
 }
 .aw-brand { justify-self: start; color: var(--aw-blue); font-size: 1.08rem; }
 .aw-logo, .aw-icon { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 50%; }
-.aw-logo { color: white; background: linear-gradient(140deg, #4387e3, #325bb6); }
+.aw-logo { color: white; background: #1769d5; }
 .aw-header .aw-avatar { justify-self: end; }
 .aw-layout { width: min(100%, 1340px); margin: 0 auto; padding: 18px clamp(12px, 3vw, 34px); }
 .aw-feed { min-width: 0; width: min(100%, 1180px); margin: 0 auto; }
@@ -102,7 +102,7 @@
   border: 1px solid var(--aw-line);
   box-shadow: 0 2px 8px #1f4b7a0c !important;
 }
-.aw-progress { padding: 16px; margin-bottom: 12px; border-radius: 16px; background: linear-gradient(115deg, #fff 18%, #f1f5ff 100%); }
+.aw-progress { padding: 16px; margin-bottom: 12px; border-radius: 16px; background: var(--aw-soft); }
 .aw-progress-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
 .aw-progress h2, .aw-progress p { margin: 0; }
 .aw-progress h2 { font-size: 1.02rem; }
@@ -110,9 +110,9 @@
 .aw-progress strong { color: #264c95; font-size: 1.4rem; font-variant-numeric: tabular-nums; padding: 4px 11px; border-radius: 20px; background: #e8efff; }
 .aw-progress progress { appearance: none; display: block; width: 100%; height: 15px; border: 0; border-radius: 20px; overflow: hidden; background: #dfe9fa; }
 .aw-progress progress::-webkit-progress-bar { background: #dfe9fa; }
-.aw-progress progress::-webkit-progress-value { background: linear-gradient(90deg, #2876dd, #5169d9 58%, #7155c7); border-radius: 20px; transition: width .25s ease; }
-.aw-progress progress::-moz-progress-bar { background: linear-gradient(90deg, #2876dd, #5169d9 58%, #7155c7); border-radius: 20px; }
-.anelisa-workspace .primary { background: linear-gradient(125deg, #1465cf, #3b5abb); color: #fff; }
+.aw-progress progress::-webkit-progress-value { background: var(--aw-blue); border-radius: 20px; transition: width .25s ease; }
+.aw-progress progress::-moz-progress-bar { background: var(--aw-blue); border-radius: 20px; }
+.anelisa-workspace .primary { background: var(--aw-blue); color: #fff; }
 .anelisa-workspace .primary:hover { background: #0e54b0; }
 .anelisa-workspace .myday-check.checked { background: var(--aw-blue); border-color: var(--aw-blue); }
 .anelisa-workspace .meeting-date { color: #1459ad; background: var(--aw-soft); }
@@ -168,7 +168,7 @@
 
 .aw-daily-quote {
   display: flex; align-items: center; gap: 9px; margin: 0 0 14px; padding: 8px 11px;
-  background: linear-gradient(110deg, #e8f2ff, #f1ebfd); color: #374c79; border-radius: 12px;
+  background: var(--aw-soft); color: #374c79; border-radius: 12px;
 }
 .aw-daily-quote svg { flex: none; color: #5861b6; }
 [data-day-type="saturday"] { --aw-day-tint: #e0edff; --aw-day-ink: #254d84; }
@@ -205,10 +205,100 @@
 .aw-action-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-bottom: 12px; }
 .aw-action-cards button {
   display: flex; align-items: center; gap: 9px; padding: 10px 12px; text-align: left;
-  background: linear-gradient(115deg, #edf5ff, #fff); border: 1px solid var(--aw-line);
+  background: var(--aw-soft); border: 1px solid var(--aw-line);
   border-radius: 12px; color: #22528d;
 }
-.aw-action-cards button:last-child { background: linear-gradient(115deg, #f0edff, #fff); color: #554486; }
+.aw-action-cards button:last-child { background: var(--aw-alt-soft); color: #554486; }
 .aw-action-cards button:hover { border-color: #a2b8dd; }
 .aw-action-cards svg { flex: none; }
 .aw-other-activities summary { padding: 12px 16px; cursor: pointer; }
+
+.anelisa-workspace {
+  --aw-page: #f0f4fa;
+  --aw-surface: #fff;
+  --aw-alt-soft: #eeeafd;
+  --aw-on-accent: #fff;
+}
+.anelisa-workspace[data-aw-theme="instagram"] {
+  --aw-page: #fafafa;
+  --aw-ink: #242127;
+  --aw-muted: #625968;
+  --aw-line: #e8e1eb;
+  --aw-soft: #f9e9f4;
+  --aw-alt-soft: #f1ebfc;
+  --aw-blue: #9b3879;
+}
+.anelisa-workspace[data-aw-theme="tiktok"] {
+  color-scheme: dark;
+  --aw-page: #111214;
+  --aw-surface: #1b1c20;
+  --aw-ink: #f5f5f6;
+  --aw-muted: #c4c5cc;
+  --aw-line: #3a3b42;
+  --aw-soft: #292a31;
+  --aw-alt-soft: #302932;
+  --aw-blue: #7ce9e3;
+  --aw-on-accent: #121417;
+}
+.anelisa-workspace :is(.aw-header, .aw-view, .task-panel, .aw-profile, .aw-activity-dialog, .aw-meeting-options) {
+  background: var(--aw-surface);
+  color: var(--aw-ink);
+}
+.anelisa-workspace :is(.primary, .primary:hover, .aw-logo, .aw-day[aria-pressed="true"]:not([data-day-type])) {
+  background: var(--aw-blue);
+  color: var(--aw-on-accent);
+}
+.anelisa-workspace :is(.secondary, .aw-avatar, .aw-edit, .aw-view button[aria-pressed="true"], .aw-daily-quote, .aw-progress strong) {
+  background: var(--aw-soft);
+  color: var(--aw-ink);
+}
+.anelisa-workspace .aw-daily-quote svg { color: var(--aw-blue); }
+.anelisa-workspace :is(.panel-head, .anelisa-task, .meeting-list-item, .meeting-action, .meeting-editor) { border-color: var(--aw-line); }
+.anelisa-workspace :is(.meeting-editor, .aw-activity-dialog) :is(input:not([type="checkbox"]), select, textarea) {
+  color: var(--aw-ink);
+  background: var(--aw-page);
+}
+.anelisa-workspace .aw-action-cards button { color: var(--aw-ink); }
+.aw-action-icon {
+  display: grid; place-items: center; flex: none; width: 31px; height: 31px; border-radius: 9px;
+  color: var(--aw-blue); background: var(--aw-surface);
+}
+.aw-theme-picker { border: 0; padding: 0; margin: 0; display: grid; gap: 6px; }
+.aw-theme-picker legend { margin-bottom: 7px; }
+.aw-profile-body .aw-theme-picker label {
+  display: flex; align-items: center; gap: 8px; padding: 8px; border: 1px solid var(--aw-line); border-radius: 9px; cursor: pointer;
+}
+.aw-theme-picker input { margin: 0; accent-color: var(--aw-blue); }
+.aw-theme-picker label:has(input:checked) { background: var(--aw-soft); }
+
+[data-aw-theme="instagram"] .aw-feed { max-width: 690px; }
+[data-aw-theme="instagram"] .aw-brand { color: var(--aw-ink); }
+[data-aw-theme="instagram"] :is(.aw-logo, .aw-action-icon) {
+  border-radius: 50%; border: 1px solid #d59fc3; color: var(--aw-blue); background: var(--aw-surface);
+}
+[data-aw-theme="instagram"] .aw-action-cards { grid-template-columns: repeat(2, minmax(0, 120px)); }
+[data-aw-theme="instagram"] .aw-action-cards button {
+  flex-direction: column; align-items: center; text-align: center; background: transparent; border-color: transparent;
+}
+[data-aw-theme="instagram"] .aw-action-cards button:hover { background: var(--aw-soft); }
+[data-aw-theme="instagram"] .aw-action-icon { width: 46px; height: 46px; }
+[data-aw-theme="instagram"] .aw-progress { background: var(--aw-surface); }
+
+[data-aw-theme="tiktok"] .aw-header { box-shadow: none; }
+[data-aw-theme="tiktok"] .aw-logo { background: #101114; color: #fff; border: 1px solid #7ce9e3; box-shadow: 2px 2px #f77594; }
+[data-aw-theme="tiktok"] .aw-feed { max-width: 880px; }
+[data-aw-theme="tiktok"] .aw-progress { background: var(--aw-surface); }
+[data-aw-theme="tiktok"] .aw-progress progress,
+[data-aw-theme="tiktok"] .aw-progress progress::-webkit-progress-bar { background: #393b44; }
+[data-aw-theme="tiktok"] :is(.aw-agenda button, .meeting-date, .aw-meeting-trigger) { color: var(--aw-blue); }
+[data-aw-theme="tiktok"] .aw-action-cards button:last-child .aw-action-icon { color: #ff9ab2; }
+[data-aw-theme="tiktok"] .aw-day:not([data-day-type]):not([aria-pressed="true"]) { background: var(--aw-soft); color: var(--aw-ink); }
+[data-aw-theme="tiktok"] .aw-day[data-day-type="saturday"] { --aw-day-tint: #22364f; --aw-day-ink: #d1e4ff; }
+[data-aw-theme="tiktok"] .aw-day[data-day-type="sunday"] { --aw-day-tint: #3b2c50; --aw-day-ink: #eee0ff; }
+[data-aw-theme="tiktok"] .aw-day[data-day-type="holiday"] { --aw-day-tint: #522f3c; --aw-day-ink: #ffdde4; }
+[data-aw-theme="tiktok"] .muted { color: var(--aw-muted); }
+@media (min-width: 700px) {
+  [data-aw-theme="tiktok"] .aw-home-content { display: grid; grid-template-columns: minmax(0, 1fr) 168px; gap: 0 16px; }
+  [data-aw-theme="tiktok"] .aw-action-cards { grid-column: 2; grid-row: 1 / span 2; grid-template-columns: 1fr; align-content: start; }
+  [data-aw-theme="tiktok"] :is(.aw-progress, .aw-home-agenda) { grid-column: 1; }
+}

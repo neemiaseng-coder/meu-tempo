@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, CalendarCheck, CalendarDays, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ClipboardList,
-  CirclePlus, House, List, LogOut, MessageCircle, Music2, Pencil, Repeat2, Settings, Sparkles, SquarePen, Video, X } from 'lucide-react';
+  CirclePlus, House, List, LogOut, MessageCircle, Music2, Pencil, Repeat2, Settings, SquarePen, Video, X } from 'lucide-react';
 import ActivityEditor from './ActivityEditor.jsx';
+import DailyQuotes from './DailyQuotes.jsx';
 import './anelisa.css';
 
 const appearance = {
@@ -117,7 +118,7 @@ function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holidaysForM
 }
 
 export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveActivity,
-  meetings, renderMeetings, signOut, userId, email, holidaysForMonth, dailyQuote }) {
+  meetings, renderMeetings, signOut, userId, email, holidaysForMonth }) {
   const themeKey = 'meu-tempo-theme-' + userId;
   const [theme, setTheme] = useState(() => {
     try {
@@ -226,7 +227,7 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
               <button aria-pressed={view === 'calendar'} onClick={() => setView('calendar')}><CalendarDays size={17}/> Calendário</button>
             </div>
           </div>
-          <p className="aw-daily-quote"><Sparkles size={17} aria-hidden="true"/>{dailyQuote}</p>
+          <DailyQuotes key={date} date={date}/>
           <div className="aw-home-content">
           <div className="aw-action-cards">
             <button onClick={() => onAdd('demand')}><span className="aw-action-icon"><Task size={20}/></span> Incluir tarefa</button>

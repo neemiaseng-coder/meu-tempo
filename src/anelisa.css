@@ -102,14 +102,14 @@
   border: 1px solid var(--aw-line);
   box-shadow: 0 2px 8px #1f4b7a0c !important;
 }
-.aw-progress { padding: 16px; margin-bottom: 12px; border-radius: 16px; background: var(--aw-soft); }
+.aw-progress { padding: 16px; margin-bottom: 12px; border-radius: 16px; background: var(--aw-progress-surface); }
 .aw-progress-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
 .aw-progress h2, .aw-progress p { margin: 0; }
 .aw-progress h2 { font-size: 1.02rem; }
 .aw-progress p { color: var(--aw-muted); margin-top: 3px; font-size: .9rem; }
 .aw-progress strong { color: #264c95; font-size: 1.4rem; font-variant-numeric: tabular-nums; padding: 4px 11px; border-radius: 20px; background: #e8efff; }
-.aw-progress progress { appearance: none; display: block; width: 100%; height: 15px; border: 0; border-radius: 20px; overflow: hidden; background: #dfe9fa; }
-.aw-progress progress::-webkit-progress-bar { background: #dfe9fa; }
+.aw-progress progress { appearance: none; display: block; width: 100%; height: 12px; border: 0; border-radius: 20px; overflow: hidden; background: var(--aw-progress-track); }
+.aw-progress progress::-webkit-progress-bar { background: var(--aw-progress-track); }
 .aw-progress progress::-webkit-progress-value { background: var(--aw-blue); border-radius: 20px; transition: width .25s ease; }
 .aw-progress progress::-moz-progress-bar { background: var(--aw-blue); border-radius: 20px; }
 .anelisa-workspace .primary { background: var(--aw-blue); color: #fff; }
@@ -224,6 +224,8 @@
 
 .anelisa-workspace {
   --aw-font: "Segoe UI", Helvetica, Arial, sans-serif;
+  --aw-progress-surface: #eaf3ff;
+  --aw-progress-track: #cddff7;
   --aw-page: #f0f4fa;
   --aw-surface: #fff;
   --aw-alt-soft: #eeeafd;
@@ -231,6 +233,8 @@
 }
 .anelisa-workspace[data-aw-theme="instagram"] {
   --aw-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --aw-progress-surface: #fbf0f7;
+  --aw-progress-track: #efd3e5;
   --aw-page: #fafafa;
   --aw-ink: #242127;
   --aw-muted: #625968;
@@ -242,6 +246,8 @@
 .anelisa-workspace[data-aw-theme="tiktok"] {
   --aw-font: "TikTok Sans", Inter, system-ui, sans-serif;
   color-scheme: dark;
+  --aw-progress-surface: #1c2b2e;
+  --aw-progress-track: #355357;
   --aw-page: #111214;
   --aw-surface: #1b1c20;
   --aw-ink: #f5f5f6;
@@ -294,14 +300,10 @@
 }
 [data-aw-theme="instagram"] .aw-action-cards button:hover { background: var(--aw-soft); }
 [data-aw-theme="instagram"] .aw-action-icon { width: 46px; height: 46px; }
-[data-aw-theme="instagram"] .aw-progress { background: var(--aw-surface); }
 
 [data-aw-theme="tiktok"] .aw-header { box-shadow: none; }
 [data-aw-theme="tiktok"] .aw-logo { background: #101114; color: #fff; border: 1px solid #7ce9e3; box-shadow: 2px 2px #f77594; }
 [data-aw-theme="tiktok"] .aw-feed { max-width: 880px; }
-[data-aw-theme="tiktok"] .aw-progress { background: var(--aw-surface); }
-[data-aw-theme="tiktok"] .aw-progress progress,
-[data-aw-theme="tiktok"] .aw-progress progress::-webkit-progress-bar { background: #393b44; }
 [data-aw-theme="tiktok"] :is(.aw-agenda button, .meeting-date, .aw-meeting-trigger) { color: var(--aw-blue); }
 [data-aw-theme="tiktok"] .aw-action-cards button:last-child .aw-action-icon { color: #ff9ab2; }
 [data-aw-theme="tiktok"] .aw-day:not([data-day-type]):not([aria-pressed="true"]) { background: var(--aw-soft); color: var(--aw-ink); }
@@ -314,3 +316,13 @@
   [data-aw-theme="tiktok"] .aw-action-cards { grid-column: 2; grid-row: 1 / span 2; grid-template-columns: 1fr; align-content: start; }
   [data-aw-theme="tiktok"] :is(.aw-progress, .aw-home-agenda) { grid-column: 1; }
 }
+
+.aw-daily-quote p { flex: 1; min-width: 0; margin: 0; }
+.aw-quote-controls { display: flex; align-items: center; gap: 3px; flex: none; }
+.aw-quote-controls span { color: var(--aw-muted); font-size: .78rem; font-variant-numeric: tabular-nums; }
+.aw-quote-controls button {
+  display: grid; place-items: center; width: 32px; height: 32px; padding: 0;
+  background: var(--aw-surface); color: var(--aw-ink); border: 1px solid var(--aw-line); border-radius: 50%;
+}
+.aw-quote-controls button:hover { border-color: var(--aw-blue); }
+.aw-quote-controls button:focus-visible { outline: 2px solid var(--aw-blue); outline-offset: 2px; }

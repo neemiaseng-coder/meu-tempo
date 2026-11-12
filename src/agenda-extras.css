@@ -156,3 +156,21 @@
   .mini-calendar-grid button[aria-current="date"] { outline: 1px solid #1966cf; }
   .mini-calendar-grid button[aria-pressed="true"], .mini-calendar-grid button:hover { background: #2366cb; color: #fff; }
 }
+
+.neemias-main .myday-progress {
+  background: #fff; border-color: #b9d4ff; box-shadow: 0 3px 12px #245cc314;
+}
+.neemias-main .myday-progress > div:first-child { color: #284b7c; font-size: 14px; }
+.neemias-main .myday-progress > div:first-child b { color: #174a9b; }
+.neemias-main .myday-track { height: 12px; background: #dbeaff; }
+.neemias-main .myday-track i { background: #2174ed; }
+.neemias-main .myday-count { background: #dceaff; color: #1b509e; }
+.neemias-main .myday-list-head h2 { color: #173b71; }
+.neemias-main .myday-list-head p { color: #526888; }
+@media (min-width: 1100px) {
+  .neemias-main { background: #f0f6ff; }
+  .neemias-main .topbar { background: #1c62d2; }
+  .neemias-desktop-menu button[aria-current="page"] { background: #d5e7ff; color: #154cb1; }
+  .neemias-layout .agenda-sidebar section { border-color: #bcd6ff; }
+  .neemias-layout .agenda-sidebar h2 { color: #1859bb; }
+}

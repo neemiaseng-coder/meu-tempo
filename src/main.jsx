@@ -102,13 +102,13 @@ function App(){
  if(!supabase)return <main className="setup"><h1>Meu Tempo</h1><p>Configure as variáveis do Supabase para iniciar.</p><code>VITE_SUPABASE_URL</code><code>VITE_SUPABASE_ANON_KEY</code></main>;
  if(!user)return <Login client={supabase} connectionError={toast}/>;
  const anelisa=user.app_metadata?.meu_tempo_workspace==='anelisa';
- const renderMeetings=(initialMeetingId=null)=><Meetings key={user.id+(initialMeetingId||'')} initialMeetingId={initialMeetingId} client={supabase} userId={user.id} today={dateToday}
+ const renderMeetings=(initialMeetingId=null,mode)=> <Meetings key={user.id+':' +(mode||'')+':' +(initialMeetingId||'')} mode={mode} initialMeetingId={initialMeetingId} client={supabase} userId={user.id} today={dateToday}
    meetings={meetings} tasks={tasks}
    onMeeting={meeting=>setMeetings(old=>[...old.filter(item=>item.id!==meeting.id),meeting]
      .sort((a,b)=>a.meeting_date.localeCompare(b.meeting_date)))}
    onTask={task=>setTasks(old=>[task,...old.filter(item=>item.id!==task.id)])}/>;
  return <div className={`app theme-${theme}${anelisa?' aw-app':''}`}>
- {anelisa?<AnelisaWorkspace holidaysForMonth={holidaysForMonth} dailyQuote={dailyQuote} key={user.id} userId={user.id} email={user.email} section={section} onSection={setSection} tasks={tasks} date={dateToday}
+ {anelisa?<AnelisaWorkspace holidaysForMonth={holidaysForMonth} dailyQuote={dailyQuote} key={user.id} userId={user.id} email={user.email} tasks={tasks} date={dateToday}
    isDone={isDone} toggle={toggle} meetings={meetings} renderMeetings={renderMeetings}
    onSaveActivity={async(id,values)=>{
     const table=supabase.from('tasks');

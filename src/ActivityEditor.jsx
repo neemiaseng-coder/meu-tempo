@@ -53,7 +53,7 @@ export default function ActivityEditor({ task, date, onSave, onClose }) {
       </div>
       <fieldset disabled={saving}>
         <label>Título<input name="title" defaultValue={task.title ?? ''} required autoFocus/></label>
-        <label>Descrição<textarea name="description" rows="4" defaultValue={task.description ?? ''}/></label>
+        <label>Descrição<textarea name="description" rows="2" defaultValue={task.description ?? ''}/></label>
         {routine && <label>Periodicidade<select value={frequency} onChange={event => setFrequency(event.target.value)}>
           <option value="daily">Todos os dias</option>
           <option value="weekly">Semanal</option>

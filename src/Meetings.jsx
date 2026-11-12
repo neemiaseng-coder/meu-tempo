@@ -4,12 +4,16 @@ import { CalendarDays, Check, Plus, Sparkles } from 'lucide-react';
 const formatDate = date => new Date(date + 'T12:00:00').toLocaleDateString('pt-BR');
 const newDraft = date => ({ meeting_date: date, title: '', agenda: '', participants: '', discussion_notes: '' });
 
-export default function Meetings({ client, userId, today, meetings, tasks, onMeeting, onTask, initialMeetingId }) {
-  const [draft, setDraft] = useState(null);
+export default function Meetings({ client, userId, today, meetings, tasks, onMeeting, onTask, initialMeetingId, mode }) {
+  const [draft, setDraft] = useState(() => mode === 'start' ? newDraft(today) : null);
   const [open, setOpen] = useState(initialMeetingId ?? null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const selected = meetings.find(meeting => meeting.id === open);
+  const visibleMeetings = mode === 'history' ? meetings.filter(meeting => meeting.finalized_at)
+    : mode === 'start' ? meetings.filter(meeting => !meeting.finalized_at)
+    : mode === 'detail' ? [] : meetings;
+  const heading = mode === 'history' ? 'Reuniões realizadas' : mode === 'start' ? 'Iniciar reunião' : 'Reuniões';
 
   function edit(meeting) {
     setError('');
@@ -83,8 +87,8 @@ export default function Meetings({ client, userId, today, meetings, tasks, onMee
 
   return <section className="task-panel meeting-workspace">
     <div className="panel-head">
-      <div><h2>Reuniões</h2><p className="muted">Anote o alinhamento e acompanhe as tarefas combinadas.</p></div>
-      <button className="primary" disabled={pending || Boolean(draft)} onClick={() => edit()}><Plus size={17}/> Nova reunião</button>
+      <div><h2>{heading}</h2>{!mode && <p className="muted">Anote o alinhamento e acompanhe as tarefas combinadas.</p>}</div>
+      {(!mode || mode === 'start') && !draft && <button className="primary" disabled={pending} onClick={() => edit()}><Plus size={17}/> Nova reunião</button>}
     </div>
     {error && <p className="meeting-error" role="alert">{error}</p>}
     {draft && <form className="meeting-editor" onSubmit={save}>
@@ -135,9 +139,11 @@ export default function Meetings({ client, userId, today, meetings, tasks, onMee
         <button className="secondary" onClick={() => edit(selected)}>Continuar rascunho</button>
       </>}
     </article>}
-    {!meetings.length && !draft && <div className="empty">Nenhuma reunião cadastrada.</div>}
+    {!visibleMeetings.length && !draft && !selected && <div className="empty">
+      {mode === 'history' ? 'Nenhuma reunião realizada.' : mode === 'start' ? 'Nenhum rascunho salvo.' : 'Nenhuma reunião cadastrada.'}
+    </div>}
     <div className="meeting-history">
-      {meetings.map(meeting => <button type="button" key={meeting.id} className="meeting-list-item"
+      {visibleMeetings.map(meeting => <button type="button" key={meeting.id} className="meeting-list-item"
         aria-pressed={open === meeting.id} disabled={pending || Boolean(draft)}
         onClick={() => { setOpen(meeting.id); setError(''); }}>
         <CalendarDays size={19}/><span><strong>{meeting.title}</strong><small>{formatDate(meeting.meeting_date)}</small></span>

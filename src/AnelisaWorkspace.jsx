@@ -1,10 +1,9 @@
-import React, { useRef, useState } from 'react';
-import { CalendarCheck, CalendarDays, Check, ChevronLeft, ChevronRight, ClipboardList,
-  House, List, LogOut, Pencil, Plus, Settings, Sparkles, X } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { ArrowLeft, CalendarCheck, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, ClipboardList,
+  House, List, LogOut, Pencil, Settings, Sparkles, X } from 'lucide-react';
 import ActivityEditor from './ActivityEditor.jsx';
 import './anelisa.css';
 
-const tabs = [['Home', House], ['Tarefas', ClipboardList], ['Rotinas', CalendarCheck], ['Reuniões', CalendarDays]];
 const shortWeekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const frequencies = { daily: 'Diária', weekly: 'Semanal', monthly: 'Mensal' };
 const fullDate = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -111,13 +110,15 @@ function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holidaysForM
   </section>;
 }
 
-export default function AnelisaWorkspace({ section, onSection, tasks, date, isDone, toggle, onSaveActivity,
+export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveActivity,
   meetings, renderMeetings, signOut, userId, email, holidaysForMonth, dailyQuote }) {
-  const current = tabs.some(([label]) => label === section) ? section : 'Home';
-  const [activity, setActivity] = useState(null);
-  const onAdd = type => setActivity({ task_type: type });
+  const [route, setRoute] = useState(null);
   const [view, setView] = useState('list');
-  const [openedMeeting, setOpenedMeeting] = useState(null);
+  const meetingMenu = route?.screen === 'meeting-menu';
+  const meetingRoute = route?.screen === 'meeting' ? route : null;
+  const activity = route?.screen === 'activity'
+    ? route.id ? tasks.find(task => task.id === route.id) : { task_type: route.type }
+    : null;
   const [photo, setPhoto] = useState(() => localStorage.getItem('meu-tempo-photo-' + userId) || '');
   const [photoError, setPhotoError] = useState('');
   const menu = useRef(null);
@@ -129,13 +130,32 @@ export default function AnelisaWorkspace({ section, onSection, tasks, date, isDo
   const completedToday = plannedToday.filter(isDone).length;
   const progress = plannedToday.length ? Math.round(completedToday / plannedToday.length * 100) : 0;
   const todaysMeetings = meetings.filter(meeting => meeting.meeting_date === date);
-  const list = active.filter(task => current === 'Rotinas' ? isRoutine(task) : !isRoutine(task));
-  const calendarTasks = current === 'Home' ? active : current === 'Reuniões' ? [] : list;
+  const agendaToday = [...due, ...routines];
+  const remainingActivities = active.filter(task => !agendaToday.includes(task));
 
-  function go(label) {
-    onSection(label);
-    setOpenedMeeting(null);
+  useEffect(() => {
+    const syncRoute = () => {
+      setRoute(window.history.state?.meuTempoRoute ?? null);
+    };
+    syncRoute();
+    window.addEventListener('popstate', syncRoute);
+    return () => window.removeEventListener('popstate', syncRoute);
+  }, []);
+
+  function openRoute(next) {
+    const state = { ...window.history.state, meuTempoRoute: next };
+    if (window.history.state?.meuTempoRoute) window.history.replaceState(state, '');
+    else window.history.pushState(state, '');
+    setRoute(next);
   }
+
+  function goHome() {
+    if (window.history.state?.meuTempoRoute) window.history.back();
+  }
+
+  const openMeeting = id => openRoute({ screen: 'meeting', mode: 'detail', id });
+  const onEdit = task => openRoute({ screen: 'activity', id: task.id });
+  const onAdd = type => openRoute({ screen: 'activity', type });
 
   function changePhoto(event) {
     const file = event.target.files?.[0];
@@ -159,66 +179,63 @@ export default function AnelisaWorkspace({ section, onSection, tasks, date, isDo
 
   return <main className="anelisa-workspace">
     <header className="aw-header">
-      <button className="aw-brand" onClick={() => go('Home')}><span className="aw-logo"><House size={19}/></span> <span>Meu Tempo</span></button>
-      <nav aria-label="Módulos" className="aw-nav">
-        {tabs.map(([label, Icon]) => <button key={label} aria-current={current === label ? 'page' : undefined}
-          onClick={() => go(label)}><Icon size={21}/><span>{label}</span></button>)}
-      </nav>
+      <button className="aw-brand" aria-label="Início do Meu Tempo" onClick={goHome}>
+        <span className="aw-logo"><House size={19}/></span> <span>Meu Tempo</span>
+      </button>
       <button className="aw-avatar" aria-label="Abrir configurações do perfil" aria-haspopup="dialog"
         onClick={() => menu.current.showModal()}>{photo ? <img src={photo} alt=""/> : 'A'}</button>
     </header>
 
     <div className="aw-layout">
       <div className="aw-feed">
-        <div className="aw-heading">
-          <div><p>{fullDate.format(toDate(date))}</p><h1>{current === 'Home' ? 'Olá, Anelisa' : current}</h1></div>
-          <div className="aw-view" role="group" aria-label="Modo de visualização">
-            <button aria-pressed={view === 'list'} onClick={() => setView('list')}><List size={17}/> Lista</button>
-            <button aria-pressed={view === 'calendar'} onClick={() => setView('calendar')}><CalendarDays size={17}/> Calendário</button>
-          </div>
+        <div className="aw-meeting-nav">
+          {meetingRoute && <button className="secondary aw-home-back" onClick={goHome}><ArrowLeft size={17}/> Início</button>}
+          <button className="secondary aw-meeting-trigger" aria-expanded={meetingMenu} aria-controls="aw-meeting-options"
+            onClick={() => meetingMenu ? goHome() : openRoute({ screen: 'meeting-menu' })}><CalendarDays size={18}/> Reunião <ChevronDown size={15}/></button>
+          {meetingMenu && <div id="aw-meeting-options" className="aw-meeting-options">
+            <button onClick={() => openRoute({ screen: 'meeting', mode: 'start' })}>Iniciar reunião</button>
+            <button onClick={() => openRoute({ screen: 'meeting', mode: 'history' })}>Reuniões realizadas</button>
+          </div>}
         </div>
-
-        {current === 'Home' && <p className="aw-daily-quote"><Sparkles size={17} aria-hidden="true"/>{dailyQuote}</p>}
-        {current === 'Home' && <section className="aw-progress" aria-labelledby="aw-progress-title">
-          <div className="aw-progress-head">
-            <div><h2 id="aw-progress-title">Progresso do dia</h2>
-              <p>{completedToday} de {plannedToday.length} {plannedToday.length === 1 ? 'atividade concluída' : 'atividades concluídas'}</p>
-            </div>
-            <strong>{progress}%</strong>
-          </div>
-          <progress aria-labelledby="aw-progress-title" value={progress} max="100">{progress}%</progress>
-        </section>}
-
-        {view === 'calendar' && <AgendaCalendar key={current} date={date} tasks={calendarTasks} holidaysForMonth={holidaysForMonth} onEdit={setActivity}
-          meetings={current === 'Home' || current === 'Reuniões' ? meetings : []}
-          onMeeting={id => { onSection('Reuniões'); setOpenedMeeting(id); setView('list'); }}/>}
-        {view === 'list' && current === 'Home' && <section className="task-panel">
-          <div className="panel-head"><h2>Minha agenda de hoje</h2>
-            <div className="aw-quick-actions">
-              <button className="secondary" onClick={() => onAdd('demand')}><Plus size={15}/> Tarefa</button>
-              <button className="secondary" onClick={() => onAdd('routine')}><Plus size={15}/> Rotina</button>
+        {meetingRoute ? renderMeetings(meetingRoute.id, meetingRoute.mode) : <>
+          <div className="aw-heading">
+            <div><p>{fullDate.format(toDate(date))}</p><h1>Olá, Anelisa</h1></div>
+            <div className="aw-view" role="group" aria-label="Modo de visualização">
+              <button aria-pressed={view === 'list'} onClick={() => setView('list')}><List size={17}/> Lista</button>
+              <button aria-pressed={view === 'calendar'} onClick={() => setView('calendar')}><CalendarDays size={17}/> Calendário</button>
             </div>
           </div>
-          <TaskRows tasks={[...due, ...routines]} date={date} isDone={isDone} toggle={toggle} onEdit={setActivity}/>
-          {todaysMeetings.map(meeting => <button className="aw-meeting-row" key={meeting.id}
-            onClick={() => { onSection('Reuniões'); setOpenedMeeting(meeting.id); }}>
-            <CalendarDays size={18}/><strong>{meeting.title}</strong><span>Reunião</span>
-          </button>)}
-        </section>}
-        {view === 'list' && ['Rotinas', 'Tarefas'].includes(current) && <section className="task-panel">
-          <div className="panel-head"><h2>{current === 'Rotinas' ? 'Minhas rotinas' : 'Minhas tarefas'}</h2>
-            <button className="primary" onClick={() => onAdd(current === 'Rotinas' ? 'routine' : 'demand')}>
-              <Plus size={16}/>{current === 'Rotinas' ? 'Nova rotina' : 'Nova tarefa'}
-            </button>
+          <p className="aw-daily-quote"><Sparkles size={17} aria-hidden="true"/>{dailyQuote}</p>
+          <div className="aw-action-cards">
+            <button onClick={() => onAdd('demand')}><ClipboardList size={20}/> Incluir tarefa</button>
+            <button onClick={() => onAdd('routine')}><CalendarCheck size={20}/> Incluir rotina</button>
           </div>
-          <TaskRows tasks={list} date={date} isDone={isDone} toggle={toggle} onEdit={setActivity}/>
-        </section>}
-        {current === 'Reuniões' && <div hidden={view !== 'list'}>{renderMeetings(openedMeeting)}</div>}
-
+          <section className="aw-progress" aria-labelledby="aw-progress-title">
+            <div className="aw-progress-head">
+              <div><h2 id="aw-progress-title">Progresso do dia</h2>
+                <p>{completedToday} de {plannedToday.length} {plannedToday.length === 1 ? 'atividade concluída' : 'atividades concluídas'}</p>
+              </div>
+              <strong>{progress}%</strong>
+            </div>
+            <progress aria-labelledby="aw-progress-title" value={progress} max="100">{progress}%</progress>
+          </section>
+          {view === 'calendar' ? <AgendaCalendar date={date} tasks={active} holidaysForMonth={holidaysForMonth}
+            meetings={meetings} onEdit={onEdit} onMeeting={openMeeting}/> : <section className="task-panel">
+            <div className="panel-head"><h2>Minha agenda de hoje</h2></div>
+            <TaskRows tasks={agendaToday} date={date} isDone={isDone} toggle={toggle} onEdit={onEdit}/>
+            {todaysMeetings.map(meeting => <button className="aw-meeting-row" key={meeting.id} onClick={() => openMeeting(meeting.id)}>
+              <CalendarDays size={18}/><strong>{meeting.title}</strong><span>Reunião</span>
+            </button>)}
+          </section>}
+          {remainingActivities.length > 0 && <details className="task-panel aw-other-activities">
+            <summary>Outras tarefas e rotinas</summary>
+            <TaskRows tasks={remainingActivities} date={date} isDone={isDone} toggle={toggle} onEdit={onEdit}/>
+          </details>}
+        </>}
       </div>
     </div>
 
-    {activity && <ActivityEditor task={activity} date={date} onSave={onSaveActivity} onClose={() => setActivity(null)}/>}
+    {activity && <ActivityEditor task={activity} date={date} onSave={onSaveActivity} onClose={goHome}/>}
 
     <dialog ref={menu} className="aw-profile" aria-labelledby="aw-profile-title"
       onClick={event => { if (event.target === event.currentTarget) menu.current.close(); }}>

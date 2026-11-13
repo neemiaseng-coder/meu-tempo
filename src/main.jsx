@@ -13,6 +13,11 @@ const supabaseKey=import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase=supabaseUrl&&supabaseKey?createClient(supabaseUrl,supabaseKey):null;
 const searchableSections=['Meu Dia','Processos','Mensagens prontas','Cadastros','Reuniões'];
 const today=()=>new Date().toLocaleDateString('en-CA');
+function weekStart(date){
+ const day=new Date(date+'T12:00:00');
+ day.setDate(day.getDate()-(day.getDay()+6)%7);
+ return day.toLocaleDateString('en-CA');
+}
 const monthThemes=['Janeiro Branco','Fevereiro Roxo / Laranja','Março Lilás','Abril Azul','Maio Amarelo','Junho Vermelho','Julho Amarelo','Agosto Lilás','Setembro Amarelo','Outubro Rosa','Novembro Azul','Dezembro Vermelho'];
 const brHolidays={'01-01':'Confraternização Universal','04-21':'Tiradentes','05-01':'Dia do Trabalho','09-07':'Independência do Brasil','10-12':'Nossa Senhora Aparecida','11-02':'Finados','11-15':'Proclamação da República','11-20':'Consciência Negra','12-25':'Natal'};
 function easterDate(y){const a=y%19,b=Math.floor(y/100),cc=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(cc/4),k=cc%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),day=(h+l-7*m+114)%31+1;return new Date(y,mo-1,day)}
@@ -38,7 +43,7 @@ function App(){
  setBusy(true);
  try{
   const timeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error('Tempo limite ao carregar os dados. Verifique a conexão com o Supabase.')),15000));
-  const results=await Promise.race([Promise.all([supabase.from('tasks').select('*').order('created_at',{ascending:false}),supabase.from('message_templates').select('*').order('created_at',{ascending:false}),supabase.from('quick_records').select('*').order('created_at',{ascending:false}),supabase.from('task_occurrences').select('*').eq('occurrence_date',today()),supabase.from('meetings').select('*').order('meeting_date',{ascending:true}),supabase.from('deadline_events').select('*').order('event_date',{ascending:true}),supabase.from('hr_processes').select('*').order('created_at',{ascending:false}),supabase.from('vacancies').select('*').order('created_at',{ascending:false})]),timeout]);
+  const results=await Promise.race([Promise.all([supabase.from('tasks').select('*').order('created_at',{ascending:false}),supabase.from('message_templates').select('*').order('created_at',{ascending:false}),supabase.from('quick_records').select('*').order('created_at',{ascending:false}),supabase.from('task_occurrences').select('*').gte('occurrence_date',weekStart(today())).lte('occurrence_date',today()),supabase.from('meetings').select('*').order('meeting_date',{ascending:true}),supabase.from('deadline_events').select('*').order('event_date',{ascending:true}),supabase.from('hr_processes').select('*').order('created_at',{ascending:false}),supabase.from('vacancies').select('*').order('created_at',{ascending:false})]),timeout]);
   if(!isCurrent())return;
   const [a,b,c,d,e,f,g,h]=results;
   if(a.error){setTasks([]);notify(a.error.message)}else setTasks(a.data||[]);
@@ -77,7 +82,7 @@ function App(){
  const todayTasks=tasks.filter(t=>t.status!=='cancelled'&&t.is_active!==false&&(occursToday(t)||(t.recurrence_type==='none'&&t.due_date&&t.due_date<=dateToday&&(t.status==='pending'||t.due_date===dateToday))));
  const todayMeetings=meetings.filter(m=>m.meeting_date===dateToday);
  const todayEvents=deadlineEvents.filter(e=>eventOccursOn(e,dateToday));
- const isDone=t=>t.recurrence_type!=='none'?occurrences.some(o=>o.task_id===t.id&&o.status==='completed'):t.status==='completed';
+ const isDone=t=>t.recurrence_type!=='none'?occurrences.some(o=>o.task_id===t.id&&o.occurrence_date===dateToday&&o.status==='completed'):t.status==='completed';
  const completed=todayTasks.filter(isDone).length;
  const progress=todayTasks.length?Math.round(completed/todayTasks.length*100):0;
 
@@ -101,7 +106,7 @@ function App(){
  async function saveDeadline(e){e.preventDefault();const payload={title:deadlineTitle.trim(),event_date:deadlineDate,event_type:deadlineType,description:deadlineDescription,recurrence_type:deadlineRecurrence,recurrence_end:deadlineRecurrence==='none'?null:(deadlineEnd||null)};const result=editingDeadlineId?await supabase.from('deadline_events').update(payload).eq('id',editingDeadlineId).select().single():await supabase.from('deadline_events').insert({...payload,user_id:user.id}).select().single();const{data,error}=result;if(error){notify(error.message);return}setDeadlineEvents(old=>editingDeadlineId?old.map(x=>x.id===editingDeadlineId?data:x):[...old,data]);closeDeadlineForm();notify(editingDeadlineId?'Alteração confirmada':'Prazo salvo no calendário')}
  function eventOccursOn(ev,iso){if(ev.event_date===iso)return true;if(ev.recurrence_type==='none'||iso<ev.event_date||(ev.recurrence_end&&iso>ev.recurrence_end))return false;const a=new Date(ev.event_date+'T12:00:00'),b=new Date(iso+'T12:00:00');if(ev.recurrence_type==='weekly')return (b-a)%(7*86400000)===0;if(ev.recurrence_type==='monthly')return a.getDate()===b.getDate();return false}
  async function addTask(e){e.preventDefault();if(!title.trim())return;const item={title:title.trim(),task_type:taskType, due_date:due, scheduled_date:due, status:'pending', user_id:user.id, recurrence_type:taskType==='routine'?recurrence:'none', recurrence_days:taskType==='routine'&&recurrence==='weekly'?recurrenceDays:taskType==='routine'&&recurrence==='monthly'?[monthDay]:[]};const{data,error}=await supabase.from('tasks').insert(item).select().single();if(error){notify(error.message);return}setTasks(old=>[data,...old]);if(anelisa)setSection(taskType==='routine'?'Rotinas':'Tarefas');setTitle('');setShowAdd(false);notify('Atividade adicionada')}
- async function toggle(t){if(t.recurrence_type!=='none'){const current=occurrences.find(o=>o.task_id===t.id),status=current?.status==='completed'?'pending':'completed';const{data,error}=await supabase.from('task_occurrences').upsert({user_id:user.id,task_id:t.id,occurrence_date:dateToday,status,completed_at:status==='completed'?new Date().toISOString():null},{onConflict:'task_id,occurrence_date'}).select().single();if(error){notify(error.message);return}setOccurrences(old=>[...old.filter(o=>o.task_id!==t.id),data]);return}const status=t.status==='completed'?'pending':'completed';const{error}=await supabase.from('tasks').update({status,completed_at:status==='completed'?new Date().toISOString():null}).eq('id',t.id);if(error){notify(error.message);return}setTasks(old=>old.map(x=>x.id===t.id?{...x,status}:x))}
+ async function toggle(t){if(t.recurrence_type!=='none'){const current=occurrences.find(o=>o.task_id===t.id&&o.occurrence_date===dateToday),status=current?.status==='completed'?'pending':'completed';const{data,error}=await supabase.from('task_occurrences').upsert({user_id:user.id,task_id:t.id,occurrence_date:dateToday,status,completed_at:status==='completed'?new Date().toISOString():null},{onConflict:'task_id,occurrence_date'}).select().single();if(error){notify(error.message);return}setOccurrences(old=>[...old.filter(o=>o.task_id!==t.id||o.occurrence_date!==dateToday),data]);return}const status=t.status==='completed'?'pending':'completed';const{error}=await supabase.from('tasks').update({status,completed_at:status==='completed'?new Date().toISOString():null}).eq('id',t.id);if(error){notify(error.message);return}setTasks(old=>old.map(x=>x.id===t.id?{...x,status}:x))}
  async function saveTemplate(e){e.preventDefault();if(!templateTitle.trim()||!templateBody.trim())return;const variables=['nome',...(templateHasDate?['data']:[])];const{data,error}=await supabase.from('message_templates').insert({user_id:user.id,title:templateTitle.trim(),body:templateBody,variables}).select().single();if(error){notify(error.message);return}setTemplates([data,...templates]);setSelectedTemplateId(data.id);setTemplateTitle('');setTemplateBody('');setTemplateHasDate(false);setShowTemplateForm(false);notify('Modelo salvo')}
  function makeMessage(t){const msg=t.body.replaceAll('{{nome}}',recipient.trim()).replaceAll('{{data}}',new Date(sendDate+'T12:00:00').toLocaleDateString('pt-BR'));setGenerated(msg)}
  async function encryptValue(value,password){const enc=new TextEncoder(),salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));const material=await crypto.subtle.importKey('raw',enc.encode(password),'PBKDF2',false,['deriveKey']);const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:250000,hash:'SHA-256'},material,{name:'AES-GCM',length:256},false,['encrypt']);const cipher=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,enc.encode(value));const b=x=>btoa(String.fromCharCode(...x));return [b(salt),b(iv),b(new Uint8Array(cipher))].join(':')}
@@ -150,6 +155,13 @@ function App(){
  return <div className={`app theme-${theme}${anelisa?' aw-app':''}`}>
  {anelisa?<AnelisaWorkspace holidaysForMonth={holidaysForMonth} key={user.id} userId={user.id} email={user.email} tasks={tasks} date={dateToday}
    isDone={isDone} toggle={toggle} meetings={meetings} renderMeetings={renderMeetings}
+   weekStart={weekStart(dateToday)} occurrences={occurrences}
+   onDeleteActivity={async(id)=>{
+    const {data,error}=await supabase.from('tasks').update({is_active:false,status:'cancelled'})
+      .eq('id',id).eq('user_id',user.id).select().single();
+    if(error)throw error;
+    setTasks(old=>old.map(item=>item.id===id?data:item));
+   }}
    events={deadlineEvents} occursOn={eventOccursOn} onReminder={openReminder} reminderDialog={reminderDialog}
    contacts={records.filter(record=>record.record_type==='contact')}
    onSaveContact={async(contact)=>{

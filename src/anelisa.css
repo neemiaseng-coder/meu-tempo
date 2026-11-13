@@ -384,3 +384,37 @@
   .anelisa-workspace .aw-meeting-nav:empty, .anelisa-workspace .aw-meeting-nav:not(:has(.aw-home-back)) { margin: 0; }
   .anelisa-workspace .anelisa-task { padding-block: 13px; }
 }
+
+.aw-module-head, .aw-task-actions, .aw-profile-identity { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.aw-module-head { margin-bottom: 12px; }
+.aw-module-head h1 { flex: 1; margin: 0; }
+.aw-edit.aw-delete { color: #9a3046; background: #fff0f2; }
+.aw-dashboard { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+.anelisa-workspace .aw-dashboard section {
+  padding: 13px 15px; border: 1px solid var(--aw-line); border-radius: 12px; background: var(--aw-surface);
+  border-left: 3px solid var(--aw-blue);
+}
+.aw-dashboard h2 { margin: 0 0 5px; font-size: 14px; color: var(--aw-blue); }
+.aw-dashboard strong { font-size: 25px; color: var(--aw-ink); }
+.aw-dashboard p { margin: 4px 0 0; color: var(--aw-muted); font-size: 13px; }
+.anelisa-workspace .aw-profile-identity {
+  background: var(--aw-soft); border: 1px solid var(--aw-line); border-radius: 14px; padding: 13px;
+  flex-wrap: nowrap; min-width: 0;
+}
+.aw-profile-identity p { min-width: 0; }
+.aw-profile-identity strong { font-size: 19px; }
+.anelisa-workspace .aw-profile-identity .aw-avatar {
+  width: 66px; height: 66px; display: grid; place-items: center; font-size: 24px;
+  color: var(--aw-on-accent); background: var(--aw-blue);
+}
+@media (min-width: 1100px) {
+  .anelisa-workspace .aw-header { min-height: 72px; }
+  .anelisa-workspace .aw-header .aw-brand { font-size: 20px; }
+  .anelisa-workspace .aw-header .aw-avatar { width: 54px; height: 54px; border: 2px solid var(--aw-desk-header-ink); }
+  .anelisa-workspace .aw-greeting { padding: 23px; background: var(--aw-soft); }
+  .anelisa-workspace .aw-greeting h1 { color: var(--aw-blue); font-size: clamp(29px, 3vw, 43px); }
+  .aw-mobile-quotes { display: none; }
+  .aw-desktop-right .aw-daily-quote { flex-wrap: wrap; margin: 0; padding: 13px; }
+  .aw-desktop-right .aw-quote-controls { margin-left: auto; }
+  .aw-desktop-left button[aria-current="page"]:not(.primary) { color: var(--aw-blue); background: var(--aw-soft); }
+}

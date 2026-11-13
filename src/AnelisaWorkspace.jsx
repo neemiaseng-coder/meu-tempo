@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Bell, CalendarCheck, CalendarDays, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ClipboardList,
-  CirclePlus, House, List, LogOut, MessageCircle, Music2, Pencil, Repeat2, Settings, SquarePen, Video, X } from 'lucide-react';
+  CirclePlus, House, List, LogOut, MessageCircle, Music2, Pencil, Repeat2, Settings, SquarePen, Trash2, Video, X } from 'lucide-react';
 import ActivityEditor from './ActivityEditor.jsx';
 import DailyQuotes from './DailyQuotes.jsx';
 import { MiniCalendar, upcomingReminders } from './AgendaExtras.jsx';
@@ -32,7 +32,7 @@ export function routineOccurs(task, date) {
     || (task.recurrence_type === 'monthly' && (schedule.length ? schedule.includes(day.getDate()) : task.scheduled_date === date));
 }
 
-function TaskRows({ tasks, date, isDone, toggle, onEdit }) {
+function TaskRows({ tasks, date, isDone, toggle, onEdit, onDelete }) {
   if (!tasks.length) return <p className="aw-empty">Nenhuma atividade nesta lista.</p>;
   return tasks.map(task => {
     const routine = isRoutine(task);
@@ -54,7 +54,10 @@ function TaskRows({ tasks, date, isDone, toggle, onEdit }) {
         {task.description && <details className="aw-task-description"><summary>Detalhes</summary><p>{task.description}</p></details>}
       </div>
       <span className={status === 'Em atraso' ? 'aw-late' : undefined}>{status}</span>
-      <button className="aw-edit" aria-label={'Editar ' + task.title} onClick={() => onEdit(task)}><Pencil size={16}/></button>
+      <div className="aw-task-actions">
+        <button className="aw-edit" aria-label={'Editar ' + task.title} onClick={() => onEdit(task)}><Pencil size={16}/></button>
+        {onDelete && <button className="aw-edit aw-delete" aria-label={'Excluir ' + task.title} onClick={() => onDelete(task)}><Trash2 size={16}/></button>}
+      </div>
     </div>;
   });
 }
@@ -128,7 +131,7 @@ export function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holid
 }
 
 export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveActivity,
-  meetings, renderMeetings, signOut, userId, email, holidaysForMonth, events, occursOn, onReminder, reminderDialog, contacts, onSaveContact }) {
+  meetings, renderMeetings, signOut, userId, email, holidaysForMonth, events, occursOn, onReminder, reminderDialog, contacts, onSaveContact, onDeleteActivity, weekStart, occurrences }) {
   const themeKey = 'meu-tempo-theme-' + userId;
   const [theme, setTheme] = useState(() => {
     try {
@@ -146,6 +149,10 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
 
   const [route, setRoute] = useState(null);
   const [view, setView] = useState('list');
+  const [deleteError, setDeleteError] = useState('');
+  const deleting = useRef(new Set());
+  const module = route?.module ?? (route?.screen === 'meeting' ? 'meetings' : 'day');
+  const activityModule = module === 'tasks' || module === 'routines';
   const [selectedDay, setSelectedDay] = useState(date);
   const meetingMenu = route?.screen === 'meeting-menu';
   const meetingRoute = route?.screen === 'meeting' ? route : null;
@@ -161,6 +168,17 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
     (task.due_date === date || (task.due_date < date && !isDone(task))));
   const plannedToday = [...due.filter(task => task.due_date === date), ...routines];
   const completedToday = plannedToday.filter(isDone).length;
+  const weekDays = Array.from({ length: 7 }, (_, offset) => {
+    const day = toDate(weekStart);
+    day.setDate(day.getDate() + offset);
+    return isoDate(day);
+  });
+  const doneOccurrences = new Set(occurrences.filter(item => item.status === 'completed')
+    .map(item => item.task_id + ':' + item.occurrence_date));
+  const plannedWeek = weekDays.flatMap(day => active.filter(task => isRoutine(task)
+    ? routineOccurs(task, day) : task.due_date === day).map(task => ({ task, day })));
+  const completedWeek = plannedWeek.filter(({ task, day }) => isRoutine(task)
+    ? doneOccurrences.has(task.id + ':' + day) : isDone(task)).length;
   const progress = plannedToday.length ? Math.round(completedToday / plannedToday.length * 100) : 0;
   const todaysMeetings = meetings.filter(meeting => meeting.meeting_date === date);
   const lateTasks = due.filter(task => task.due_date < date);
@@ -194,8 +212,25 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
   }
 
   const openMeeting = id => openRoute({ screen: 'meeting', mode: 'detail', id });
-  const onEdit = task => openRoute({ screen: 'activity', id: task.id });
-  const onAdd = type => openRoute({ screen: 'activity', type });
+  const onEdit = task => openRoute({ screen: 'activity', id: task.id, module });
+  const onAdd = type => openRoute({ screen: 'activity', type, module });
+  function closeActivity() {
+    if (activityModule) openRoute({ screen: 'module', module });
+    else goHome();
+  }
+
+  async function removeActivity(task) {
+    if (deleting.current.has(task.id) || !window.confirm('Excluir “' + task.title + '”?')) return;
+    deleting.current.add(task.id);
+    setDeleteError('');
+    try {
+      await onDeleteActivity(task.id);
+    } catch {
+      setDeleteError('Não foi possível excluir a atividade. Tente novamente.');
+    } finally {
+      deleting.current.delete(task.id);
+    }
+  }
 
   function changePhoto(event) {
     const file = event.target.files?.[0];
@@ -230,11 +265,10 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
       <aside className="aw-desktop-left">
         <nav className="aw-desk-card" aria-label="Menu principal">
           <h2>🧭 Menu</h2>
-          <button onClick={() => { goHome(); setView('list'); }}>🏠 Meu dia</button>
-          <button onClick={() => onAdd('demand')}>📝 Incluir tarefa</button>
-          <button onClick={() => onAdd('routine')}>🔁 Incluir rotina</button>
-          <button onClick={() => openRoute({ screen: 'meeting', mode: 'start' })}>💬 Iniciar reunião</button>
-          <button onClick={() => openRoute({ screen: 'meeting', mode: 'history' })}>📂 Reuniões realizadas</button>
+          <button aria-current={module === 'day' ? 'page' : undefined} onClick={() => { goHome(); setView('list'); }}>🏠 Meu Dia</button>
+          <button aria-current={module === 'tasks' ? 'page' : undefined} onClick={() => openRoute({ screen: 'module', module: 'tasks' })}>📝 Tarefas</button>
+          <button aria-current={module === 'routines' ? 'page' : undefined} onClick={() => openRoute({ screen: 'module', module: 'routines' })}>🔁 Rotinas</button>
+          <button aria-current={module === 'meetings' ? 'page' : undefined} onClick={() => openRoute({ screen: 'meeting', mode: 'history' })}>💬 Reuniões</button>
         </nav>
         <section className="aw-desk-card">
           <h2>📌 Lembretes rápidos</h2>
@@ -255,15 +289,38 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
             <button onClick={() => openRoute({ screen: 'meeting', mode: 'history' })}>Reuniões realizadas</button>
           </div>}
         </div>
-        {meetingRoute ? renderMeetings(meetingRoute.id, meetingRoute.mode) : <>
-          <div className="aw-heading">
-            <div><p>{fullDate.format(toDate(date))}</p><h1>Olá, Anelisa</h1></div>
+        {deleteError && <p role="alert">{deleteError}</p>}
+        {meetingRoute ? <>
+          <div className="aw-module-head"><h1>Reuniões</h1>
+            <button className="primary" onClick={() => openRoute({ screen: 'meeting', mode: 'start' })}>Iniciar reunião</button>
+            <button className="secondary" onClick={() => openRoute({ screen: 'meeting', mode: 'history' })}>Reuniões realizadas</button>
+          </div>
+          {renderMeetings(meetingRoute.id, meetingRoute.mode)}
+        </> : activityModule ? <section className="task-panel">
+          <div className="panel-head"><h1>{module === 'tasks' ? 'Tarefas' : 'Rotinas'}</h1>
+            <button className="primary" onClick={() => onAdd(module === 'tasks' ? 'demand' : 'routine')}>
+              {module === 'tasks' ? 'Incluir tarefa' : 'Incluir rotina'}
+            </button>
+          </div>
+          <TaskRows tasks={active.filter(task => isRoutine(task) === (module === 'routines'))}
+            date={date} isDone={isDone} toggle={toggle} onEdit={onEdit} onDelete={removeActivity}/>
+        </section> : <>
+          <div className="aw-heading aw-greeting">
+            <div><p>{fullDate.format(toDate(date))}</p><h1>Olá, Anelisa 👋</h1></div>
             <div className="aw-view" role="group" aria-label="Modo de visualização">
               <button aria-pressed={view === 'list'} onClick={() => setView('list')}><List size={17}/> Lista</button>
               <button aria-pressed={view === 'calendar'} onClick={() => setView('calendar')}><CalendarDays size={17}/> Calendário</button>
             </div>
           </div>
-          <DailyQuotes key={date} date={date}/>
+          <div className="aw-dashboard" aria-label="Resumo diário e semanal">
+            <section className="aw-desk-card"><h2>🎯 Hoje</h2>
+              <strong>{completedToday}/{plannedToday.length}</strong><p>atividades concluídas</p>
+            </section>
+            <section className="aw-desk-card"><h2>📊 Esta semana</h2>
+              <strong>{completedWeek}/{plannedWeek.length}</strong><p>atividades concluídas · segunda a domingo</p>
+            </section>
+          </div>
+          <div className="aw-mobile-quotes"><DailyQuotes key={date} date={date}/></div>
           <div className="aw-home-content">
           <div className="aw-action-cards">
             <button onClick={() => onAdd('demand')}><span className="aw-action-icon"><Task size={20}/></span> Incluir tarefa</button>
@@ -305,6 +362,7 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
         </>}
       </div>
       <aside className="aw-desktop-right" aria-label="Calendário e atualizações">
+        <DailyQuotes key={date} date={date}/>
         <div className="aw-desk-card">
           <MiniCalendar today={date} selected={selectedDay} holidaysForMonth={holidaysForMonth}
             hasEvent={day => events.some(event => occursOn(event, day)) || meetings.some(meeting => meeting.meeting_date === day)}
@@ -338,7 +396,7 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
     </div>
 
     {reminderDialog}
-    {activity && <ActivityEditor task={activity} date={date} onSave={onSaveActivity} onClose={goHome}/>}
+    {activity && <ActivityEditor task={activity} date={date} onSave={onSaveActivity} onClose={closeActivity}/>}
 
     <dialog ref={menu} className="aw-profile" aria-labelledby="aw-profile-title"
       onClick={event => { if (event.target === event.currentTarget) menu.current.close(); }}>
@@ -347,7 +405,10 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
           <h2 id="aw-profile-title"><Settings size={20}/> Configurações</h2>
           <button className="secondary" aria-label="Fechar configurações" onClick={() => menu.current.close()}><X size={18}/></button>
         </div>
-        <p><strong>Anelisa</strong><br/>{email}</p>
+        <div className="aw-profile-identity">
+          <span className="aw-avatar">{photo ? <img src={photo} alt=""/> : 'A'}</span>
+          <p><strong>Anelisa</strong><br/>{email}</p>
+        </div>
         <fieldset className="aw-theme-picker">
           <legend>Tema</legend>
           {Object.entries(appearance).map(([key, option]) => <label key={key}>

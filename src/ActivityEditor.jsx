@@ -24,6 +24,7 @@ export default function ActivityEditor({ task, date, onSave, onClose }) {
       setError(title ? 'Selecione pelo menos um dia da semana.' : 'Informe o título.');
       return;
     }
+    if (task.id && !window.confirm('Salvar as alterações nesta atividade?')) return;
     const day = form.get('date') || null;
     setSaving(true);
     setError('');

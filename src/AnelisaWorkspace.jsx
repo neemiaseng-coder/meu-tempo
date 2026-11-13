@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Bell, BellRing, Cake, Calendar, CircleAlert, Compass, Grid2X2, ListTodo, Newspaper, NotebookPen, Pin, VideoIcon, CalendarCheck, CalendarDays, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ClipboardList,
+import { ArrowLeft, Bell, BellRing, Cake, Calendar, CircleAlert, Compass, FileText, Grid2X2, ListTodo, Newspaper, NotebookPen, Pin, VideoIcon, CalendarCheck, CalendarDays, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ClipboardList,
   CirclePlus, House, List, LogOut, MessageCircle, Music2, Pencil, Repeat2, Settings, SquarePen, Trash2, Video, X } from 'lucide-react';
 import ActivityEditor from './ActivityEditor.jsx';
 import DailyQuotes from './DailyQuotes.jsx';
@@ -21,6 +21,16 @@ const monthLabel = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'nume
 const toDate = value => new Date(value + 'T12:00:00');
 const isoDate = date => date.toLocaleDateString('en-CA');
 const isRoutine = task => task.task_type === 'routine';
+const workspaceStart = '2026-11-12';
+const taskDay = task => task.due_date || task.scheduled_date;
+
+function previousDays(date) {
+  const days = [];
+  for (const day = toDate(workspaceStart); isoDate(day) < date; day.setDate(day.getDate() + 1)) {
+    days.push(isoDate(day));
+  }
+  return days;
+}
 
 export function routineOccurs(task, date) {
   if (!isRoutine(task) || task.is_active === false || task.status === 'cancelled'
@@ -36,20 +46,20 @@ function TaskRows({ tasks, date, isDone, toggle, onEdit, onDelete }) {
   if (!tasks.length) return <p className="aw-empty">Nenhuma atividade nesta lista.</p>;
   return tasks.map(task => {
     const routine = isRoutine(task);
-    const scheduled = !routine || routineOccurs(task, date);
+    const scheduled = !routine || Boolean(task.occurrenceDay) || routineOccurs(task, date);
     const done = isDone(task);
-    const late = !routine && !done && Boolean(task.due_date && task.due_date < date);
+    const late = !done && Boolean(task.occurrenceDay || (!routine && taskDay(task) && taskDay(task) < date));
     const variableMonth = routine && task.recurrence_type === 'monthly' && !task.recurrence_days?.length;
-    const status = done ? 'Concluída' : routine ? scheduled ? 'Hoje' : variableMonth && !task.scheduled_date ? 'Data a definir' : 'Fora da programação de hoje'
-      : !task.due_date ? 'Sem prazo' : task.due_date < date ? 'Em atraso' : task.due_date === date ? 'Hoje' : 'Agendada';
+    const status = done ? 'Concluída' : late ? 'Em atraso' : routine ? scheduled ? 'Hoje' : variableMonth && !task.scheduled_date ? 'Data a definir' : 'Fora da programação de hoje'
+      : !taskDay(task) ? 'Sem prazo' : taskDay(task) === date ? 'Hoje' : 'Agendada';
     const scheduledLabel = routine && task.recurrence_type === 'weekly'
       ? (task.recurrence_days ?? []).map(day => shortWeekdays[day]).join(', ')
       : variableMonth && task.scheduled_date ? toDate(task.scheduled_date).toLocaleDateString('pt-BR') : '';
-    const subtitle = routine ? [frequencies[task.recurrence_type], scheduledLabel].filter(Boolean).join(' · ')
-      : task.due_date && toDate(task.due_date).toLocaleDateString('pt-BR');
-    return <div className="anelisa-task" data-overdue={late || undefined} key={task.id}>
+    const subtitle = task.occurrenceDay ? toDate(task.occurrenceDay).toLocaleDateString('pt-BR') : routine ? [frequencies[task.recurrence_type], scheduledLabel].filter(Boolean).join(' · ')
+      : taskDay(task) && toDate(taskDay(task)).toLocaleDateString('pt-BR');
+    return <div className="anelisa-task" data-overdue={late || undefined} key={task.occurrenceDay ? task.id + ':' + task.occurrenceDay : task.id}>
       <button className={'myday-check' + (done ? ' checked' : '')} disabled={!scheduled}
-        aria-pressed={done} aria-label={task.title} onClick={() => toggle(task)}>{done && <Check size={16}/>}</button>
+        aria-pressed={done} aria-label={task.title} onClick={() => toggle(task, task.occurrenceDay)}>{done && <Check size={16}/>}</button>
       <div><strong>{late && <CircleAlert size={15} aria-hidden="true"/>}{task.title}</strong><small>{subtitle}</small>
         {task.description && <details className="aw-task-description"><summary>Detalhes</summary><p>{task.description}</p></details>}
       </div>
@@ -72,7 +82,7 @@ export function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holid
 
   function entries(day) {
     return [
-      ...tasks.filter(task => isRoutine(task) ? routineOccurs(task, day) : task.due_date === day)
+      ...tasks.filter(task => isRoutine(task) ? routineOccurs(task, day) : taskDay(task) === day)
         .map(task => ({ ...task, kind: isRoutine(task) ? 'Rotina' : 'Tarefa' })),
       ...events.filter(event => occursOn(event, day)).map(event => ({ ...event, kind: event.event_type === 'other' ? 'Lembrete' : 'Evento' })),
       ...meetings.filter(meeting => meeting.meeting_date === day).map(meeting => ({ ...meeting, kind: 'Reunião' })),
@@ -181,9 +191,9 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
   const menu = useRef(null);
   const active = tasks.filter(task => task.is_active !== false && task.status !== 'cancelled');
   const routines = active.filter(task => routineOccurs(task, date));
-  const due = active.filter(task => !isRoutine(task) && task.due_date &&
-    (task.due_date === date || (task.due_date < date && !isDone(task))));
-  const plannedToday = [...due.filter(task => task.due_date === date), ...routines];
+  const pendingTasks = active.filter(task => !isRoutine(task) && taskDay(task)
+    && taskDay(task) < date && !isDone(task));
+  const plannedToday = [...active.filter(task => !isRoutine(task) && taskDay(task) === date), ...routines];
   const completedToday = plannedToday.filter(isDone).length;
   const weekDays = Array.from({ length: 7 }, (_, offset) => {
     const day = toDate(weekStart);
@@ -193,20 +203,24 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
   const doneOccurrences = new Set(occurrences.filter(item => item.status === 'completed')
     .map(item => item.task_id + ':' + item.occurrence_date));
   const plannedWeek = weekDays.flatMap(day => active.filter(task => isRoutine(task)
-    ? routineOccurs(task, day) : task.due_date === day).map(task => ({ task, day })));
+    ? routineOccurs(task, day) : taskDay(task) === day).map(task => ({ task, day })));
   const completedWeek = plannedWeek.filter(({ task, day }) => isRoutine(task)
     ? doneOccurrences.has(task.id + ':' + day) : isDone(task)).length;
   const progress = plannedToday.length ? Math.round(completedToday / plannedToday.length * 100) : 0;
   const todaysMeetings = meetings.filter(meeting => meeting.meeting_date === date);
-  const lateTasks = due.filter(task => task.due_date < date);
-  const agendaToday = [...due.filter(task => task.due_date === date), ...routines];
+  const lateRoutines = previousDays(date).flatMap(day => active
+    .filter(task => routineOccurs(task, day) && !doneOccurrences.has(task.id + ':' + day))
+    .map(task => ({ ...task, occurrenceDay: day })));
+  const lateTasks = [...pendingTasks, ...lateRoutines]
+    .sort((a, b) => (a.occurrenceDay || taskDay(a)).localeCompare(b.occurrenceDay || taskDay(b)));
+  const agendaToday = plannedToday;
   const reminders = upcomingReminders(events, date, occursOn);
   const birthdays = events.filter(event => birthday(event) && event.event_date.startsWith(date.slice(0, 7)))
     .sort((a, b) => a.event_date.localeCompare(b.event_date));
   const shortDay = day => toDate(day).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
   const recentMeetings = [...meetings].filter(meeting => meeting.finalized_at)
     .sort((a, b) => b.finalized_at.localeCompare(a.finalized_at)).slice(0, 3);
-  const remainingActivities = active.filter(task => !due.includes(task) && !routines.includes(task));
+  const remainingActivities = active.filter(task => !pendingTasks.includes(task) && !plannedToday.includes(task));
 
   useEffect(() => {
     const syncRoute = () => {
@@ -287,18 +301,6 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
           <button aria-current={module === 'routines' ? 'page' : undefined} onClick={() => openRoute({ screen: 'module', module: 'routines' })}><Routine/> Rotinas</button>
           <button aria-current={module === 'meetings' ? 'page' : undefined} onClick={() => openRoute({ screen: 'meeting', mode: 'history' })}><Meeting/> Reuniões</button>
         </nav>
-        <section className="aw-desk-card aw-notes" data-card="notes">
-          <h2><label htmlFor="aw-notes"><NotebookPen/> Anotações</label></h2>
-          <textarea id="aw-notes" rows={4} value={notes} onChange={updateNotes} placeholder="Escreva uma anotação…"/>
-          <small role="status">{notesStatus}</small>
-        </section>
-        <section className="aw-desk-card" data-card="reminders">
-          <h2><Pin/> Lembretes rápidos</h2>
-          <button className="primary" onClick={() => onReminder(date)}><Alert/> Incluir lembrete</button>
-          {reminders.length ? <ul>{reminders.slice(0, 4).map(({ event, day }) => <li key={event.id + day}>
-            <button onClick={() => onReminder(day, event)}>{event.description || event.title}<small>{shortDay(day)}</small></button>
-          </li>)}</ul> : <p>Nenhum lembrete nos próximos 7 dias.</p>}
-        </section>
         <AnelisaContacts records={contacts} onSave={onSaveContact}/>
       </aside>
       <div className="aw-feed">
@@ -328,7 +330,10 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
             date={date} isDone={isDone} toggle={toggle} onEdit={onEdit} onDelete={removeActivity}/>
         </section> : <>
           <div className="aw-heading aw-greeting">
-            <div><p>{fullDate.format(toDate(date))}</p><h1>Olá, Anelisa</h1></div>
+            <div className="aw-greeting-copy">
+              <span className="aw-greeting-doc" aria-hidden="true"><FileText size={26}/></span>
+              <div><p><time dateTime={date}>{fullDate.format(toDate(date))}</time></p><h1>Olá, Anelisa</h1></div>
+            </div>
             <div className="aw-view" role="group" aria-label="Modo de visualização">
               <button aria-pressed={view === 'list'} onClick={() => setView('list')}><List size={17}/> Lista</button>
               <button aria-pressed={view === 'calendar'} onClick={() => setView('calendar')}><CalendarIcon size={17}/> Calendário</button>
@@ -389,6 +394,11 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
             <button className="secondary" onClick={() => onReminder(selectedDay)}><Alert/> Lembrete</button>
           </div>
         </div>
+        <section className="aw-desk-card aw-notes" data-card="notes">
+          <h2><label htmlFor="aw-notes"><NotebookPen/> Anotações</label></h2>
+          <textarea id="aw-notes" rows={7} value={notes} onChange={updateNotes} placeholder="Escreva uma anotação…"/>
+          <small role="status">{notesStatus}</small>
+        </section>
         <section className="aw-desk-card" data-card="birthdays">
           <h2><Birthday/> Aniversariantes do mês</h2>
           {birthdays.length ? <ul>{birthdays.map(event => <li key={event.id}>

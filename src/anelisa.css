@@ -510,3 +510,43 @@
   }
   .anelisa-workspace .aw-desk-card h2 { color: var(--aw-ink); }
 }
+
+.anelisa-workspace { font-size: 16px; }
+.anelisa-workspace button { font-size: inherit; }
+.anelisa-workspace .anelisa-task strong { font-size: 1.0625rem; }
+.anelisa-workspace :is(.anelisa-task small, .aw-dashboard p, .aw-dashboard h2, .aw-greeting p, .aw-daily-quote p) { font-size: .9375rem; }
+.aw-greeting-copy { display: flex; align-items: center; gap: 12px; }
+.aw-greeting-doc {
+  display: grid; place-items: center; flex: 0 0 46px; height: 46px;
+  border: 1px solid var(--aw-line); border-radius: 13px;
+  color: var(--aw-icon-a); background: var(--aw-card-a);
+}
+.anelisa-workspace .aw-notes textarea {
+  min-height: 176px; padding: 13px; line-height: 1.55;
+  border: 1px solid var(--aw-icon-b); border-radius: 16px;
+}
+.anelisa-workspace .aw-notes textarea:focus {
+  outline: 2px solid var(--aw-blue); outline-offset: 2px;
+}
+.anelisa-workspace[data-aw-theme="google"] {
+  --aw-page: #fff; --aw-surface: #fff; --aw-soft: #e8f0fe;
+  --aw-card-a: #e8f0fe; --aw-card-b: #f5f8fd; --aw-card-c: #f5f8fd;
+  --aw-line: #dadce0; --aw-progress-surface: #f2f6fc;
+  --aw-icon-a: #1967d2; --aw-icon-b: #5f6368; --aw-icon-c: #5f6368;
+  background: #fff;
+}
+.anelisa-workspace[data-aw-theme="google"] .aw-header {
+  background: #fff; color: #202124; border-bottom: 1px solid #dadce0;
+}
+.anelisa-workspace[data-aw-theme="google"] .aw-header .aw-brand { color: #202124; }
+.anelisa-workspace[data-aw-theme="google"] .aw-header .aw-avatar { border-color: #dadce0; }
+@media (min-width: 1100px) {
+  .anelisa-workspace .aw-desk-card h2 { font-size: 1.0625rem; }
+  .anelisa-workspace .aw-desk-card p { font-size: .9375rem; }
+  .anelisa-workspace .aw-desk-card .aw-calendar-actions button { font-size: .875rem; }
+  .anelisa-workspace[data-aw-theme="google"] :is(.aw-greeting, .aw-desk-card[data-card]) { background: #fff; }
+  .anelisa-workspace[data-aw-theme="google"] .aw-desk-card[data-card="menu"] { box-shadow: none; }
+  .anelisa-workspace[data-aw-theme="google"] .aw-desk-card[data-card="menu"] button { border-radius: 8px 24px 24px 8px; }
+  .anelisa-workspace[data-aw-theme="google"] .aw-desk-card[data-card="menu"] button svg { color: #5f6368; }
+  .anelisa-workspace[data-aw-theme="google"] .aw-desk-card[data-card="menu"] button[aria-current="page"] svg { color: #1967d2; }
+}

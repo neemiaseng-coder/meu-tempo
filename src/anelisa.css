@@ -97,21 +97,11 @@
 .aw-header .aw-avatar { justify-self: end; }
 .aw-layout { width: min(100%, 1340px); margin: 0 auto; padding: 18px clamp(12px, 3vw, 34px); }
 .aw-feed { min-width: 0; width: min(100%, 1180px); margin: 0 auto; }
-.aw-progress, .anelisa-workspace .task-panel {
+.anelisa-workspace .task-panel {
   background: #fff;
   border: 1px solid var(--aw-line);
   box-shadow: 0 2px 8px #1f4b7a0c !important;
 }
-.aw-progress { padding: 16px; margin-bottom: 12px; border-radius: 16px; background: var(--aw-progress-surface); }
-.aw-progress-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
-.aw-progress h2, .aw-progress p { margin: 0; }
-.aw-progress h2 { font-size: 1.02rem; }
-.aw-progress p { color: var(--aw-muted); margin-top: 3px; font-size: .9rem; }
-.aw-progress strong { color: #264c95; font-size: 1.4rem; font-variant-numeric: tabular-nums; padding: 4px 11px; border-radius: 20px; background: #e8efff; }
-.aw-progress progress { appearance: none; display: block; width: 100%; height: 12px; border: 0; border-radius: 20px; overflow: hidden; background: var(--aw-progress-track); }
-.aw-progress progress::-webkit-progress-bar { background: var(--aw-progress-track); }
-.aw-progress progress::-webkit-progress-value { background: var(--aw-blue); border-radius: 20px; transition: width .25s ease; }
-.aw-progress progress::-moz-progress-bar { background: var(--aw-blue); border-radius: 20px; }
 .anelisa-workspace .primary { background: var(--aw-blue); color: #fff; }
 .anelisa-workspace .primary:hover { background: #0e54b0; }
 .anelisa-workspace .myday-check.checked { background: var(--aw-blue); border-color: var(--aw-blue); }
@@ -123,7 +113,6 @@
   .aw-header .aw-avatar { width: 36px; height: 36px; }
   .aw-layout { padding-top: 16px; }
 }
-@media (prefers-reduced-motion: reduce) { .aw-progress progress::-webkit-progress-value { transition: none; } }
 .app.aw-app { overflow-x: clip; }
 .aw-app .modal .primary { background: #1465cf; color: #fff; }
 .aw-app .modal .primary:hover { background: #0e54b0; }
@@ -266,7 +255,7 @@
   background: var(--aw-blue);
   color: var(--aw-on-accent);
 }
-.anelisa-workspace :is(.secondary, .aw-avatar, .aw-edit, .aw-view button[aria-pressed="true"], .aw-daily-quote, .aw-progress strong) {
+.anelisa-workspace :is(.secondary, .aw-avatar, .aw-edit, .aw-view button[aria-pressed="true"], .aw-daily-quote) {
   background: var(--aw-soft);
   color: var(--aw-ink);
 }
@@ -314,7 +303,7 @@
 @media (min-width: 700px) {
   [data-aw-theme="tiktok"] .aw-home-content { display: grid; grid-template-columns: minmax(0, 1fr) 168px; gap: 0 16px; }
   [data-aw-theme="tiktok"] .aw-action-cards { grid-column: 2; grid-row: 1 / span 2; grid-template-columns: 1fr; align-content: start; }
-  [data-aw-theme="tiktok"] :is(.aw-progress, .aw-home-agenda) { grid-column: 1; }
+  [data-aw-theme="tiktok"] .aw-home-agenda { grid-column: 1; }
 }
 
 .aw-daily-quote p { flex: 1; min-width: 0; margin: 0; }
@@ -389,14 +378,6 @@
 .aw-module-head { margin-bottom: 12px; }
 .aw-module-head h1 { flex: 1; margin: 0; }
 .aw-edit.aw-delete { color: #9a3046; background: #fff0f2; }
-.aw-dashboard { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
-.anelisa-workspace .aw-dashboard section {
-  padding: 13px 15px; border: 1px solid var(--aw-line); border-radius: 12px; background: var(--aw-surface);
-  border-left: 3px solid var(--aw-blue);
-}
-.aw-dashboard h2 { margin: 0 0 5px; font-size: 14px; color: var(--aw-blue); }
-.aw-dashboard strong { font-size: 25px; color: var(--aw-ink); }
-.aw-dashboard p { margin: 4px 0 0; color: var(--aw-muted); font-size: 13px; }
 .anelisa-workspace .aw-profile-identity {
   background: var(--aw-soft); border: 1px solid var(--aw-line); border-radius: 14px; padding: 13px;
   flex-wrap: nowrap; min-width: 0;
@@ -417,4 +398,115 @@
   .aw-desktop-right .aw-daily-quote { flex-wrap: wrap; margin: 0; padding: 13px; }
   .aw-desktop-right .aw-quote-controls { margin-left: auto; }
   .aw-desktop-left button[aria-current="page"]:not(.primary) { color: var(--aw-blue); background: var(--aw-soft); }
+}
+
+.anelisa-workspace {
+  --aw-muted: #43546a;
+  --aw-blue: #0866ff;
+  --aw-card-a: #e2eeff;
+  --aw-card-b: #eae5ff;
+  --aw-card-c: #dff5f2;
+  --aw-icon-a: #064fc3;
+  --aw-icon-b: #6741bc;
+  --aw-icon-c: #08776c;
+}
+.anelisa-workspace[data-aw-theme="instagram"] {
+  --aw-muted: #544558;
+  --aw-blue: #a71d70;
+  --aw-card-a: #ffe2f1;
+  --aw-card-b: #f0e5ff;
+  --aw-card-c: #fff0dc;
+  --aw-icon-a: #ad186e;
+  --aw-icon-b: #7430c4;
+  --aw-icon-c: #a34505;
+}
+.anelisa-workspace[data-aw-theme="tiktok"] {
+  --aw-ink: #fff;
+  --aw-muted: #dedde3;
+  --aw-blue: #74f5eb;
+  --aw-card-a: #173338;
+  --aw-card-b: #35233a;
+  --aw-card-c: #412735;
+  --aw-icon-a: #74f5eb;
+  --aw-icon-b: #d3afff;
+  --aw-icon-c: #ff9db5;
+}
+.anelisa-workspace[data-aw-theme="google"] {
+  --aw-font: Roboto, "Arial", sans-serif;
+  --aw-blue: #0b57d0;
+  --aw-ink: #202124;
+  --aw-muted: #414854;
+  --aw-page: #f2f6fc;
+  --aw-soft: #d3e3fd;
+  --aw-alt-soft: #fce8e6;
+  --aw-progress-surface: #e2edff;
+  --aw-progress-track: #aac7fa;
+  --aw-card-a: #e1edff;
+  --aw-card-b: #fce8e6;
+  --aw-card-c: #e2f4e8;
+  --aw-icon-a: #0b57d0;
+  --aw-icon-b: #b3261e;
+  --aw-icon-c: #146c2e;
+}
+[data-aw-theme="google"] .aw-logo { background: #fff; color: #0b57d0; }
+[data-aw-theme="google"] .aw-logo svg rect:nth-of-type(1) { color: #4285f4; }
+[data-aw-theme="google"] .aw-logo svg rect:nth-of-type(2) { color: #ea4335; }
+[data-aw-theme="google"] .aw-logo svg rect:nth-of-type(3) { color: #fbbc05; }
+[data-aw-theme="google"] .aw-logo svg rect:nth-of-type(4) { color: #34a853; }
+[data-aw-theme="facebook"] .aw-brand svg { fill: currentColor; }
+[data-aw-theme="instagram"] .aw-logo svg { stroke-width: 2.4; }
+[data-aw-theme="tiktok"] .aw-logo svg { filter: drop-shadow(1px 1px #ff567f); }
+.anelisa-workspace .aw-dashboard {
+  display: grid; grid-template-columns: 50px minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center; gap: 10px; padding: 6px 11px; margin-bottom: 12px;
+  background: var(--aw-progress-surface); border: 1px solid var(--aw-line); border-radius: 12px;
+}
+.aw-dashboard h2, .aw-dashboard p { margin: 0; font-size: .84rem; }
+.aw-dashboard h2 { font-weight: 600; color: var(--aw-ink); }
+.aw-dashboard p { color: var(--aw-muted); }
+.aw-week-summary { padding-left: 10px; border-left: 1px solid var(--aw-progress-track); }
+.aw-progress-ring {
+  display: grid; place-items: center; position: relative;
+  width: 46px; height: 46px; font-size: 11px; font-weight: 650; color: var(--aw-ink);
+}
+.aw-progress-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.aw-progress-ring circle { fill: none; stroke: var(--aw-progress-track); stroke-width: 2.5; }
+.aw-progress-ring circle + circle { stroke: var(--aw-blue); }
+.aw-progress-ring circle[stroke-dasharray="0 100"] { visibility: hidden; }
+
+.anelisa-workspace :is(.aw-desk-card, .panel-head, .anelisa-task strong) svg {
+  width: 17px; height: 17px; vertical-align: -.19em; margin-right: 4px;
+  color: var(--aw-card-icon, var(--aw-icon-a)); flex-shrink: 0;
+}
+.anelisa-workspace .aw-overdue-panel h2 svg, .anelisa-workspace .anelisa-task[data-overdue] strong svg { color: #bf294d; }
+[data-aw-theme="tiktok"] .aw-overdue-panel h2 svg, [data-aw-theme="tiktok"] .anelisa-task[data-overdue] strong svg { color: #ff9db5; }
+.anelisa-workspace .aw-desk-card .primary svg { color: currentColor; }
+.anelisa-workspace .aw-calendar-actions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; }
+.anelisa-workspace .aw-calendar-actions button {
+  display: flex; align-items: center; justify-content: center; gap: 4px; padding: 8px 4px;
+  background: var(--aw-surface); border: 1px solid var(--aw-line); font-size: .78rem;
+}
+.anelisa-workspace .aw-calendar-actions svg { margin: 0; }
+.anelisa-workspace .aw-calendar-actions button:first-child svg { color: var(--aw-icon-b); }
+.anelisa-workspace .aw-notes textarea {
+  display: block; width: 100%; resize: vertical; min-height: 85px;
+  background: var(--aw-surface); border: 1px solid var(--aw-line); border-radius: 9px;
+  color: var(--aw-ink); font: inherit; padding: 8px;
+}
+.anelisa-workspace .aw-notes textarea::placeholder { color: var(--aw-muted); opacity: 1; }
+.anelisa-workspace .aw-notes small { min-height: 1em; }
+.anelisa-workspace .aw-action-cards button:nth-child(2) .aw-action-icon,
+.anelisa-workspace nav button:nth-of-type(3) svg { color: var(--aw-icon-b); }
+.anelisa-workspace .aw-action-cards button:nth-child(3) .aw-action-icon,
+.anelisa-workspace nav button:nth-of-type(4) svg { color: var(--aw-icon-c); }
+@media (min-width: 1100px) {
+  .anelisa-workspace[data-aw-theme="google"] { --aw-desk-header: #0b57d0; background: #f2f6fc; }
+  .anelisa-workspace .aw-desk-card[data-card] { background: var(--aw-card-a); }
+  .anelisa-workspace .aw-desk-card:is([data-card="notes"], [data-card="birthdays"], [data-card="notifications"]) {
+    background: var(--aw-card-b); --aw-card-icon: var(--aw-icon-b);
+  }
+  .anelisa-workspace .aw-desk-card:is([data-card="contacts"], [data-card="news"], [data-card="reminders"]) {
+    background: var(--aw-card-c); --aw-card-icon: var(--aw-icon-c);
+  }
+  .anelisa-workspace .aw-desk-card h2 { color: var(--aw-ink); }
 }

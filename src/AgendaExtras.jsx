@@ -4,6 +4,11 @@ import { Bell, CalendarDays, ChevronLeft, ChevronRight, Newspaper, X } from 'luc
 const shortDate = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' });
 const toDate = date => new Date(date + 'T12:00:00Z');
 
+const birthdayPrefix = /^anivers[aá]rio\b(?:\s+d[aeo]\b)?[\s:–-]*/i;
+export function isBirthday(event) {
+  return event?.event_type === 'other' && birthdayPrefix.test((event.description || event.title || '').trim());
+}
+
 export function upcomingReminders(events, date, occursOn) {
   return Array.from({ length: 7 }, (_, offset) => {
     const day = toDate(date);
@@ -67,6 +72,9 @@ export function AgendaSidebar({ events, date, occursOn, onReminder, calendar, ch
 
 export function ReminderDialog({ reminder, onSave, onDelete, onClose }) {
   const dialog = useRef(null);
+  const birthday = reminder.kind === 'birthday' || isBirthday(reminder.event);
+  const label = birthday ? 'aniversário' : 'lembrete';
+  const savedDescription = reminder.event?.description || reminder.event?.title || '';
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   useEffect(() => { dialog.current.showModal(); }, []);
@@ -76,13 +84,13 @@ export function ReminderDialog({ reminder, onSave, onDelete, onClose }) {
     const form = new FormData(event.currentTarget);
     const description = form.get('description').trim();
     if (!description) {
-      setError('Escreva uma descrição.');
+      setError(birthday ? 'Informe o nome do aniversariante.' : 'Escreva uma descrição.');
       return;
     }
     setBusy(true);
     setError('');
     try {
-      await onSave(reminder.event?.id, form.get('date'), description);
+      await onSave(reminder.event?.id, form.get('date'), birthday ? 'Aniversário de ' + description : description);
       onClose();
     } catch (err) {
       setError(err.message);
@@ -91,7 +99,7 @@ export function ReminderDialog({ reminder, onSave, onDelete, onClose }) {
   }
 
   async function remove() {
-    if (!window.confirm('Excluir este lembrete do calendário?')) return;
+    if (!window.confirm('Excluir este ' + label + ' do calendário?')) return;
     setBusy(true);
     setError('');
     try {
@@ -107,16 +115,19 @@ export function ReminderDialog({ reminder, onSave, onDelete, onClose }) {
     onCancel={event => { event.preventDefault(); if (!busy) onClose(); }}
     onClick={event => { if (!busy && event.target === event.currentTarget) onClose(); }}>
     <form onSubmit={save}>
-      <header><h2 id="agenda-reminder-title">{reminder.event ? 'Editar lembrete' : 'Incluir lembrete'}</h2>
+      <header><h2 id="agenda-reminder-title">{reminder.event ? 'Editar ' + label : 'Incluir ' + label}</h2>
         <button type="button" className="secondary" aria-label="Fechar" disabled={busy} onClick={onClose}><X size={17}/></button>
       </header>
       <label>Dia<input type="date" name="date" required defaultValue={reminder.event?.event_date ?? reminder.day} disabled={busy}/></label>
-      <label>Descrição<textarea name="description" rows="3" required maxLength={500} disabled={busy}
-        placeholder="Ex.: Aniversário da Ana" defaultValue={reminder.event?.description || reminder.event?.title || reminder.initialDescription || ''}/></label>
+      {birthday
+        ? <label>Nome do aniversariante<input name="description" required maxLength={485} disabled={busy}
+            defaultValue={savedDescription.trim().replace(birthdayPrefix, '')}/></label>
+        : <label>Descrição<textarea name="description" rows="3" required maxLength={500} disabled={busy}
+            placeholder="Ex.: Levar os documentos" defaultValue={savedDescription}/></label>}
       {error && <p role="alert">{error}</p>}
       <footer>
         {reminder.event && <button className="secondary" type="button" disabled={busy} onClick={remove}>Excluir</button>}
-        <button className="primary" type="submit" disabled={busy}>{busy ? 'Salvando…' : 'Salvar lembrete'}</button>
+        <button className="primary" type="submit" disabled={busy}>{busy ? 'Salvando…' : 'Salvar ' + label}</button>
       </footer>
     </form>
   </dialog>;

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ContactRound } from 'lucide-react';
 
 export default function AnelisaContacts({ records, onSave }) {
   const [adding, setAdding] = useState(false);
@@ -35,8 +36,8 @@ export default function AnelisaContacts({ records, onSave }) {
     }
   }
 
-  return <section className="aw-desk-card">
-    <h2>📇 Contatos rápidos</h2>
+  return <section data-card="contacts" className="aw-desk-card">
+    <h2><ContactRound/> Contatos rápidos</h2>
     {contacts.length ? <ul>{contacts.map(({ id, name, phone }) => <li key={id}>
       {phone.replace(/\D/g, '') ? <a href={'tel:' + (phone.startsWith('+') ? '+' : '') + phone.replace(/\D/g, '')}>{name} <small>{phone}</small></a> : name}
     </li>)}</ul> : <p>Nenhum contato cadastrado.</p>}

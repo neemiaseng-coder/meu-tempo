@@ -86,7 +86,7 @@ function App(){
  const completed=todayTasks.filter(isDone).length;
  const progress=todayTasks.length?Math.round(completed/todayTasks.length*100):0;
 
- function openReminder(day,event,initialDescription){setReminder({day,event,initialDescription})}
+ function openReminder(day,event,kind){setReminder({day,event,kind})}
  async function saveReminder(id,day,description){
   const table=supabase.from('deadline_events');
   const values={title:description,event_date:day,description};

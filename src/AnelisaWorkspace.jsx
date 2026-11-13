@@ -142,7 +142,7 @@ export function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holid
 }
 
 export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveActivity,
-  meetings, renderMeetings, signOut, userId, email, holidaysForMonth, events, occursOn, onReminder, reminderDialog, contacts, onSaveContact, onDeleteActivity, weekStart, occurrences }) {
+  meetings, renderMeetings, signOut, userId, email, holidaysForMonth, events, occursOn, onReminder, reminderDialog, contacts, onSaveContact, onDeleteActivity, weekStart, occurrences, accountPhoto, onSavePhoto }) {
   const themeKey = 'meu-tempo-theme-' + userId;
   const [theme, setTheme] = useState(() => {
     try {
@@ -186,7 +186,11 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
   const activity = route?.screen === 'activity'
     ? route.id ? tasks.find(task => task.id === route.id) : { task_type: route.type }
     : null;
-  const [photo, setPhoto] = useState(() => localStorage.getItem('meu-tempo-photo-' + userId) || '');
+  const [localPhoto] = useState(() => {
+    try { return localStorage.getItem('meu-tempo-photo-' + userId) || ''; } catch { return ''; }
+  });
+  const photo = accountPhoto || localPhoto;
+  const [savingPhoto, setSavingPhoto] = useState(false);
   const [photoError, setPhotoError] = useState('');
   const menu = useRef(null);
   const notificationPanel = useRef(null);
@@ -265,24 +269,33 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
     }
   }
 
-  function changePhoto(event) {
+  async function changePhoto(event) {
     const file = event.target.files?.[0];
+    event.target.value = '';
     if (!file) return;
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 1_500_000) {
-      setPhotoError('Escolha uma imagem JPG, PNG ou WebP de até 1,5 MB.');
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setPhotoError('Escolha uma imagem JPG, PNG ou WebP.');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        localStorage.setItem('meu-tempo-photo-' + userId, reader.result);
-        setPhoto(reader.result);
-        setPhotoError('');
-      } catch {
-        setPhotoError('Não foi possível salvar a foto neste navegador.');
-      }
-    };
-    reader.readAsDataURL(file);
+    setSavingPhoto(true);
+    setPhotoError('');
+    try {
+      const image = await createImageBitmap(file);
+      const canvas = document.createElement('canvas');
+      const scale = Math.min(1, 320 / Math.max(image.width, image.height));
+      canvas.width = Math.max(1, Math.round(image.width * scale));
+      canvas.height = Math.max(1, Math.round(image.height * scale));
+      const context = canvas.getContext('2d');
+      context.fillStyle = '#fff';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      image.close();
+      await onSavePhoto(canvas.toDataURL('image/jpeg', 0.84));
+    } catch {
+      setPhotoError('Não foi possível salvar a foto. Tente novamente.');
+    } finally {
+      setSavingPhoto(false);
+    }
   }
 
   return <main className="anelisa-workspace" data-aw-theme={theme}>
@@ -474,7 +487,7 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
             <option.Brand size={17} aria-hidden="true"/> {option.label}
           </label>)}
         </fieldset>
-        <label>Alterar foto neste navegador<input type="file" accept="image/jpeg,image/png,image/webp" onChange={changePhoto}/></label>
+        <label>{savingPhoto ? 'Salvando foto…' : 'Alterar foto do perfil'}<input disabled={savingPhoto} type="file" accept="image/jpeg,image/png,image/webp" onChange={changePhoto}/></label>
         {photoError && <p role="alert">{photoError}</p>}
         <button className="secondary" onClick={signOut}><LogOut size={17}/> Sair da conta</button>
       </div>

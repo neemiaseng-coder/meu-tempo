@@ -158,6 +158,14 @@ function App(){
  {anelisa?<AnelisaWorkspace holidaysForMonth={holidaysForMonth} key={user.id} userId={user.id} email={user.email} tasks={tasks} date={dateToday}
    isDone={isDone} toggle={toggle} meetings={meetings} renderMeetings={renderMeetings}
    weekStart={weekStart(dateToday)} occurrences={occurrences}
+   accountPhoto={records.find(record=>record.id===user.id&&record.metadata?.kind==='profile_photo')?.content}
+   onSavePhoto={async(content)=>{
+    const {data,error}=await supabase.from('quick_records').upsert({
+      id:user.id,user_id:user.id,record_type:'snippet',title:'Foto de perfil',content,metadata:{kind:'profile_photo'}
+    }).select().single();
+    if(error)throw error;
+    setRecords(old=>[data,...old.filter(record=>record.id!==data.id)]);
+   }}
    onDeleteActivity={async(id)=>{
     const {data,error}=await supabase.from('tasks').update({is_active:false,status:'cancelled'})
       .eq('id',id).eq('user_id',user.id).select().single();

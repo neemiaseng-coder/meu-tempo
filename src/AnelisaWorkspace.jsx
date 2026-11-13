@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Bell, BellRing, Cake, Calendar, CircleAlert, Compass, FileText, Grid2X2, ListTodo, Newspaper, NotebookPen, Pin, VideoIcon, CalendarCheck, CalendarDays, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ClipboardList,
+import { ArrowLeft, Bell, BellRing, Cake, Calendar, CircleAlert, Compass, FileText, Grid2X2, ListTodo, Newspaper, NotebookPen, VideoIcon, CalendarCheck, CalendarDays, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ClipboardList,
   CirclePlus, House, List, LogOut, MessageCircle, Music2, Pencil, Repeat2, Settings, SquarePen, Trash2, Video, X } from 'lucide-react';
 import ActivityEditor from './ActivityEditor.jsx';
 import DailyQuotes from './DailyQuotes.jsx';
@@ -189,6 +189,7 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
   const [photo, setPhoto] = useState(() => localStorage.getItem('meu-tempo-photo-' + userId) || '');
   const [photoError, setPhotoError] = useState('');
   const menu = useRef(null);
+  const notificationPanel = useRef(null);
   const active = tasks.filter(task => task.is_active !== false && task.status !== 'cancelled');
   const routines = active.filter(task => routineOccurs(task, date));
   const pendingTasks = active.filter(task => !isRoutine(task) && taskDay(task)
@@ -217,6 +218,7 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
   const reminders = upcomingReminders(events, date, occursOn);
   const birthdays = events.filter(event => birthday(event) && event.event_date.startsWith(date.slice(0, 7)))
     .sort((a, b) => a.event_date.localeCompare(b.event_date));
+  const notificationCount = reminders.length + lateTasks.length;
   const shortDay = day => toDate(day).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
   const recentMeetings = [...meetings].filter(meeting => meeting.finalized_at)
     .sort((a, b) => b.finalized_at.localeCompare(a.finalized_at)).slice(0, 3);
@@ -288,8 +290,15 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
       <button className="aw-brand" aria-label="Início do Meu Tempo" onClick={goHome}>
         <span className="aw-logo"><Brand size={19}/></span> <span>Meu Tempo</span>
       </button>
-      <button className="aw-avatar" aria-label="Abrir configurações do perfil" aria-haspopup="dialog"
+      <div className="aw-header-actions">
+        <button className="aw-notification-trigger" aria-label={'Notificações e lembretes (' + notificationCount + ')'}
+          aria-haspopup="dialog" onClick={() => notificationPanel.current.showModal()}>
+          <Alert size={22} aria-hidden="true"/>
+          {notificationCount > 0 && <span className="aw-notification-count" aria-hidden="true">{notificationCount > 99 ? '99+' : notificationCount}</span>}
+        </button>
+        <button className="aw-avatar" aria-label="Abrir configurações do perfil" aria-haspopup="dialog"
         onClick={() => menu.current.showModal()}>{photo ? <img src={photo} alt=""/> : 'A'}</button>
+      </div>
     </header>
 
     <div className="aw-layout aw-desktop-layout">
@@ -301,6 +310,11 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
           <button aria-current={module === 'routines' ? 'page' : undefined} onClick={() => openRoute({ screen: 'module', module: 'routines' })}><Routine/> Rotinas</button>
           <button aria-current={module === 'meetings' ? 'page' : undefined} onClick={() => openRoute({ screen: 'meeting', mode: 'history' })}><Meeting/> Reuniões</button>
         </nav>
+        <section className="aw-desk-card aw-notes" data-card="notes">
+          <h2><label htmlFor="aw-notes"><NotebookPen/> Anotações</label></h2>
+          <textarea id="aw-notes" rows={7} value={notes} onChange={updateNotes} placeholder="Escreva uma anotação…"/>
+          <small role="status">{notesStatus}</small>
+        </section>
         <AnelisaContacts records={contacts} onSave={onSaveContact}/>
       </aside>
       <div className="aw-feed">
@@ -394,11 +408,6 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
             <button className="secondary" onClick={() => onReminder(selectedDay)}><Alert/> Lembrete</button>
           </div>
         </div>
-        <section className="aw-desk-card aw-notes" data-card="notes">
-          <h2><label htmlFor="aw-notes"><NotebookPen/> Anotações</label></h2>
-          <textarea id="aw-notes" rows={7} value={notes} onChange={updateNotes} placeholder="Escreva uma anotação…"/>
-          <small role="status">{notesStatus}</small>
-        </section>
         <section className="aw-desk-card" data-card="birthdays">
           <h2><Birthday/> Aniversariantes do mês</h2>
           {birthdays.length ? <ul>{birthdays.map(event => <li key={event.id}>
@@ -411,19 +420,39 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
             <button onClick={() => openMeeting(meeting.id)}>{meeting.title}<small>Reunião realizada</small></button>
           </li>)}</ul> : <p>Nenhuma atualização recente.</p>}
         </section>
-        <section className="aw-desk-card" data-card="notifications">
-          <h2><Alert/> Notificações</h2>
-          {lateTasks.length > 0 && <button onClick={() => { goHome(); setView('list'); requestAnimationFrame(() => document.querySelector('.aw-overdue-panel')?.scrollIntoView({ block: 'nearest' })); }}>
-            <CircleAlert/> {lateTasks.length} {lateTasks.length === 1 ? 'tarefa em atraso' : 'tarefas em atraso'}
-          </button>}
-          {reminders.length > 0 && <button onClick={() => onReminder(reminders[0].day, reminders[0].event)}>
-            <Pin/> Próximo lembrete · {shortDay(reminders[0].day)}
-          </button>}
-          {!lateTasks.length && !reminders.length && <p>Nenhuma notificação no momento.</p>}
-        </section>
       </aside>
     </div>
 
+    <dialog className="aw-notification-panel" ref={notificationPanel} aria-labelledby="aw-notification-title"
+      onClick={event => { if (event.target === event.currentTarget) notificationPanel.current.close(); }}>
+      <div className="aw-notification-body">
+        <header>
+          <h2 id="aw-notification-title">Notificações e lembretes</h2>
+          <button className="secondary" aria-label="Fechar notificações" onClick={() => notificationPanel.current.close()}><X size={18}/></button>
+        </header>
+        {lateTasks.length > 0 && <button className="aw-notification-item aw-notification-overdue" onClick={() => {
+          notificationPanel.current.close();
+          goHome();
+          setView('list');
+          requestAnimationFrame(() => document.querySelector('.aw-overdue-panel')?.scrollIntoView({ block: 'nearest' }));
+        }}>
+          <CircleAlert size={20}/><span>{lateTasks.length} {lateTasks.length === 1 ? 'atividade em atraso' : 'atividades em atraso'}</span>
+        </button>}
+        {reminders.length > 0 && <>
+          <h3>Próximos 7 dias</h3>
+          <ul>{reminders.map(({ event, day }) => <li key={event.id + ':' + day}>
+            <button className="aw-notification-item" onClick={() => {
+              notificationPanel.current.close();
+              onReminder(day, event);
+            }}>
+              {birthday(event) ? <Birthday size={19}/> : <Alert size={19}/>}
+              <span>{event.description || event.title}<small>{shortDay(day)}</small></span>
+            </button>
+          </li>)}</ul>
+        </>}
+        {!notificationCount && <p>Nenhuma notificação ou lembrete para os próximos 7 dias.</p>}
+      </div>
+    </dialog>
     {reminderDialog}
     {activity && <ActivityEditor task={activity} date={date} onSave={onSaveActivity} onClose={closeActivity}/>}
 

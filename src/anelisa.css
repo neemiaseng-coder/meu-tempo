@@ -502,7 +502,7 @@
 @media (min-width: 1100px) {
   .anelisa-workspace[data-aw-theme="google"] { --aw-desk-header: #0b57d0; background: #f2f6fc; }
   .anelisa-workspace .aw-desk-card[data-card] { background: var(--aw-card-a); }
-  .anelisa-workspace .aw-desk-card:is([data-card="notes"], [data-card="birthdays"], [data-card="notifications"]) {
+  .anelisa-workspace .aw-desk-card:is([data-card="notes"], [data-card="birthdays"]) {
     background: var(--aw-card-b); --aw-card-icon: var(--aw-icon-b);
   }
   .anelisa-workspace .aw-desk-card:is([data-card="contacts"], [data-card="news"], [data-card="reminders"]) {
@@ -550,3 +550,38 @@
   .anelisa-workspace[data-aw-theme="google"] .aw-desk-card[data-card="menu"] button svg { color: #5f6368; }
   .anelisa-workspace[data-aw-theme="google"] .aw-desk-card[data-card="menu"] button[aria-current="page"] svg { color: #1967d2; }
 }
+
+.aw-header-actions { display: flex; align-items: center; gap: 10px; }
+.anelisa-workspace .aw-notification-trigger {
+  position: relative; display: grid; place-items: center;
+  width: 42px; height: 42px; border: 1px solid var(--aw-line);
+  border-radius: 50%; color: var(--aw-blue); background: var(--aw-surface);
+}
+.aw-notification-count {
+  position: absolute; top: -4px; right: -5px;
+  min-width: 19px; min-height: 19px; padding: 1px 4px;
+  border-radius: 99px; border: 1px solid var(--aw-surface); background: #bd2849;
+  color: #fff; font-size: 11px; line-height: 15px; font-weight: 650;
+}
+.anelisa-workspace .aw-notification-panel {
+  position: fixed; inset: 77px 16px auto auto; margin: 0; padding: 0;
+  width: min(380px, calc(100vw - 32px)); max-height: calc(100dvh - 93px);
+  background: var(--aw-surface); color: var(--aw-ink);
+  border: 1px solid var(--aw-line); border-radius: 16px; box-shadow: 0 8px 32px #121a3933;
+}
+.aw-notification-panel::backdrop { background: #11182722; }
+.aw-notification-body { padding: 14px; }
+.aw-notification-body header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.aw-notification-body :is(h2, h3) { margin: 0; font-size: 1rem; }
+.aw-notification-body h3 { margin-top: 12px; }
+.aw-notification-body ul { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 5px; }
+.anelisa-workspace .aw-notification-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 10px; text-align: left; color: var(--aw-ink);
+  background: var(--aw-soft); border-radius: 10px; overflow-wrap: anywhere;
+}
+.aw-notification-item svg { flex: none; color: var(--aw-blue); }
+.aw-notification-item small { display: block; color: var(--aw-muted); }
+.anelisa-workspace .aw-notification-overdue { margin-top: 10px; background: #fff0f2; color: #992845; }
+.aw-notification-overdue svg { color: currentColor; }
+[data-aw-theme="tiktok"] .aw-notification-body .aw-notification-overdue { background: #412735; color: #ffb3c8; }

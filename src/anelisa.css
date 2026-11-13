@@ -326,3 +326,61 @@
 }
 .aw-quote-controls button:hover { border-color: var(--aw-blue); }
 .aw-quote-controls button:focus-visible { outline: 2px solid var(--aw-blue); outline-offset: 2px; }
+
+.aw-desktop-left, .aw-desktop-right { display: none; }
+.anelisa-workspace .aw-overdue-panel { border-color: #edb4bd; }
+.anelisa-workspace .anelisa-task[data-overdue] {
+  background: #fff0f1; color: #762e3c; border-color: #f2ccd2;
+}
+.anelisa-workspace .anelisa-task[data-overdue] .aw-late { color: #94293f; }
+[data-aw-theme="tiktok"] .anelisa-task[data-overdue] {
+  background: #492832; color: #ffe0e6; border-color: #69404b;
+}
+[data-aw-theme="tiktok"] .anelisa-task[data-overdue] .aw-late { color: #ffc3d0; }
+.anelisa-workspace .aw-overdue-panel .panel-head { color: var(--aw-ink); }
+
+@media (min-width: 1100px) {
+  .anelisa-workspace { --aw-desk-header: #195fc7; --aw-desk-header-ink: #fff; background: #edf5ff; }
+  .anelisa-workspace[data-aw-theme="instagram"] { --aw-desk-header: #a83b80; background: #fcf2fa; }
+  .anelisa-workspace[data-aw-theme="tiktok"] { --aw-desk-header: #7ce9e3; --aw-desk-header-ink: #142127; background: #15181d; }
+  .anelisa-workspace .aw-header { background: var(--aw-desk-header); border-color: transparent; }
+  .anelisa-workspace .aw-header .aw-brand { color: var(--aw-desk-header-ink); }
+  .anelisa-workspace .aw-desktop-layout {
+    width: min(100%, 1740px); display: grid;
+    grid-template-columns: clamp(185px, 17vw, 250px) minmax(0, 1fr) clamp(245px, 22vw, 320px);
+    gap: clamp(12px, 1.5vw, 24px); align-items: start;
+  }
+  .anelisa-workspace[data-aw-theme] .aw-feed { max-width: none; width: 100%; }
+  .anelisa-workspace[data-aw-theme] .aw-home-content { display: block; }
+  .aw-desktop-left, .aw-desktop-right { display: grid; gap: 14px; min-width: 0; }
+  .anelisa-workspace .aw-desk-card, .anelisa-workspace .aw-heading {
+    background: var(--aw-surface); border: 1px solid var(--aw-line); border-radius: 14px;
+    padding: 15px; box-shadow: 0 4px 15px #153b7710; overflow-wrap: anywhere;
+  }
+  .aw-desk-card h2 { margin: 0 0 10px; color: var(--aw-blue); font-size: 15px; }
+  .aw-desk-card p { color: var(--aw-muted); margin: 8px 0; font-size: 13px; }
+  .aw-desk-card ul { list-style: none; padding: 0; margin: 8px 0; }
+  .aw-desk-card li + li { border-top: 1px solid var(--aw-line); }
+  .aw-desk-card button:not(.primary), .aw-desk-card a {
+    display: block; width: 100%; padding: 8px; border-radius: 8px;
+    text-align: left; color: var(--aw-ink); background: transparent; text-decoration: none;
+  }
+  .aw-desk-card button:not(.primary):hover, .aw-desk-card a:hover { background: var(--aw-soft); }
+  .aw-desk-card small { display: block; color: var(--aw-muted); margin-top: 3px; }
+  .aw-desk-card form label { display: grid; gap: 4px; margin: 8px 0; }
+  .aw-desk-card input {
+    width: 100%; min-width: 0; background: var(--aw-page); color: var(--aw-ink);
+    padding: 7px; border-radius: 8px; border: 1px solid var(--aw-line);
+  }
+  .aw-desk-card .mini-calendar-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin: 4px 0 8px; }
+  .aw-desk-card .mini-calendar-toolbar button { width: auto; color: var(--aw-blue); background: var(--aw-soft); }
+  .aw-desk-card .mini-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; text-align: center; margin-bottom: 8px; }
+  .aw-desk-card .mini-calendar-grid button { position: relative; text-align: center; min-height: 32px; padding: 3px; background: var(--aw-page); }
+  .aw-desk-card .mini-calendar-grid button[data-weekend] { background: var(--aw-soft); }
+  .aw-desk-card .mini-calendar-grid button[data-holiday] { background: var(--aw-alt-soft); color: var(--aw-ink); }
+  .aw-desk-card .mini-calendar-grid button[aria-pressed=true] { background: var(--aw-blue); color: var(--aw-on-accent); }
+  .aw-mini-dot { display: block; width: 4px; height: 4px; border-radius: 50%; background: currentColor; margin: 1px auto 0; }
+  .anelisa-workspace .aw-action-cards, .anelisa-workspace .aw-meeting-trigger { display: none; }
+  .anelisa-workspace .aw-meeting-nav:empty, .anelisa-workspace .aw-meeting-nav:not(:has(.aw-home-back)) { margin: 0; }
+  .anelisa-workspace .anelisa-task { padding-block: 13px; }
+}

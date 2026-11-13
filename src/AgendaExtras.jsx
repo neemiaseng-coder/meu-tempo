@@ -13,7 +13,7 @@ export function upcomingReminders(events, date, occursOn) {
     .map(event => ({ event, day })));
 }
 
-export function MiniCalendar({ today, selected, holidaysForMonth, onSelect }) {
+export function MiniCalendar({ today, selected, holidaysForMonth, onSelect, hasEvent }) {
   const [month, setMonth] = useState(() => new Date(today + 'T12:00:00'));
   const year = month.getFullYear();
   const index = month.getMonth();
@@ -37,10 +37,10 @@ export function MiniCalendar({ today, selected, holidaysForMonth, onSelect }) {
         const day = new Date(year, index, i + 1, 12);
         const iso = day.toLocaleDateString('en-CA');
         const holiday = holidays[iso];
-        return <button key={iso} aria-label={dateLabel.format(day) + (holiday ? ', ' + holiday : '')}
+        return <button key={iso} aria-label={dateLabel.format(day) + (holiday ? ', ' + holiday : '') + (hasEvent?.(iso) ? ', com evento' : '')}
           title={holiday} aria-current={iso === today ? 'date' : undefined} aria-pressed={iso === selected}
           data-holiday={holiday ? true : undefined} data-weekend={[0, 6].includes(day.getDay()) ? true : undefined}
-          onClick={() => onSelect(iso)}>{i + 1}</button>;
+          onClick={() => onSelect(iso)}>{i + 1}{hasEvent?.(iso) && <span className="aw-mini-dot" aria-hidden="true"/>}</button>;
       })}
     </div>
   </section>;
@@ -112,7 +112,7 @@ export function ReminderDialog({ reminder, onSave, onDelete, onClose }) {
       </header>
       <label>Dia<input type="date" name="date" required defaultValue={reminder.event?.event_date ?? reminder.day} disabled={busy}/></label>
       <label>Descrição<textarea name="description" rows="3" required maxLength={500} disabled={busy}
-        placeholder="Ex.: Aniversário da Ana" defaultValue={reminder.event?.description || reminder.event?.title || ''}/></label>
+        placeholder="Ex.: Aniversário da Ana" defaultValue={reminder.event?.description || reminder.event?.title || reminder.initialDescription || ''}/></label>
       {error && <p role="alert">{error}</p>}
       <footer>
         {reminder.event && <button className="secondary" type="button" disabled={busy} onClick={remove}>Excluir</button>}

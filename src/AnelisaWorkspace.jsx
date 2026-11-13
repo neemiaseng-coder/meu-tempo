@@ -3,7 +3,8 @@ import { ArrowLeft, Bell, CalendarCheck, CalendarDays, Camera, Check, ChevronDow
   CirclePlus, House, List, LogOut, MessageCircle, Music2, Pencil, Repeat2, Settings, SquarePen, Video, X } from 'lucide-react';
 import ActivityEditor from './ActivityEditor.jsx';
 import DailyQuotes from './DailyQuotes.jsx';
-import { AgendaSidebar } from './AgendaExtras.jsx';
+import { MiniCalendar, upcomingReminders } from './AgendaExtras.jsx';
+import AnelisaContacts from './AnelisaContacts.jsx';
 import './anelisa.css';
 
 const appearance = {
@@ -18,6 +19,7 @@ const fullDate = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numer
 const monthLabel = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' });
 const toDate = value => new Date(value + 'T12:00:00');
 const isoDate = date => date.toLocaleDateString('en-CA');
+const birthday = event => event.event_type === 'other' && /^anivers[aá]rio\b/i.test((event.description || event.title || '').trim());
 const isRoutine = task => task.task_type === 'routine';
 
 export function routineOccurs(task, date) {
@@ -36,6 +38,7 @@ function TaskRows({ tasks, date, isDone, toggle, onEdit }) {
     const routine = isRoutine(task);
     const scheduled = !routine || routineOccurs(task, date);
     const done = isDone(task);
+    const late = !routine && !done && Boolean(task.due_date && task.due_date < date);
     const variableMonth = routine && task.recurrence_type === 'monthly' && !task.recurrence_days?.length;
     const status = done ? 'Concluída' : routine ? scheduled ? 'Hoje' : variableMonth && !task.scheduled_date ? 'Data a definir' : 'Fora da programação de hoje'
       : !task.due_date ? 'Sem prazo' : task.due_date < date ? 'Em atraso' : task.due_date === date ? 'Hoje' : 'Agendada';
@@ -44,10 +47,10 @@ function TaskRows({ tasks, date, isDone, toggle, onEdit }) {
       : variableMonth && task.scheduled_date ? toDate(task.scheduled_date).toLocaleDateString('pt-BR') : '';
     const subtitle = routine ? [frequencies[task.recurrence_type], scheduledLabel].filter(Boolean).join(' · ')
       : task.due_date && toDate(task.due_date).toLocaleDateString('pt-BR');
-    return <div className="anelisa-task" key={task.id}>
+    return <div className="anelisa-task" data-overdue={late || undefined} key={task.id}>
       <button className={'myday-check' + (done ? ' checked' : '')} disabled={!scheduled}
         aria-pressed={done} aria-label={task.title} onClick={() => toggle(task)}>{done && <Check size={16}/>}</button>
-      <div><strong>{task.title}</strong><small>{subtitle}</small>
+      <div><strong>{late && <span aria-hidden="true">😟 </span>}{task.title}</strong><small>{subtitle}</small>
         {task.description && <details className="aw-task-description"><summary>Detalhes</summary><p>{task.description}</p></details>}
       </div>
       <span className={status === 'Em atraso' ? 'aw-late' : undefined}>{status}</span>
@@ -116,7 +119,7 @@ export function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holid
       {agenda.length ? <ul>{agenda.map(item => <li key={item.kind + item.id}>
         <span>{item.kind}</span>
         {item.kind === 'Reunião' ? <button onClick={() => onMeeting(item.id)}>{item.title}</button>
-          : item.kind === 'Lembrete' ? <button onClick={() => onReminder(selected, item)}>{item.description || item.title}</button>
+          : item.kind === 'Lembrete' ? <button onClick={() => onReminder(selected, item)}>{birthday(item) ? '🎂 ' : ''}{item.description || item.title}</button>
           : item.kind === 'Evento' ? (onEvent ? <button onClick={() => onEvent(item)}>{item.title}</button> : <strong>{item.title}</strong>)
           : onEdit ? <button onClick={() => onEdit(item)}>{item.title}</button> : <strong>{item.title}</strong>}
       </li>)}</ul> : <p className="aw-empty">Nenhum item para este dia.</p>}
@@ -125,7 +128,7 @@ export function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holid
 }
 
 export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveActivity,
-  meetings, renderMeetings, signOut, userId, email, holidaysForMonth, events, occursOn, onReminder, reminderDialog }) {
+  meetings, renderMeetings, signOut, userId, email, holidaysForMonth, events, occursOn, onReminder, reminderDialog, contacts, onSaveContact }) {
   const themeKey = 'meu-tempo-theme-' + userId;
   const [theme, setTheme] = useState(() => {
     try {
@@ -143,6 +146,7 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
 
   const [route, setRoute] = useState(null);
   const [view, setView] = useState('list');
+  const [selectedDay, setSelectedDay] = useState(date);
   const meetingMenu = route?.screen === 'meeting-menu';
   const meetingRoute = route?.screen === 'meeting' ? route : null;
   const activity = route?.screen === 'activity'
@@ -159,10 +163,15 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
   const completedToday = plannedToday.filter(isDone).length;
   const progress = plannedToday.length ? Math.round(completedToday / plannedToday.length * 100) : 0;
   const todaysMeetings = meetings.filter(meeting => meeting.meeting_date === date);
-  const agendaToday = [...due, ...routines];
+  const lateTasks = due.filter(task => task.due_date < date);
+  const agendaToday = [...due.filter(task => task.due_date === date), ...routines];
+  const reminders = upcomingReminders(events, date, occursOn);
+  const birthdays = events.filter(event => birthday(event) && event.event_date.startsWith(date.slice(0, 7)))
+    .sort((a, b) => a.event_date.localeCompare(b.event_date));
+  const shortDay = day => toDate(day).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
   const recentMeetings = [...meetings].filter(meeting => meeting.finalized_at)
     .sort((a, b) => b.finalized_at.localeCompare(a.finalized_at)).slice(0, 3);
-  const remainingActivities = active.filter(task => !agendaToday.includes(task));
+  const remainingActivities = active.filter(task => !due.includes(task) && !routines.includes(task));
 
   useEffect(() => {
     const syncRoute = () => {
@@ -217,7 +226,25 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
         onClick={() => menu.current.showModal()}>{photo ? <img src={photo} alt=""/> : 'A'}</button>
     </header>
 
-    <div className="aw-layout agenda-layout">
+    <div className="aw-layout aw-desktop-layout">
+      <aside className="aw-desktop-left">
+        <nav className="aw-desk-card" aria-label="Menu principal">
+          <h2>🧭 Menu</h2>
+          <button onClick={() => { goHome(); setView('list'); }}>🏠 Meu dia</button>
+          <button onClick={() => onAdd('demand')}>📝 Incluir tarefa</button>
+          <button onClick={() => onAdd('routine')}>🔁 Incluir rotina</button>
+          <button onClick={() => openRoute({ screen: 'meeting', mode: 'start' })}>💬 Iniciar reunião</button>
+          <button onClick={() => openRoute({ screen: 'meeting', mode: 'history' })}>📂 Reuniões realizadas</button>
+        </nav>
+        <section className="aw-desk-card">
+          <h2>📌 Lembretes rápidos</h2>
+          <button className="primary" onClick={() => onReminder(date)}>Incluir lembrete</button>
+          {reminders.length ? <ul>{reminders.slice(0, 4).map(({ event, day }) => <li key={event.id + day}>
+            <button onClick={() => onReminder(day, event)}>{birthday(event) ? '🎂 ' : ''}{event.description || event.title}<small>{shortDay(day)}</small></button>
+          </li>)}</ul> : <p>Nenhum lembrete nos próximos 7 dias.</p>}
+        </section>
+        <AnelisaContacts records={contacts} onSave={onSaveContact}/>
+      </aside>
       <div className="aw-feed">
         <div className="aw-meeting-nav">
           {meetingRoute && <button className="secondary aw-home-back" onClick={goHome}><ArrowLeft size={17}/> Início</button>}
@@ -245,7 +272,7 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
           </div>
           <section className="aw-progress" aria-labelledby="aw-progress-title">
             <div className="aw-progress-head">
-              <div><h2 id="aw-progress-title">Progresso do dia</h2>
+              <div><h2 id="aw-progress-title">🎯 Progresso do dia</h2>
                 <p>{completedToday} de {plannedToday.length} {plannedToday.length === 1 ? 'atividade concluída' : 'atividades concluídas'}</p>
               </div>
               <strong>{progress}%</strong>
@@ -253,13 +280,17 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
             <progress aria-labelledby="aw-progress-title" value={progress} max="100">{progress}%</progress>
           </section>
           <div className="aw-home-agenda">
-          {view === 'calendar' ? <AgendaCalendar date={date} tasks={active} holidaysForMonth={holidaysForMonth}
+          {lateTasks.length > 0 && <section className="task-panel aw-overdue-panel">
+            <div className="panel-head"><h2>😟 Em atraso</h2><span>{lateTasks.length}</span></div>
+            <TaskRows tasks={lateTasks} date={date} isDone={isDone} toggle={toggle} onEdit={onEdit}/>
+          </section>}
+          {view === 'calendar' ? <AgendaCalendar key={selectedDay} initialDate={selectedDay} date={date} tasks={active} holidaysForMonth={holidaysForMonth}
             meetings={meetings} onEdit={onEdit} onMeeting={openMeeting} events={events} occursOn={occursOn} onReminder={onReminder}/> : <section className="task-panel">
-            <div className="panel-head"><h2>Minha agenda de hoje</h2></div>
+            <div className="panel-head"><h2>📋 Minha agenda de hoje</h2></div>
             <TaskRows tasks={agendaToday} date={date} isDone={isDone} toggle={toggle} onEdit={onEdit}/>
             {events.filter(event => event.event_type === 'other' && occursOn(event, date)).map(event =>
               <button className="aw-meeting-row" key={event.id} onClick={() => onReminder(date, event)}>
-                <Bell size={18}/><strong>{event.description || event.title}</strong><span>Lembrete</span>
+                <Bell size={18}/><strong>{birthday(event) ? '🎂 ' : ''}{event.description || event.title}</strong><span>Lembrete</span>
               </button>)}
             {todaysMeetings.map(meeting => <button className="aw-meeting-row" key={meeting.id} onClick={() => openMeeting(meeting.id)}>
               <Meeting size={18}/><strong>{meeting.title}</strong><span>Reunião</span>
@@ -273,12 +304,37 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
           </div>
         </>}
       </div>
-      <AgendaSidebar events={events} date={date} occursOn={occursOn} onReminder={onReminder}>
-        <p>O calendário agora permite incluir lembretes rápidos.</p>
-        {recentMeetings.length > 0 && <ul>{recentMeetings.map(meeting => <li key={meeting.id}>
-          <button onClick={() => openMeeting(meeting.id)}>{meeting.title}</button><small>Reunião realizada</small>
-        </li>)}</ul>}
-      </AgendaSidebar>
+      <aside className="aw-desktop-right" aria-label="Calendário e atualizações">
+        <div className="aw-desk-card">
+          <MiniCalendar today={date} selected={selectedDay} holidaysForMonth={holidaysForMonth}
+            hasEvent={day => events.some(event => occursOn(event, day)) || meetings.some(meeting => meeting.meeting_date === day)}
+            onSelect={day => { goHome(); setSelectedDay(day); setView('calendar'); }}/>
+          <button className="secondary" onClick={() => onReminder(selectedDay)}>🔔 Lembrete para {shortDay(selectedDay)}</button>
+        </div>
+        <section className="aw-desk-card">
+          <h2>🎂 Aniversariantes do mês</h2>
+          {birthdays.length ? <ul>{birthdays.map(event => <li key={event.id}>
+            <button onClick={() => onReminder(event.event_date, event)}>🎉 {event.description || event.title}<small>{shortDay(event.event_date)}</small></button>
+          </li>)}</ul> : <p>Nenhum aniversário cadastrado neste mês.</p>}
+          <button className="secondary" onClick={() => onReminder(selectedDay, undefined, 'Aniversário de ')}>Adicionar aniversário</button>
+        </section>
+        <section className="aw-desk-card">
+          <h2>📰 Notícias e atualizações</h2>
+          {recentMeetings.length ? <ul>{recentMeetings.map(meeting => <li key={meeting.id}>
+            <button onClick={() => openMeeting(meeting.id)}>{meeting.title}<small>Reunião realizada</small></button>
+          </li>)}</ul> : <p>Nenhuma atualização recente.</p>}
+        </section>
+        <section className="aw-desk-card">
+          <h2>🔔 Notificações</h2>
+          {lateTasks.length > 0 && <button onClick={() => { goHome(); setView('list'); requestAnimationFrame(() => document.querySelector('.aw-overdue-panel')?.scrollIntoView({ block: 'nearest' })); }}>
+            😟 {lateTasks.length} {lateTasks.length === 1 ? 'tarefa em atraso' : 'tarefas em atraso'}
+          </button>}
+          {reminders.length > 0 && <button onClick={() => onReminder(reminders[0].day, reminders[0].event)}>
+            📌 Próximo lembrete · {shortDay(reminders[0].day)}
+          </button>}
+          {!lateTasks.length && !reminders.length && <p>Nenhuma notificação no momento.</p>}
+        </section>
+      </aside>
     </div>
 
     {reminderDialog}

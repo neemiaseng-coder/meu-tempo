@@ -81,7 +81,7 @@ function App(){
  const completed=todayTasks.filter(isDone).length;
  const progress=todayTasks.length?Math.round(completed/todayTasks.length*100):0;
 
- function openReminder(day,event){setReminder({day,event})}
+ function openReminder(day,event,initialDescription){setReminder({day,event,initialDescription})}
  async function saveReminder(id,day,description){
   const table=supabase.from('deadline_events');
   const values={title:description,event_date:day,description};
@@ -151,6 +151,13 @@ function App(){
  {anelisa?<AnelisaWorkspace holidaysForMonth={holidaysForMonth} key={user.id} userId={user.id} email={user.email} tasks={tasks} date={dateToday}
    isDone={isDone} toggle={toggle} meetings={meetings} renderMeetings={renderMeetings}
    events={deadlineEvents} occursOn={eventOccursOn} onReminder={openReminder} reminderDialog={reminderDialog}
+   contacts={records.filter(record=>record.record_type==='contact')}
+   onSaveContact={async(contact)=>{
+    const {data,error}=await supabase.from('quick_records').insert({user_id:user.id,record_type:'contact',
+      title:contact.name,content:JSON.stringify(contact),metadata:{}}).select().single();
+    if(error)throw error;
+    setRecords(old=>[data,...old]);
+   }}
    onSaveActivity={async(id,values)=>{
     const table=supabase.from('tasks');
     const request=id?table.update(values).eq('id',id).eq('user_id',user.id):table.insert({...values,user_id:user.id});

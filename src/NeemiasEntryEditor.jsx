@@ -58,9 +58,8 @@ export default function NeemiasEntryEditor({ entry, table, onSave, onDelete, onC
           values.metadata.other = form.get('other').trim();
           const password = form.get('password');
           if (password) {
-            const master = form.get('master');
-            if (!master) throw new Error('Informe a senha mestra para criptografar a nova senha.');
-            values.encrypted_payload = await encryptValue(password, master);
+            values.encrypted_payload = await encryptValue(password);
+            values.metadata.credential_encryption = 'account-v1';
           }
         } else {
           values.content = inputs.length ? JSON.stringify({
@@ -102,8 +101,7 @@ export default function NeemiasEntryEditor({ entry, table, onSave, onDelete, onC
           <label>Login<input name="username" defaultValue={entry.metadata?.login || ''}/></label>
           <label>Outros dados<input name="other" defaultValue={entry.metadata?.other || ''}/></label>
           <label>Nova senha<input name="password" type="password" autoComplete="new-password"/></label>
-          <label>Senha mestra para a nova senha<input name="master" type="password" autoComplete="off"/></label>
-          <p>Preencha a nova senha e a senha mestra somente quando quiser trocar a senha armazenada.</p>
+          <p>Preencha a nova senha somente quando quiser trocar a senha armazenada.</p>
         </>}
         {table === 'message_templates' && <label>
           <input type="checkbox" name="usesDate" defaultChecked={entry.variables?.includes('data')}/> Usar variável de data

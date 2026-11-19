@@ -236,3 +236,12 @@ input,select,textarea{font-size:14px!important}
 .modal .deadline-weekdays label { display:flex; align-items:center; gap:5px; margin:0; padding:7px 9px; border:1px solid #d6e0ef; border-radius:9px; font-size:12px; }
 .modal .deadline-weekdays label:has(input:checked) { background:#e8f0ff; border-color:#467bd6; color:#164b9b; }
 .modal .deadline-weekdays input { width:auto; margin:0; accent-color:#2465c9; }
+.record-viewer-body { padding:20px; }
+.record-viewer dl { margin:18px 0; }
+.record-viewer dt { color:#607087; font-size:12px; margin-top:14px; }
+.record-viewer dd { margin:4px 0 0; line-height:1.5; overflow-wrap:anywhere; white-space:pre-wrap; user-select:text; }
+.record-viewer-description { white-space:pre-wrap; color:#536278; }
+.record-viewer-password { display:flex; align-items:center; flex-wrap:wrap; gap:12px; }
+.record-viewer-password button { display:flex; align-items:center; gap:6px; }
+.record-viewer-unlock { display:grid; gap:6px; font-size:13px; }
+.record-viewer-unlock small { color:#536278; }

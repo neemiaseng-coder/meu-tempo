@@ -174,3 +174,17 @@
   .neemias-layout .agenda-sidebar section { border-color: #bcd6ff; }
   .neemias-layout .agenda-sidebar h2 { color: #1859bb; }
 }
+.sidebar-process-list { display:grid; gap:8px; max-height:320px; overflow-y:auto; }
+.agenda-sidebar .sidebar-process-item {
+  display:grid; gap:5px; width:100%; padding:10px; text-align:left;
+  border:1px solid #dce6f3; border-radius:10px; background:#f4f8ff; color:#26334b;
+}
+.sidebar-process-item:hover { border-color:#7da4dd; }
+.sidebar-process-top { display:flex; justify-content:space-between; align-items:start; gap:8px; }
+.sidebar-process-top > span:first-child { overflow-wrap:anywhere; min-width:0; }
+.sidebar-process-percent { flex:none; color:#175cba; font-variant-numeric:tabular-nums; }
+.agenda-sidebar .sidebar-process-item small { color:#53657d; font-size:12px; }
+.sidebar-process-item progress { appearance:none; width:100%; height:5px; border:0; border-radius:10px; overflow:hidden; background:#dbe7f8; }
+.sidebar-process-item progress::-webkit-progress-bar { background:#dbe7f8; }
+.sidebar-process-item progress::-webkit-progress-value { background:#3578d2; border-radius:10px; }
+.sidebar-process-item progress::-moz-progress-bar { background:#3578d2; border-radius:10px; }

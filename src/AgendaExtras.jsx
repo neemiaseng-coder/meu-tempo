@@ -51,10 +51,11 @@ export function MiniCalendar({ today, selected, holidaysForMonth, onSelect, hasE
   </section>;
 }
 
-export function AgendaSidebar({ events, date, occursOn, onReminder, calendar, children }) {
+export function AgendaSidebar({ events, date, occursOn, onReminder, calendar, processes, children }) {
   const reminders = upcomingReminders(events, date, occursOn);
   return <aside className="agenda-sidebar" aria-label="Calendário, atualizações e lembretes">
     {calendar}
+    {processes}
     <section className="agenda-sidebar-reminders">
       <h2><Bell size={17}/> Lembretes dos próximos 7 dias</h2>
       {reminders.length ? <ul>{reminders.map(({ event, day }) => <li key={event.id + day}>

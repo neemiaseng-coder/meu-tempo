@@ -245,3 +245,8 @@ input,select,textarea{font-size:14px!important}
 .record-viewer-password button { display:flex; align-items:center; gap:6px; }
 .record-viewer-unlock { display:grid; gap:6px; font-size:13px; }
 .record-viewer-unlock small { color:#536278; }
+.process-step { min-width:0; }
+.process-step label { margin:0; }
+.process-step details { margin:3px 0 0 25px; color:#536278; font-size:12px; line-height:1.45; }
+.process-step summary { cursor:pointer; }
+.process-step details p { margin:4px 0 0; }

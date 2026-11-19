@@ -87,6 +87,7 @@ export function ReminderDialog({ reminder, onSave, onDelete, onClose }) {
       setError(birthday ? 'Informe o nome do aniversariante.' : 'Escreva uma descrição.');
       return;
     }
+    if (reminder.event && !window.confirm('Salvar as alterações neste ' + label + '?')) return;
     setBusy(true);
     setError('');
     try {

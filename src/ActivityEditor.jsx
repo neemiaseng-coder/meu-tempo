@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 
 const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-export default function ActivityEditor({ task, date, onSave, onClose }) {
+export default function ActivityEditor({ task, date, onSave, onDelete, onClose }) {
   const routine = task.task_type === 'routine';
   const [frequency, setFrequency] = useState(task.recurrence_type || 'daily');
   const [days, setDays] = useState(task.recurrence_days || []);
@@ -81,6 +81,12 @@ export default function ActivityEditor({ task, date, onSave, onClose }) {
         </label>
       </fieldset>
       {error && <p role="alert">{error}</p>}
+      {onDelete && <button type="button" className="secondary" disabled={saving} onClick={async () => {
+        setSaving(true);
+        setError('');
+        try { if (await onDelete()) onClose(); } catch (err) { setError(err.message); }
+        finally { setSaving(false); }
+      }}>Excluir atividade</button>}
       <button type="submit" className="primary" disabled={saving}>{saving ? 'Salvando…' : 'Salvar'}</button>
     </form>
   </dialog>;

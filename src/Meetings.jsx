@@ -4,7 +4,7 @@ import { CalendarDays, Check, Plus, Sparkles } from 'lucide-react';
 const formatDate = date => new Date(date + 'T12:00:00').toLocaleDateString('pt-BR');
 const newDraft = date => ({ meeting_date: date, title: '', agenda: '', participants: '', discussion_notes: '' });
 
-export default function Meetings({ client, userId, today, meetings, tasks, onMeeting, onTask, initialMeetingId, mode }) {
+export default function Meetings({ client, userId, today, meetings, tasks, onMeeting, onTask, initialMeetingId, mode, canManage = false, onDeleteMeeting }) {
   const [draft, setDraft] = useState(() => mode === 'start' ? newDraft(today) : null);
   const [open, setOpen] = useState(initialMeetingId ?? null);
   const [pending, setPending] = useState(false);
@@ -30,14 +30,20 @@ export default function Meetings({ client, userId, today, meetings, tasks, onMee
       setError('Preencha o título e, para finalizar, escreva o rascunho da reunião.');
       return;
     }
+    if (canManage && draft.id && !window.confirm('Salvar as alterações nesta reunião?')) return;
     setPending(true);
     setError('');
     try {
       const values = { title: title.trim(), meeting_date, agenda, participants, discussion_notes };
+      if (canManage && draft.finalized_at) {
+        values.organized_notes = draft.organized_notes;
+        values.action_items = draft.action_items;
+      }
       const table = client.from('meetings');
-      const write = draft.id
-        ? table.update(values).eq('id', draft.id).eq('user_id', userId).is('finalized_at', null)
+      let write = draft.id
+        ? table.update(values).eq('id', draft.id).eq('user_id', userId)
         : table.insert({ ...values, user_id: userId });
+      if (draft.id && !canManage) write = write.is('finalized_at', null);
       const { data, error } = await write.select().single();
       if (error) throw error;
       setDraft(data);
@@ -64,6 +70,7 @@ export default function Meetings({ client, userId, today, meetings, tasks, onMee
     if (pending) return;
     const date = new FormData(event.currentTarget).get('date');
     if (!date) return;
+    if (canManage && tasks.some(task => task.id === action.id) && !window.confirm('Alterar o prazo desta tarefa?')) return;
     setPending(true);
     setError('');
     try {
@@ -85,6 +92,21 @@ export default function Meetings({ client, userId, today, meetings, tasks, onMee
     }
   }
 
+  async function remove(meeting) {
+    if (pending || !window.confirm('Excluir a reunião “' + meeting.title + '”? As tarefas já criadas continuam na agenda.')) return;
+    setPending(true);
+    setError('');
+    try {
+      await onDeleteMeeting(meeting.id);
+      setDraft(null);
+      setOpen(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setPending(false);
+    }
+  }
+
   return <section className="task-panel meeting-workspace">
     <div className="panel-head">
       <div><h2>{heading}</h2>{!mode && <p className="muted">Anote o alinhamento e acompanhe as tarefas combinadas.</p>}</div>
@@ -92,7 +114,7 @@ export default function Meetings({ client, userId, today, meetings, tasks, onMee
     </div>
     {error && <p className="meeting-error" role="alert">{error}</p>}
     {draft && <form className="meeting-editor" onSubmit={save}>
-      <h3>Rascunho da reunião</h3>
+      <h3>{draft.finalized_at ? 'Editar reunião realizada' : 'Rascunho da reunião'}</h3>
       <fieldset disabled={pending}>
         <div className="form-grid">
           <label>Título<input required value={draft.title} onChange={e => setDraft({ ...draft, title: e.target.value })}/></label>
@@ -102,12 +124,22 @@ export default function Meetings({ client, userId, today, meetings, tasks, onMee
         </div>
         <label>Anotações<textarea rows={10} maxLength={24000} value={draft.discussion_notes}
           onChange={e => setDraft({ ...draft, discussion_notes: e.target.value })} placeholder="Digite os assuntos, decisões e tarefas durante a reunião…"/></label>
+        {canManage && draft.finalized_at && <>
+          {(draft.organized_notes || []).map((topic, index) => <div key={index}>
+            <label>Assunto<input value={topic.title} onChange={event => setDraft({
+              ...draft, organized_notes: draft.organized_notes.map((item, i) => i === index ? { ...item, title: event.target.value } : item),
+            })}/></label>
+            <label>Tópicos, um por linha<textarea rows={4} value={topic.points.join('\n')} onChange={event => setDraft({
+              ...draft, organized_notes: draft.organized_notes.map((item, i) => i === index ? { ...item, points: event.target.value.split('\n') } : item),
+            })}/></label>
+          </div>)}
+        </>}
         <div className="meeting-buttons">
           <button className="secondary" type="button" onClick={() => {
             if (window.confirm('Fechar o rascunho? As alterações desde o último salvamento serão descartadas.')) setDraft(null);
           }}>Fechar</button>
-          <button className="secondary" type="submit" value="draft">Salvar rascunho</button>
-          <button className="primary" type="submit" value="finalize"><Sparkles size={16}/> Finalizar alinhamento</button>
+          <button className="secondary" type="submit" value="draft">{draft.finalized_at ? 'Salvar alterações' : 'Salvar rascunho'}</button>
+          {!draft.finalized_at && <button className="primary" type="submit" value="finalize"><Sparkles size={16}/> Finalizar alinhamento</button>}
         </div>
       </fieldset>
       {pending && <p role="status">Processando reunião…</p>}
@@ -115,15 +147,19 @@ export default function Meetings({ client, userId, today, meetings, tasks, onMee
     {!draft && selected && <article className="meeting-editor">
       <span className="meeting-date">{formatDate(selected.meeting_date)}</span>
       <h3>{selected.title}</h3>
+      {canManage && <div className="entry-actions">
+        <button className="secondary" disabled={pending} onClick={() => edit(selected)}>Editar reunião</button>
+        <button className="secondary" disabled={pending} onClick={() => remove(selected)}>Excluir reunião</button>
+      </div>}
       {selected.participants && <p><b>Participantes</b> · {selected.participants}</p>}
       {selected.agenda && <p><b>Pauta</b> · {selected.agenda}</p>}
       {selected.finalized_at ? <>
-        {selected.organized_notes.map((topic, index) => <div key={index}>
+        {(selected.organized_notes || []).map((topic, index) => <div key={index}>
           <h4>{topic.title}</h4><ul>{topic.points.map((point, i) => <li key={i}>{point}</li>)}</ul>
         </div>)}
         <h4>Tarefas da reunião</h4>
-        {!selected.action_items.length && <p className="muted">Nenhuma tarefa identificada.</p>}
-        {selected.action_items.map(action => {
+        {!selected.action_items?.length && <p className="muted">Nenhuma tarefa identificada.</p>}
+        {(selected.action_items || []).map(action => {
           const task = tasks.find(item => item.id === action.id);
           return <form className="meeting-action" key={action.id} onSubmit={e => schedule(e, action)}>
             <div><strong>{action.title}</strong>{action.details && <p>{action.details}</p>}

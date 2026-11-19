@@ -11,7 +11,7 @@ import ActivityEditor from './ActivityEditor.jsx';
 import NeemiasEntryEditor, { EntryActions } from './NeemiasEntryEditor.jsx';
 import Meetings from './Meetings.jsx';
 import AnelisaWorkspace, { AgendaCalendar } from './AnelisaWorkspace.jsx';
-import { AgendaSidebar, MiniCalendar, ReminderDialog } from './AgendaExtras.jsx';
+import { AgendaSidebar, isDeadline, MiniCalendar, ReminderDialog } from './AgendaExtras.jsx';
 import './agenda-extras.css';
 import Login from './Login.jsx';
 const supabaseUrl=import.meta.env.VITE_SUPABASE_URL;
@@ -97,7 +97,7 @@ function App(){
  const overdueTasks=tasks.filter(t=>t.status==='pending'&&t.is_active!==false&&t.recurrence_type==='none'&&t.due_date&&t.due_date<dateToday);
  const todayTasks=tasks.filter(t=>t.status!=='cancelled'&&t.is_active!==false&&(occursToday(t)||(t.recurrence_type==='none'&&t.due_date&&t.due_date<=dateToday&&(t.status==='pending'||t.due_date===dateToday))));
  const todayMeetings=meetings.filter(m=>m.meeting_date===dateToday);
- const todayEvents=deadlineEvents.filter(e=>e.event_type!=='other'&&eventOccursOn(e,dateToday));
+ const todayEvents=deadlineEvents.filter(e=>!isDeadline(e)&&eventOccursOn(e,dateToday));
  const isDone=t=>t.recurrence_type && t.recurrence_type!=='none'
   ?occurrences.some(o=>o.task_id===t.id&&o.occurrence_date===(t.occurrenceDay||dateToday)&&o.status==='completed')
   :t.status==='completed';
@@ -107,7 +107,7 @@ function App(){
  function openReminder(day,event,kind){setReminder({day,event,kind})}
  async function saveReminder(id,day,description){
   const table=supabase.from('deadline_events');
-  const values={title:description,event_date:day,description};
+  const values={title:description,event_date:day,description,entry_kind:'reminder'};
   const result=id?await table.update(values).eq('id',id).eq('user_id',user.id).select().single()
     :await table.insert({...values,user_id:user.id,event_type:'other',recurrence_type:'none'}).select().single();
   if(result.error)throw result.error;
@@ -132,7 +132,7 @@ function App(){
   setDeadlineError('');
   try{
    const payload={
-    title:deadlineTitle.trim(),event_date:deadlineDate,event_type:deadlineType,description:deadlineDescription,
+    title:deadlineTitle.trim(),event_date:deadlineDate,event_type:deadlineType,description:deadlineDescription,entry_kind:'deadline',
     recurrence_type:deadlineRecurrence,recurrence_days:deadlineRecurrence==='weekly'?deadlineDays:[],
     recurrence_end:deadlineRecurrence==='none'?null:(deadlineEnd||null)
    };
@@ -202,8 +202,8 @@ function App(){
 
  function mask(value,type){let v=value.replace(/\D/g,'');if(type==='cnpj')return v.slice(0,14).replace(/^(\d{2})(\d)/,'$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/,'$1.$2.$3').replace(/\.(\d{3})(\d)/,'.$1/$2').replace(/(\d{4})(\d)/,'$1-$2');if(type==='cep')return v.slice(0,8).replace(/^(\d{5})(\d)/,'$1-$2');if(type==='phone'){v=v.slice(0,11);return v.length>10?v.replace(/^(\d{2})(\d{5})(\d{0,4}).*/,'($1) $2-$3'):v.replace(/^(\d{2})(\d{4})(\d{0,4}).*/,'($1) $2-$3')}return value}
  async function copyValue(value){try{await navigator.clipboard.writeText(value);notify('Copiado para a área de transferência')}catch{notify('Não foi possível copiar')}}
- const searchItems=useMemo(()=>[...tasks.map(x=>({label:x.title,detail:'Atividade',section:'Meu Dia',search:x.title+' '+(x.description||'')})),...meetings.map(x=>({label:x.title,detail:'Reunião',section:'Reuniões',search:x.title+' '+(x.agenda||'')})),...deadlineEvents.filter(x=>x.event_type!=='other').map(x=>({label:x.title,detail:'Calendário',section:'Meu Dia',search:x.title+' '+(x.description||'')})),...templates.map(x=>({label:x.title,detail:'Mensagem pronta',section:'Mensagens prontas',search:x.title+' '+x.body})),...records.filter(x=>!['profile_photo','credential_key'].includes(x.metadata?.kind)).map(x=>({label:x.title,detail:'Cadastro',section:'Cadastros',search:x.title+' '+(x.metadata?.description||'')})),...processes.map(x=>({label:x.person_name,detail:x.process_type==='admission'?'Admissão':'Rescisão',section:'Processos',search:x.person_name+' '+(x.role||'')+' '+(x.unit||'')})),...searchableSections.map(label=>({label,detail:'Seção',section:label,search:label}))].filter(x=>query.trim()&&x.search.toLowerCase().includes(query.toLowerCase())).slice(0,8),[query,tasks,meetings,deadlineEvents,templates,records,processes]);
- const overdueNotifications=[...overdueTasks.map(t=>({title:t.title,detail:'Atividade em atraso',date:t.due_date,section:'Meu Dia'})),...deadlineEvents.filter(e=>e.event_type!=='other'&&e.event_date<dateToday).map(e=>({title:e.title,detail:'Lançamento do calendário em atraso',date:e.event_date,section:'Meu Dia'})),...processes.filter(p=>p.status!=='completed'&&p.due_date&&p.due_date<dateToday).map(p=>({title:p.person_name,detail:'Processo com prazo vencido',date:p.due_date,section:'Processos'}))];
+ const searchItems=useMemo(()=>[...tasks.map(x=>({label:x.title,detail:'Atividade',section:'Meu Dia',search:x.title+' '+(x.description||'')})),...meetings.map(x=>({label:x.title,detail:'Reunião',section:'Reuniões',search:x.title+' '+(x.agenda||'')})),...deadlineEvents.filter(x=>!isDeadline(x)).map(x=>({label:x.title,detail:'Calendário',section:'Meu Dia',search:x.title+' '+(x.description||'')})),...templates.map(x=>({label:x.title,detail:'Mensagem pronta',section:'Mensagens prontas',search:x.title+' '+x.body})),...records.filter(x=>!['profile_photo','credential_key'].includes(x.metadata?.kind)).map(x=>({label:x.title,detail:'Cadastro',section:'Cadastros',search:x.title+' '+(x.metadata?.description||'')})),...processes.map(x=>({label:x.person_name,detail:x.process_type==='admission'?'Admissão':'Rescisão',section:'Processos',search:x.person_name+' '+(x.role||'')+' '+(x.unit||'')})),...searchableSections.map(label=>({label,detail:'Seção',section:label,search:label}))].filter(x=>query.trim()&&x.search.toLowerCase().includes(query.toLowerCase())).slice(0,8),[query,tasks,meetings,deadlineEvents,templates,records,processes]);
+ const overdueNotifications=[...overdueTasks.map(t=>({title:t.title,detail:'Atividade em atraso',date:t.due_date,section:'Meu Dia'})),...deadlineEvents.filter(e=>!isDeadline(e)&&e.event_date<dateToday).map(e=>({title:e.title,detail:'Lançamento do calendário em atraso',date:e.event_date,section:'Meu Dia'})),...processes.filter(p=>p.status!=='completed'&&p.due_date&&p.due_date<dateToday).map(p=>({title:p.person_name,detail:'Processo com prazo vencido',date:p.due_date,section:'Processos'}))];
  const meetingNotifications=meetings.filter(m=>m.meeting_date>=dateToday&&m.meeting_date<=new Date(Date.now()+86400000).toLocaleDateString('en-CA')).map(m=>({title:m.title,detail:'Lembrete de reunião',date:m.meeting_date,section:'Reuniões'}));
  const notifications=[...overdueNotifications,...meetingNotifications];
 
@@ -335,7 +335,7 @@ function App(){
    <button className="secondary" aria-pressed={agendaView==='calendar'} onClick={()=>setAgendaView('calendar')}><CalendarDays size={16}/> Calendário</button>
   </div>
   {agendaView==='calendar'&&<AgendaCalendar key={calendarSelection?.version} date={dateToday} initialDate={calendarSelection?.day} tasks={tasks.filter(t=>t.is_active!==false&&t.status!=='cancelled')}
-   meetings={meetings} holidaysForMonth={holidaysForMonth} events={deadlineEvents.filter(event=>event.event_type!=='other')} occursOn={eventOccursOn}
+   meetings={meetings} holidaysForMonth={holidaysForMonth} events={deadlineEvents.filter(event=>!isDeadline(event))} occursOn={eventOccursOn}
    onReminder={openReminder} onMeeting={id=>{setMeetingSelection(id);setSection('Reuniões')}} onEvent={openDeadlineEditor} onEdit={setEditingActivity} renderTaskDescription={task=><TaskDescription description={task.description}/>}/>}
  </>}
  {section==='Meu Dia'&&agendaView==='list'&&<section className="myday-shell"><div className="myday-progress"><div><b>Seu progresso</b><span>{completed}/{todayTasks.length} concluídas · {progress}%</span></div><div className="myday-track" role="progressbar" aria-label="Progresso das tarefas de hoje" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><i style={{width:progress+'%'}}/></div></div><div className="myday-list-head"><div><h2>Minha lista de hoje</h2><p>Atividades em atraso aparecem destacadas em vermelho.</p></div><span className="myday-count">{todayTasks.length-completed} pendentes</span></div><div className="myday-list">{[...overdueTasks,...todayTasks.filter(t=>!overdueTasks.some(o=>o.id===t.id))].map((t,i)=><div key={t.id} className={`myday-task ${isDone(t)?'is-done':''} ${!isDone(t)&&t.due_date<dateToday&&t.recurrence_type==='none'?'is-overdue':''}`}><button className={`myday-check ${isDone(t)?'checked':''}`} onClick={()=>toggle(t)} aria-label={isDone(t)?'Desmarcar tarefa':'Concluir tarefa'}>{isDone(t)?<Check size={17}/>:null}</button><span className={`myday-task-icon task-tone-${i%6}`}>{t.task_type==='routine'?<CalendarCheck size={19}/>:<ClipboardList size={19}/>}</span><div className="myday-task-copy"><b>{t.title}</b><small>{t.task_type==='routine'?'Rotina':'Demanda'} · {t.recurrence_type==='daily'?'Diária':t.recurrence_type==='weekly'?'Semanal':t.recurrence_type==='monthly'?'Mensal':t.due_date?new Date(t.due_date+'T12:00:00').toLocaleDateString('pt-BR'):'Sem prazo'}</small><TaskDescription description={t.description}/></div><span className="myday-task-status">{isDone(t)?'Concluída':t.due_date<dateToday&&t.recurrence_type==='none'?'Em atraso':'A fazer'}</span>{activityActions(t)}</div>)}{!todayTasks.length&&!overdueTasks.length&&<div className="myday-empty"><span><Check size={26}/></span><b>Sua lista está livre!</b><p>Adicione uma rotina ou demanda para organizar seu dia.</p><button className="primary" onClick={()=>setShowAdd(true)}><Plus size={16}/> Adicionar atividade</button></div>}</div><div className="day-agenda"><h2>Agenda de hoje</h2>{todayMeetings.map(m=><div className="agenda-item meeting" key={m.id}><CalendarDays/><div><b>{m.title}</b><small>Reunião · {m.agenda||'Sem pauta'}</small><button className="secondary" onClick={()=>{setMeetingSelection(m.id);setSection('Reuniões')}}>Abrir reunião</button></div></div>)}{todayEvents.map(ev=><div className="agenda-item" key={ev.id}><CalendarCheck/><div>
@@ -374,10 +374,10 @@ function App(){
     </button>;
    })}
   </div>:<p>Nenhum processo cadastrado.</p>}
- </section>}
+ </section>} events={deadlineEvents} date={dateToday} occursOn={eventOccursOn} onReminder={openReminder}
   calendar={<MiniCalendar today={dateToday} selected={agendaView==='calendar'&&section==='Meu Dia'?calendarSelection?.day:null}
-   holidaysForMonth={holidaysForMonth} events={deadlineEvents} occursOn={eventOccursOn} onReminder={openReminder}
-   hasEvent={day=>deadlineEvents.some(event=>eventOccursOn(event,day))}
+   holidaysForMonth={holidaysForMonth} events={deadlineEvents.filter(isDeadline)} occursOn={eventOccursOn} onEvent={openDeadlineEditor}
+   hasEvent={day=>deadlineEvents.some(event=>isDeadline(event)&&eventOccursOn(event,day))}
    onSelect={day=>{
     setCalendarSelection(old=>({day,version:(old?.version??0)+1}));
     setAgendaView('calendar');setSection('Meu Dia');

@@ -191,24 +191,24 @@
 
 .mini-calendar-cell { position:relative; min-width:0; }
 .mini-calendar-date { width:100%; display:block; }
-.mini-calendar-cell:has(.mini-calendar-reminders) { z-index:5; }
-.mini-calendar-reminders {
+.mini-calendar-cell:has(.mini-calendar-deadlines) { z-index:5; }
+.mini-calendar-deadlines {
   position:absolute; z-index:60; top:100%; left:0; width:250px;
   max-width:calc(100vw - 32px); max-height:250px; overflow-y:auto;
   border:1px solid #c6d7ef; border-radius:12px; padding:10px;
   background:#fff; color:#26334b; box-shadow:0 8px 24px #18325526;
   text-align:left;
 }
-.mini-calendar-cell[data-align="end"] .mini-calendar-reminders { left:auto; right:0; }
-.mini-calendar-reminders h3 { font-size:13px; margin:0 0 7px; font-weight:600; }
-.agenda-sidebar .mini-calendar-reminders ul { margin:0; }
-.agenda-sidebar .mini-calendar-reminders li { padding:0; }
-.agenda-sidebar .mini-calendar-reminders .mini-calendar-reminder {
+.mini-calendar-cell[data-align="end"] .mini-calendar-deadlines { left:auto; right:0; }
+.mini-calendar-deadlines h3 { font-size:13px; margin:0 0 7px; font-weight:600; }
+.agenda-sidebar .mini-calendar-deadlines ul { margin:0; }
+.agenda-sidebar .mini-calendar-deadlines li { padding:0; }
+.agenda-sidebar .mini-calendar-deadlines .mini-calendar-deadline {
   display:flex; align-items:flex-start; gap:6px; width:100%;
   padding:8px 4px; border-radius:6px; font-size:13px; line-height:1.4;
   background:transparent; color:#26334b; text-align:left;
 }
-.mini-calendar-reminder span { white-space:pre-wrap; overflow-wrap:anywhere; min-width:0; }
-.mini-calendar-reminder svg { flex:none; margin-top:2px; color:#2465be; }
-.agenda-sidebar .mini-calendar-reminders .mini-calendar-reminder:hover { background:#eaf2ff; color:#174e99; }
+.mini-calendar-deadline span { white-space:pre-wrap; overflow-wrap:anywhere; min-width:0; }
+.mini-calendar-deadline svg { flex:none; margin-top:2px; color:#2465be; }
+.agenda-sidebar .mini-calendar-deadlines .mini-calendar-deadline:hover { background:#eaf2ff; color:#174e99; }
 .agenda-sidebar .mini-calendar-grid .aw-mini-dot { display:block; width:4px; height:4px; margin:1px auto 0; border-radius:50%; background:currentColor; }

@@ -1,5 +1,5 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
-import { Bell, CalendarDays, ChevronLeft, ChevronRight, Newspaper, X } from 'lucide-react';
+import { Bell, CalendarDays, ChevronLeft, ChevronRight, Flag, Newspaper, X } from 'lucide-react';
 
 const shortDate = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' });
 const toDate = date => new Date(date + 'T12:00:00Z');
@@ -9,16 +9,20 @@ export function isBirthday(event) {
   return event?.event_type === 'other' && birthdayPrefix.test((event.description || event.title || '').trim());
 }
 
+export function isDeadline(event) {
+  return event.entry_kind === 'deadline' || (!event.entry_kind && event.event_type !== 'other');
+}
+
 export function upcomingReminders(events, date, occursOn) {
   return Array.from({ length: 7 }, (_, offset) => {
     const day = toDate(date);
     day.setUTCDate(day.getUTCDate() + offset);
     return day.toISOString().slice(0, 10);
-  }).flatMap(day => events.filter(event => event.event_type === 'other' && occursOn(event, day))
+  }).flatMap(day => events.filter(event => !isDeadline(event) && occursOn(event, day))
     .map(event => ({ event, day })));
 }
 
-export function MiniCalendar({ today, selected, holidaysForMonth, onSelect, hasEvent, events = [], occursOn, onReminder }) {
+export function MiniCalendar({ today, selected, holidaysForMonth, onSelect, hasEvent, events = [], occursOn, onEvent }) {
   const calendarId = useId();
   const [hoveredDay, setHoveredDay] = useState(null);
   const [month, setMonth] = useState(() => new Date(today + 'T12:00:00'));
@@ -44,36 +48,36 @@ export function MiniCalendar({ today, selected, holidaysForMonth, onSelect, hasE
         const day = new Date(year, index, i + 1, 12);
         const iso = day.toLocaleDateString('en-CA');
         const holiday = holidays[iso];
-        const reminders = onReminder && occursOn
-          ? events.filter(event => event.event_type === 'other' && occursOn(event, iso)) : [];
-        const hasReminders = reminders.length > 0;
-        const withEvent = hasEvent?.(iso) || hasReminders;
+        const deadlines = onEvent && occursOn
+          ? events.filter(event => isDeadline(event) && occursOn(event, iso)) : [];
+        const hasDeadlines = deadlines.length > 0;
+        const withEvent = hasEvent?.(iso) || hasDeadlines;
         const panelId = calendarId + '-' + iso;
         return <div className="mini-calendar-cell" key={iso} data-align={(first + i) % 7 >= 3 ? 'end' : 'start'}
-          onMouseEnter={() => setHoveredDay(hasReminders ? iso : null)}
+          onMouseEnter={() => setHoveredDay(hasDeadlines ? iso : null)}
           onMouseLeave={() => setHoveredDay(null)}
-          onFocusCapture={() => { if (hasReminders) setHoveredDay(iso); }}
+          onFocusCapture={() => { if (hasDeadlines) setHoveredDay(iso); }}
           onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setHoveredDay(null); }}
           onKeyDown={event => {
             if (event.key === 'Escape') { setHoveredDay(null); event.stopPropagation(); }
           }}>
           <button className="mini-calendar-date"
-            aria-label={dateLabel.format(day) + (holiday ? ', ' + holiday : '') + (hasReminders ? ', ' + reminders.length + ' lembrete(s)' : withEvent ? ', com evento' : '')}
+            aria-label={dateLabel.format(day) + (holiday ? ', ' + holiday : '') + (hasDeadlines ? ', ' + deadlines.length + ' prazo(s)' : withEvent ? ', com evento' : '')}
             title={holiday} aria-current={iso === today ? 'date' : undefined} aria-pressed={iso === selected}
-            aria-haspopup={hasReminders ? 'dialog' : undefined}
-            aria-expanded={hasReminders ? hoveredDay === iso : undefined} aria-controls={hasReminders ? panelId : undefined}
+            aria-haspopup={hasDeadlines ? 'dialog' : undefined}
+            aria-expanded={hasDeadlines ? hoveredDay === iso : undefined} aria-controls={hasDeadlines ? panelId : undefined}
             data-holiday={holiday ? true : undefined} data-weekend={[0, 6].includes(day.getDay()) ? true : undefined}
-            onClick={() => { if (hasReminders) setHoveredDay(iso); onSelect(iso); }}>
+            onClick={() => { if (hasDeadlines) setHoveredDay(iso); onSelect(iso); }}>
             {i + 1}{withEvent && <span className="aw-mini-dot" aria-hidden="true"/>}
           </button>
-          {hasReminders && hoveredDay === iso && <div className="mini-calendar-reminders" id={panelId}
-            role="dialog" aria-label={'Lembretes de ' + dateLabel.format(day)}>
-            <h3>{shortDate.format(toDate(iso))} · Lembretes</h3>
-            <ul>{reminders.map(event => <li key={event.id}>
-              <button className="mini-calendar-reminder" onClick={() => {
+          {hasDeadlines && hoveredDay === iso && <div className="mini-calendar-deadlines" id={panelId}
+            role="dialog" aria-label={'Prazos de ' + dateLabel.format(day)}>
+            <h3>{shortDate.format(toDate(iso))} · Prazos</h3>
+            <ul>{deadlines.map(event => <li key={event.id}>
+              <button className="mini-calendar-deadline" onClick={() => {
                 setHoveredDay(null);
-                onReminder(iso, event);
-              }}><Bell size={15} aria-hidden="true"/><span>{event.description || event.title}</span></button>
+                onEvent(event);
+              }}><Flag size={15} aria-hidden="true"/><span>{event.title || event.description}</span></button>
             </li>)}</ul>
           </div>}
         </div>;
@@ -82,10 +86,19 @@ export function MiniCalendar({ today, selected, holidaysForMonth, onSelect, hasE
   </section>;
 }
 
-export function AgendaSidebar({ calendar, processes, children }) {
+export function AgendaSidebar({ events = [], date, occursOn, onReminder, calendar, processes, children }) {
+  const reminders = upcomingReminders(events, date, occursOn);
   return <aside className="agenda-sidebar" aria-label="Calendário, atualizações e lembretes">
     {calendar}
     {processes}
+    <section className="agenda-sidebar-reminders">
+      <h2><Bell size={17}/> Lembretes dos próximos 7 dias</h2>
+      {reminders.length ? <ul>{reminders.map(({ event, day }) => <li key={event.id + day}>
+        <button onClick={() => onReminder(day, event)}>
+          <time dateTime={day}>{shortDate.format(toDate(day))}</time><span>{event.description || event.title}</span>
+        </button>
+      </li>)}</ul> : <p>Nenhum lembrete neste período.</p>}
+    </section>
     <section className="agenda-sidebar-news">
       <h2><Newspaper size={17}/> Notícias e atualizações</h2>
       {children ?? <p>O calendário agora permite incluir lembretes rápidos.</p>}

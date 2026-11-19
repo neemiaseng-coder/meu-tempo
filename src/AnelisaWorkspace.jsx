@@ -72,7 +72,7 @@ function TaskRows({ tasks, date, isDone, toggle, onEdit, onDelete }) {
   });
 }
 
-export function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holidaysForMonth, events = [], occursOn, onReminder, onEvent, showBirthday = false, initialDate = date }) {
+export function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holidaysForMonth, events = [], occursOn, onReminder, onEvent, renderTaskDescription, showBirthday = false, initialDate = date }) {
   const [selected, setSelected] = useState(initialDate);
   const [month, setMonth] = useState(() => new Date(toDate(initialDate).getFullYear(), toDate(initialDate).getMonth(), 1, 12));
   const year = month.getFullYear();
@@ -135,7 +135,10 @@ export function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holid
         {item.kind === 'Reunião' ? <button onClick={() => onMeeting(item.id)}>{item.title}</button>
           : item.kind === 'Lembrete' ? <button onClick={() => onReminder(selected, item)}>{item.description || item.title}</button>
           : item.kind === 'Evento' ? (onEvent ? <button onClick={() => onEvent(item)}>{item.title}</button> : <strong>{item.title}</strong>)
-          : onEdit ? <button onClick={() => onEdit(item)}>{item.title}</button> : <strong>{item.title}</strong>}
+          : <div className="agenda-task-copy">
+            {onEdit ? <button onClick={() => onEdit(item)}>{item.title}</button> : <strong>{item.title}</strong>}
+            {renderTaskDescription?.(item)}
+          </div>}
       </li>)}</ul> : <p className="aw-empty">Nenhum item para este dia.</p>}
     </div>
   </section>;

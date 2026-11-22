@@ -1,2 +1,42 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><meta name="theme-color" content="#f7f8f6"/><title>Meu Tempo</title></head><body><div id="root"></div><script type="module" src="/src/main.jsx"></script></body></html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="theme-color" content="#06152e"/>
+<title>Meu Tempo</title>
+<style>
+#lunex-intro{position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 42%,#102a50 0%,#07172f 48%,#040c1b 100%);color:#f4f7ff;overflow:hidden;pointer-events:all}
+#lunex-intro *{box-sizing:border-box}
+#lunex-intro .brand{position:relative;display:flex;align-items:center;justify-content:center;height:115px;font:700 clamp(64px,13vw,112px)/1 Arial,Helvetica,sans-serif;letter-spacing:-.085em}
+#lunex-intro .letter-l,#lunex-intro .letter-x{position:relative;z-index:2;display:inline-block}
+#lunex-intro .letter-l{color:#f3f6fc;animation:lunex-l 3.5s cubic-bezier(.22,.75,.18,1) both}
+#lunex-intro .letter-x{color:#4d91fb;animation:lunex-x 3.5s cubic-bezier(.22,.75,.18,1) both}
+#lunex-intro .middle{display:inline-block;max-width:0;opacity:0;white-space:nowrap;overflow:hidden;color:#f3f6fc;animation:lunex-middle 3.5s cubic-bezier(.22,.75,.18,1) both}
+#lunex-intro .tagline{font:500 clamp(8px,1.7vw,12px)/1.5 Arial,Helvetica,sans-serif;letter-spacing:.26em;text-align:center;text-transform:uppercase;opacity:0;animation:lunex-tag 3.5s ease both}
+#lunex-intro .stage{display:flex;flex-direction:column;align-items:center;gap:16px;animation:lunex-stage 3.5s ease both}
+#lunex-intro.lunex-done{opacity:0;pointer-events:none;transition:opacity .38s ease}
+@keyframes lunex-l{0%,30%{transform:translateX(24px)}52%,100%{transform:translateX(0)}}
+@keyframes lunex-x{0%,30%{transform:translateX(-24px)}52%,100%{transform:translateX(0)}}
+@keyframes lunex-middle{0%,31%{max-width:0;opacity:0}58%,100%{max-width:360px;opacity:1}}
+@keyframes lunex-tag{0%,62%{opacity:0;transform:translateY(8px)}82%,100%{opacity:1;transform:translateY(0)}}
+@keyframes lunex-stage{0%{opacity:0;transform:scale(.97)}15%,92%{opacity:1;transform:scale(1)}100%{opacity:1}}
+@media(prefers-reduced-motion:reduce){#lunex-intro *,#lunex-intro .stage{animation-duration:.01ms!important;animation-delay:0ms!important}#lunex-intro .middle{max-width:360px;opacity:1}#lunex-intro .tagline{opacity:1}}
+</style>
+</head>
+<body>
+<div id="lunex-intro" aria-label="Abertura LUNEX" role="status">
+ <div class="stage"><div class="brand"><span class="letter-l">L</span><span class="middle">UNE</span><span class="letter-x">X</span></div><div class="tagline">Sistemas · Tecnologia · Gestão</div></div>
+</div>
+<div id="root"></div>
+<script>
+(function(){
+ var intro=document.getElementById('lunex-intro');
+ var done=false;
+ function finish(){if(done)return;done=true;intro.classList.add('lunex-done');setTimeout(function(){intro.remove()},420)}
+ setTimeout(finish,3500);
+})();
+</script>
+<script type="module" src="/src/main.jsx"></script>
+</body>
+</html>

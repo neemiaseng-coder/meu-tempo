@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import { Leaf } from 'lucide-react';
 
 export function loginError(error) {
+  if (error?.message === 'Login timeout') {
+    return 'O serviço de login demorou para responder. Tente novamente em instantes.';
+  }
   switch (error?.code) {
     case 'invalid_credentials': return 'E-mail ou senha incorretos. Confira os dados e tente novamente.';
     case 'email_not_confirmed': return 'Confirme seu e-mail antes de entrar.';
     case 'over_request_rate_limit': return 'Muitas tentativas. Aguarde um momento antes de tentar novamente.';
-    default: return 'Não foi possível conectar. Verifique sua internet e tente novamente.';
+    default: return 'Não foi possível acessar o serviço de login. Tente novamente em instantes.';
   }
 }
 

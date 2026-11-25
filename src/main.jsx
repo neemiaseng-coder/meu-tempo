@@ -4,6 +4,7 @@ import{createClient}from'@supabase/supabase-js';
 import{LayoutDashboard,CalendarCheck,ClipboardList,Sunrise,Briefcase,UserPlus,MessageSquareText,FolderKanban,Settings,Plus,Search,Bell,Check,Clock,ChevronLeft,ChevronRight,Sun,MoreHorizontal,Target,CalendarDays,Menu,X,Filter,Flag,ArrowUpRight,Leaf,Building2,KeyRound,Phone,Copy,Save,Home,Trash2}from'lucide-react';
 import'./style.css';
 import { createProcessChecklist } from './processChecklists.js';
+import { loadTaskOccurrences } from './taskOccurrences.js';
 import RecordViewer from './RecordViewer.jsx';
 import { encryptCredential, readCredential } from './CredentialStorage.js';
 import TaskDescription from './TaskDescription.jsx';
@@ -31,6 +32,7 @@ function holidaysForMonth(y,m){const out={};Object.entries(brHolidays).forEach((
 
 function App(){
  const [section,setSection]=useState('Meu Dia'),[tasks,setTasks]=useState([]),[occurrences,setOccurrences]=useState([]),[busy,setBusy]=useState(true),[user,setUser]=useState(null),[sessionReady,setSessionReady]=useState(false),[query,setQuery]=useState(''),[showAdd,setShowAdd]=useState(false),[title,setTitle]=useState(''),[taskType,setTaskType]=useState('demand'),[due,setDue]=useState(today()),[recurrence,setRecurrence]=useState('daily'),[recurrenceDays,setRecurrenceDays]=useState([new Date().getDay()]),[monthDay,setMonthDay]=useState(Number(today().slice(-2))),[toast,setToast]=useState(''),[theme,setTheme]=useState('light'),[mobile,setMobile]=useState(false),[templates,setTemplates]=useState([]),[records,setRecords]=useState([]),[templateTitle,setTemplateTitle]=useState(''),[templateBody,setTemplateBody]=useState(''),[templateHasDate,setTemplateHasDate]=useState(false),[selectedTemplateId,setSelectedTemplateId]=useState(null),[recipient,setRecipient]=useState(''),[sendDate,setSendDate]=useState(today()),[generated,setGenerated]=useState(''),[showTemplateForm,setShowTemplateForm]=useState(false),[showRecordForm,setShowRecordForm]=useState(false),[recordType,setRecordType]=useState('company'),[recordTitle,setRecordTitle]=useState(''),[recordDescription,setRecordDescription]=useState(''),[company,setCompany]=useState({razao:'',fantasia:'',cnpj:'',ie:'',cep:'',street:'',number:'',complement:'',district:'',city:'',state:'',phone:'',email:'',responsible:''}),[contact,setContact]=useState({phone:'',name:'',email:''}),[login,setLogin]=useState({username:'',password:'',other:''});
+ const [historyError,setHistoryError]=useState('');
  const [viewingRecord,setViewingRecord]=useState(null);
  const [deadlineDays,setDeadlineDays]=useState([]);
  const [savingDeadline,setSavingDeadline]=useState(false);
@@ -56,20 +58,25 @@ function App(){
  },[]);
  const load=async(isCurrent)=>{if(!supabase||!user){setLoadedUserId(null);setBusy(false);return}
  setBusy(true);
+ setHistoryError('');
  try{
   const timeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error('Tempo limite ao carregar os dados. Verifique a conexão com o Supabase.')),15000));
-  const results=await Promise.race([Promise.all([supabase.from('tasks').select('*').order('created_at',{ascending:false}),supabase.from('message_templates').select('*').order('created_at',{ascending:false}),supabase.from('quick_records').select('*').order('created_at',{ascending:false}),supabase.from('task_occurrences').select('*').gte('occurrence_date',weekStart(today())).lte('occurrence_date',today()),supabase.from('meetings').select('*').order('meeting_date',{ascending:true}),supabase.from('deadline_events').select('*').order('event_date',{ascending:true}),supabase.from('hr_processes').select('*').order('created_at',{ascending:false}),supabase.from('vacancies').select('*').order('created_at',{ascending:false})]),timeout]);
+  const results=await Promise.race([Promise.all([supabase.from('tasks').select('*').order('created_at',{ascending:false}),supabase.from('message_templates').select('*').order('created_at',{ascending:false}),supabase.from('quick_records').select('*').order('created_at',{ascending:false}),loadTaskOccurrences(supabase,user.id,today()),supabase.from('meetings').select('*').order('meeting_date',{ascending:true}),supabase.from('deadline_events').select('*').order('event_date',{ascending:true}),supabase.from('hr_processes').select('*').order('created_at',{ascending:false}),supabase.from('vacancies').select('*').order('created_at',{ascending:false})]),timeout]);
   if(!isCurrent())return;
   const [a,b,c,d,e,f,g,h]=results;
   if(a.error){setTasks([]);notify(a.error.message)}else setTasks(a.data||[]);
   if(b.error){setTemplates([]);notify(b.error.message)}else{setTemplates(b.data||[]);setSelectedTemplateId(b.data?.[0]?.id||null)}
   if(c.error){setRecords([]);notify(c.error.message)}else setRecords(c.data||[]);
-  if(d.error){setOccurrences([]);notify(d.error.message)}else setOccurrences(d.data||[]);
+  if(d.error){
+   setOccurrences([]);
+   setHistoryError('Não foi possível carregar o histórico de conclusões. Atualize para tentar novamente.');
+  }else setOccurrences(d.data||[]);
   if(e.error){setMeetings([]);notify(e.error.message)}else setMeetings(e.data||[]);
   if(f.error){setDeadlineEvents([]);notify(f.error.message)}else setDeadlineEvents(f.data||[]);
   if(g.error){setProcesses([]);notify(g.error.message)}else setProcesses(g.data||[]);
   if(h.error){setVacancies([]);notify(h.error.message)}else setVacancies(h.data||[]);
  }catch(error){if(isCurrent()){
+  setHistoryError('Não foi possível carregar os dados do sistema. Atualize para tentar novamente.');
   setTasks([]);setTemplates([]);setRecords([]);setOccurrences([]);
   setMeetings([]);setDeadlineEvents([]);setProcesses([]);setVacancies([]);
   notify(error.message||'Falha ao carregar os dados.');
@@ -249,6 +256,10 @@ function App(){
  if(!sessionReady||busy||(user&&loadedUserId!==user.id))return <div className="loading"><div className="brand-mark"><Leaf/></div><span>Preparando seu espaço...</span></div>;
  if(!supabase)return <main className="setup"><h1>Meu Tempo</h1><p>Configure as variáveis do Supabase para iniciar.</p><code>VITE_SUPABASE_URL</code><code>VITE_SUPABASE_ANON_KEY</code></main>;
  if(!user)return <Login client={supabase} connectionError={toast}/>;
+ if(historyError)return <main className="setup">
+  <h1>Carregamento incompleto</h1><p role="alert">{historyError}</p>
+  <button className="primary" onClick={()=>window.location.reload()}>Recarregar</button>
+ </main>;
  const anelisa=user.app_metadata?.meu_tempo_workspace==='anelisa';
  const renderMeetings=(initialMeetingId=null,mode)=> <Meetings key={user.id+':' +(mode||'')+':' +(initialMeetingId||'')} mode={mode} initialMeetingId={initialMeetingId} client={supabase} userId={user.id} today={dateToday}
    meetings={meetings} tasks={tasks}

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Bell, BellRing, Cake, Calendar, CircleAlert, Compass, FileText, Grid2X2, ListTodo, Newspaper, NotebookPen, VideoIcon, CalendarCheck, CalendarDays, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ClipboardList,
   CirclePlus, House, List, LogOut, MessageCircle, Music2, Pencil, Repeat2, Settings, SquarePen, Trash2, Video, X } from 'lucide-react';
+import { WORKSPACE_START } from './taskOccurrences.js';
 import ActivityEditor from './ActivityEditor.jsx';
 import DailyQuotes from './DailyQuotes.jsx';
 import { isBirthday as birthday, MiniCalendar, upcomingReminders } from './AgendaExtras.jsx';
@@ -21,12 +22,11 @@ const monthLabel = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'nume
 const toDate = value => new Date(value + 'T12:00:00');
 const isoDate = date => date.toLocaleDateString('en-CA');
 const isRoutine = task => task.task_type === 'routine';
-const workspaceStart = '2026-11-12';
 const taskDay = task => task.due_date || task.scheduled_date;
 
 function previousDays(date) {
   const days = [];
-  for (const day = toDate(workspaceStart); isoDate(day) < date; day.setDate(day.getDate() + 1)) {
+  for (const day = toDate(WORKSPACE_START); isoDate(day) < date; day.setDate(day.getDate() + 1)) {
     days.push(isoDate(day));
   }
   return days;

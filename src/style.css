@@ -245,11 +245,15 @@ input,select,textarea{font-size:14px!important}
 .record-viewer-password button { display:flex; align-items:center; gap:6px; }
 .record-viewer-unlock { display:grid; gap:6px; font-size:13px; }
 .record-viewer-unlock small { color:#536278; }
+.process-checklist { grid-template-columns:minmax(0,1fr); gap:7px; }
 .process-step { min-width:0; }
-.process-step label { margin:0; }
-.process-step details { margin:3px 0 0 25px; color:#536278; font-size:12px; line-height:1.45; }
-.process-step summary { cursor:pointer; }
-.process-step details p { margin:4px 0 0; }
+.process-checklist .process-step label {
+  display:grid; grid-template-columns:18px minmax(0,1fr); align-items:start;
+  gap:10px; margin:0; padding:10px 12px; cursor:pointer;
+}
+.process-checklist .process-step input { width:16px; height:16px; margin:2px 0 0; }
+.process-step-copy { display:grid; gap:3px; min-width:0; overflow-wrap:anywhere; line-height:1.45; font-size:14px; }
+.process-step-detail { color:#536278; font-size:12px; }
 
 .day-followup-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)); gap:10px; padding:12px; }
 .day-followup-card { display:grid; align-content:start; gap:7px; min-width:0; padding:13px; border:1px solid #dce6f3; border-radius:12px; background:#f5f9ff; }

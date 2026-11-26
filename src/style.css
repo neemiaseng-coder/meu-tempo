@@ -245,11 +245,11 @@ input,select,textarea{font-size:14px!important}
 .record-viewer-password button { display:flex; align-items:center; gap:6px; }
 .record-viewer-unlock { display:grid; gap:6px; font-size:13px; }
 .record-viewer-unlock small { color:#536278; }
-.process-checklist { grid-template-columns:minmax(0,1fr); gap:7px; }
+.process-checklist { grid-template-columns:minmax(0,1fr); grid-auto-rows:1fr; align-items:stretch; gap:7px; }
 .process-step { min-width:0; }
 .process-checklist .process-step label {
   display:grid; grid-template-columns:18px minmax(0,1fr); align-items:start;
-  gap:10px; margin:0; padding:10px 12px; cursor:pointer;
+  gap:10px; margin:0; padding:10px 12px; cursor:pointer; min-height:64px; height:100%;
 }
 .process-checklist .process-step input { width:16px; height:16px; margin:2px 0 0; }
 .process-step-copy { display:grid; gap:3px; min-width:0; overflow-wrap:anywhere; line-height:1.45; font-size:14px; }
@@ -278,29 +278,6 @@ input,select,textarea{font-size:14px!important}
 .time-off-list > button { width:100%; text-align:left; }
 .time-off-list small { display:block; color:#536278; margin-top:3px; }
 .deadline-adjustment { color:#245ba1; font-size:12px; line-height:1.45; }
-.neemias-main { --day-card-height:260px; }
-.neemias-main .myday-list, .neemias-main .day-followup-list {
-  display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)); gap:10px; align-items:stretch;
-}
-.neemias-main .myday-list { padding:12px; }
-.neemias-main .myday-task {
-  display:grid; grid-template-columns:24px minmax(0,1fr); grid-template-rows:24px minmax(0,1fr)24px 32px;
-  gap:8px; height:var(--day-card-height); padding:13px; border:1px solid #dce6f3; border-radius:12px;
-}
-.neemias-main .myday-check { grid-column:1; grid-row:1; }
-.neemias-main .myday-task-icon { grid-column:2; grid-row:1; justify-self:end; width:24px; height:24px; }
-.neemias-main .myday-task-copy { grid-column:1 / -1; grid-row:2; overflow-y:auto; }
-.neemias-main .myday-task-status { grid-column:1 / -1; grid-row:3; justify-self:start; align-self:center; padding:3px 8px; }
-.neemias-main .myday-task .entry-actions { grid-column:1 / -1; grid-row:4; margin:0; align-self:end; justify-content:flex-end; }
-.neemias-main .day-followup-card {
-  display:grid; grid-template-rows:22px minmax(0,1fr)32px; height:var(--day-card-height); gap:8px;
-}
-.day-followup-body { display:grid; align-content:start; gap:7px; min-width:0; overflow-y:auto; }
-.neemias-main .day-followup-card > button { align-self:end; margin:0; }
-.neemias-main .neemias-shortcuts > button, .neemias-main .neemias-action-grid > button { min-height:86px; height:86px; }
-.process-card-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr)); grid-auto-rows:1fr; gap:12px; }
-.process-card-grid .process-card { display:flex; flex-direction:column; height:100%; min-width:0; margin:0; }
-.process-card-grid .process-card > .entry-actions { margin-top:auto; padding-top:12px; }
 .work-schedule-form { width:100%; margin-top:16px; padding:14px; border:1px solid var(--aw-line,#dce6f3); border-radius:12px; }
 .work-schedule-form fieldset { border:0; padding:0; margin:0 0 12px; }
 .work-schedule-form legend { font-size:15px; margin-bottom:10px; }

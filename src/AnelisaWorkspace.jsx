@@ -46,7 +46,7 @@ export function routineOccurs(task, date) {
 
 function TaskRows({ tasks, date, isDone, toggle, onEdit, onDelete, routineRule = routineOccurs }) {
   if (!tasks.length) return <p className="aw-empty">Nenhuma atividade nesta lista.</p>;
-  return <div className="aw-task-grid">{tasks.map(task => {
+  return tasks.map(task => {
     const routine = isRoutine(task);
     const scheduled = !routine || Boolean(task.occurrenceDay) || routineRule(task, date);
     const done = isDone(task);
@@ -62,7 +62,6 @@ function TaskRows({ tasks, date, isDone, toggle, onEdit, onDelete, routineRule =
     return <div className="anelisa-task" data-overdue={late || undefined} key={task.occurrenceDay ? task.id + ':' + task.occurrenceDay : task.id}>
       <button className={'myday-check' + (done ? ' checked' : '')} disabled={!scheduled}
         aria-pressed={done} aria-label={task.title} onClick={() => toggle(task, task.occurrenceDay)}>{done && <Check size={16}/>}</button>
-      <span className="aw-card-kind">{routine ? <CalendarCheck size={16}/> : <ClipboardList size={16}/>} {routine ? 'Rotina' : 'Tarefa'}</span>
       <div><strong>{late && <CircleAlert size={15} aria-hidden="true"/>}{task.title}</strong><small>{subtitle}</small>
         {task.description && <details className="aw-task-description"><summary>Detalhes</summary><p>{task.description}</p></details>}
       </div>
@@ -72,7 +71,7 @@ function TaskRows({ tasks, date, isDone, toggle, onEdit, onDelete, routineRule =
         {onDelete && <button className="aw-edit aw-delete" aria-label={'Excluir ' + task.title} onClick={() => onDelete(task)}><Trash2 size={16}/></button>}
       </div>
     </div>;
-  })}</div>;
+  });
 }
 
 export function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holidaysForMonth, events = [], occursOn, onReminder, onEvent, renderTaskDescription, showBirthday = false, routineRule = routineOccurs, initialDate = date }) {

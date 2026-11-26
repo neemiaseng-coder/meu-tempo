@@ -587,14 +587,4 @@
 [data-aw-theme="tiktok"] .aw-notification-body .aw-notification-overdue { background: #412735; color: #ffb3c8; }
 .anelisa-workspace .work-schedule-form label { display:flex; align-items:center; gap:9px; }
 .anelisa-workspace .work-schedule-form input[type="checkbox"] { width:17px; height:17px; margin:0; }
-.aw-task-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)); gap:10px; padding:12px; }
-.anelisa-workspace .aw-task-grid .anelisa-task {
-  display:grid; grid-template-columns:24px minmax(0,1fr); grid-template-rows:24px minmax(0,1fr)24px 32px;
-  height:260px; gap:8px; padding:13px; border:1px solid var(--aw-line); border-radius:12px;
-}
-.anelisa-task > .myday-check { grid-column:1; grid-row:1; }
-.anelisa-workspace .anelisa-task > .aw-card-kind { grid-column:2; grid-row:1; display:flex; align-items:center; justify-content:flex-end; gap:4px; font-size:12px; color:var(--aw-blue); }
-.anelisa-task > div:not(.aw-task-actions) { grid-column:1 / -1; grid-row:2; min-width:0; overflow-y:auto; }
-.anelisa-task > span:not(.aw-card-kind) { grid-column:1 / -1; grid-row:3; justify-self:start; align-self:center; }
-.anelisa-task > .aw-task-actions { grid-column:1 / -1; grid-row:4; justify-content:flex-end; align-self:end; }
 .anelisa-workspace .entry-editor { background:var(--aw-surface); color:var(--aw-ink); }

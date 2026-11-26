@@ -11,6 +11,7 @@ import AnelisaContacts from './AnelisaContacts.jsx';
 import './anelisa.css';
 import { appearances as appearance, ThemePicker } from './Appearance.jsx';
 import TaskDescription from './TaskDescription.jsx';
+import DayProgress from './DayProgress.jsx';
 
 const shortWeekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const frequencies = { daily: 'Diária', weekly: 'Semanal', monthly: 'Mensal' };
@@ -364,18 +365,7 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
               <button aria-pressed={view === 'calendar'} onClick={() => setView('calendar')}><CalendarIcon size={17}/> Calendário</button>
             </div>
           </div>
-          <div className="aw-dashboard" aria-label="Resumo diário e semanal">
-            <div className="aw-progress-ring" role="progressbar" aria-label="Progresso de hoje"
-              aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
-              <svg viewBox="0 0 40 40" aria-hidden="true">
-                <circle cx="20" cy="20" r="17"/>
-                <circle cx="20" cy="20" r="17" pathLength="100" strokeDasharray={progress + ' 100'}/>
-              </svg>
-              <span aria-hidden="true">{progress}%</span>
-            </div>
-            <div><h2>Hoje</h2><p>{completedToday}/{plannedToday.length} concluídas</p></div>
-            <div className="aw-week-summary"><h2>Esta semana</h2><p>{completedWeek}/{plannedWeek.length} concluídas</p></div>
-          </div>
+          <DayProgress completed={completedToday} total={plannedToday.length} week={{ completed: completedWeek, total: plannedWeek.length }}/>
           <div className="aw-mobile-quotes"><DailyQuotes key={date} date={date}/></div>
           <div className="aw-home-content">
           <div className="aw-action-cards">

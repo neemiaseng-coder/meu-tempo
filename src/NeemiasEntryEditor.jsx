@@ -4,7 +4,7 @@ import { Pencil, Trash2, X } from 'lucide-react';
 const fields = {
   message_templates: [['title', 'Título'], ['body', 'Texto da mensagem', 'textarea']],
   vacancies: [['title', 'Cargo'], ['unit', 'Unidade'], ['department', 'Área'], ['contract_type', 'Tipo de contrato'],
-    ['quantity', 'Quantidade', 'number'], ['notes', 'Observações', 'textarea']],
+    ['quantity', 'Quantidade', 'number'], ['target_date', 'Prazo da contratação', 'date'], ['notes', 'Observações', 'textarea']],
   hr_processes: [['person_name', 'Nome'], ['role', 'Cargo'], ['unit', 'Unidade'],
     ['due_date', 'Prazo', 'date'], ['notes', 'Observações', 'textarea']],
   company: [['razao', 'Razão social'], ['fantasia', 'Nome fantasia'], ['cnpj', 'CNPJ'], ['ie', 'Inscrição estadual'],
@@ -41,7 +41,11 @@ export default function NeemiasEntryEditor({ entry, table, onSave, onDelete, onC
     try {
       const form = new FormData(event.currentTarget);
       let values = Object.fromEntries(inputs.map(([key]) => [key, form.get(key)?.trim() || '']));
-      if (table === 'vacancies') values.quantity = Number(values.quantity);
+      if (table === 'vacancies') {
+        values.quantity = Number(values.quantity);
+        values.target_date ||= null;
+        values.status = form.get('status');
+      }
       if (table === 'hr_processes') {
         values.due_date ||= null;
         values.process_type = form.get('process_type');
@@ -106,6 +110,10 @@ export default function NeemiasEntryEditor({ entry, table, onSave, onDelete, onC
         {table === 'message_templates' && <label>
           <input type="checkbox" name="usesDate" defaultChecked={entry.variables?.includes('data')}/> Usar variável de data
         </label>}
+        {table === 'vacancies' && <label>Status<select name="status" defaultValue={entry.status || 'open'}>
+          <option value="open">Aberta</option><option value="paused">Pausada</option>
+          <option value="filled">Preenchida</option><option value="cancelled">Cancelada</option>
+        </select></label>}
         {table === 'hr_processes' && <label>Tipo<select name="process_type" defaultValue={entry.process_type}>
           <option value="admission">Admissão</option><option value="termination">Rescisão</option>
         </select></label>}

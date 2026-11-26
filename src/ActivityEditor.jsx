@@ -75,7 +75,7 @@ export default function ActivityEditor({ task, date, onSave, onDelete, onClose }
           </select></label>
           {!flexible && <label>Dia do mês<input name="month-day" type="number" min="1" max="31" required defaultValue={task.recurrence_days?.[0] || 1}/></label>}
         </>}
-        <label>{variableMonth ? 'Próxima data (opcional)' : routine ? 'Data de início' : 'Data da tarefa'}
+        <label>{variableMonth ? 'Próxima data (opcional)' : routine ? 'Data de início' : 'Prazo de conclusão'}
           <input key={variableMonth ? 'variable' : 'fixed'} name="date" type="date" required={!variableMonth}
             defaultValue={variableMonth ? task.scheduled_date ?? '' : task.due_date ?? date}/>
         </label>

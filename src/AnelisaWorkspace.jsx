@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Bell, BellRing, Cake, Calendar, CircleAlert, Compass, FileText, Grid2X2, ListTodo, Newspaper, NotebookPen, VideoIcon, CalendarCheck, CalendarDays, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ClipboardList,
   CirclePlus, House, List, LogOut, MessageCircle, Music2, Pencil, Repeat2, Settings, SquarePen, Trash2, Video, X } from 'lucide-react';
+import { dayActivities } from './dayActivities.js';
 import { WORKSPACE_START } from './taskOccurrences.js';
 import ActivityEditor from './ActivityEditor.jsx';
 import DailyQuotes from './DailyQuotes.jsx';
@@ -51,7 +52,7 @@ function TaskRows({ tasks, date, isDone, toggle, onEdit, onDelete }) {
     const late = !done && Boolean(task.occurrenceDay || (!routine && taskDay(task) && taskDay(task) < date));
     const variableMonth = routine && task.recurrence_type === 'monthly' && !task.recurrence_days?.length;
     const status = done ? 'Concluída' : late ? 'Em atraso' : routine ? scheduled ? 'Hoje' : variableMonth && !task.scheduled_date ? 'Data a definir' : 'Fora da programação de hoje'
-      : !taskDay(task) ? 'Sem prazo' : taskDay(task) === date ? 'Hoje' : 'Agendada';
+      : !taskDay(task) ? 'Sem prazo' : taskDay(task) === date ? 'Hoje' : 'Prazo futuro';
     const scheduledLabel = routine && task.recurrence_type === 'weekly'
       ? (task.recurrence_days ?? []).map(day => shortWeekdays[day]).join(', ')
       : variableMonth && task.scheduled_date ? toDate(task.scheduled_date).toLocaleDateString('pt-BR') : '';
@@ -198,10 +199,9 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
   const menu = useRef(null);
   const notificationPanel = useRef(null);
   const active = tasks.filter(task => task.is_active !== false && task.status !== 'cancelled');
-  const routines = active.filter(task => routineOccurs(task, date));
   const pendingTasks = active.filter(task => !isRoutine(task) && taskDay(task)
     && taskDay(task) < date && !isDone(task));
-  const plannedToday = [...active.filter(task => !isRoutine(task) && taskDay(task) === date), ...routines];
+  const plannedToday = dayActivities(active, date, routineOccurs);
   const completedToday = plannedToday.filter(isDone).length;
   const weekDays = Array.from({ length: 7 }, (_, offset) => {
     const day = toDate(weekStart);
@@ -221,7 +221,7 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
     .map(task => ({ ...task, occurrenceDay: day })));
   const lateTasks = [...pendingTasks, ...lateRoutines]
     .sort((a, b) => (a.occurrenceDay || taskDay(a)).localeCompare(b.occurrenceDay || taskDay(b)));
-  const agendaToday = plannedToday;
+  const agendaToday = plannedToday.filter(task => !pendingTasks.includes(task));
   const reminders = upcomingReminders(events, date, occursOn);
   const birthdays = events.filter(event => birthday(event) && event.event_date.startsWith(date.slice(0, 7)))
     .sort((a, b) => a.event_date.localeCompare(b.event_date));

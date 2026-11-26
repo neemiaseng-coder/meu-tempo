@@ -5,13 +5,15 @@ import{LayoutDashboard,CalendarCheck,ClipboardList,Sunrise,Briefcase,UserPlus,Me
 import'./style.css';
 import { createProcessChecklist } from './processChecklists.js';
 import { loadTaskOccurrences } from './taskOccurrences.js';
+import { activityDeadline, dayActivities, vacancyRemaining } from './dayActivities.js';
+import DayFollowUps from './DayFollowUps.jsx';
 import RecordViewer from './RecordViewer.jsx';
 import { encryptCredential, readCredential } from './CredentialStorage.js';
 import TaskDescription from './TaskDescription.jsx';
 import ActivityEditor from './ActivityEditor.jsx';
 import NeemiasEntryEditor, { EntryActions } from './NeemiasEntryEditor.jsx';
 import Meetings from './Meetings.jsx';
-import AnelisaWorkspace, { AgendaCalendar } from './AnelisaWorkspace.jsx';
+import AnelisaWorkspace, { AgendaCalendar, routineOccurs } from './AnelisaWorkspace.jsx';
 import { AgendaSidebar, isDeadline, MiniCalendar, ReminderDialog } from './AgendaExtras.jsx';
 import './agenda-extras.css';
 import Login from './Login.jsx';
@@ -32,6 +34,7 @@ function holidaysForMonth(y,m){const out={};Object.entries(brHolidays).forEach((
 
 function App(){
  const [section,setSection]=useState('Meu Dia'),[tasks,setTasks]=useState([]),[occurrences,setOccurrences]=useState([]),[busy,setBusy]=useState(true),[user,setUser]=useState(null),[sessionReady,setSessionReady]=useState(false),[query,setQuery]=useState(''),[showAdd,setShowAdd]=useState(false),[title,setTitle]=useState(''),[taskType,setTaskType]=useState('demand'),[due,setDue]=useState(today()),[recurrence,setRecurrence]=useState('daily'),[recurrenceDays,setRecurrenceDays]=useState([new Date().getDay()]),[monthDay,setMonthDay]=useState(Number(today().slice(-2))),[toast,setToast]=useState(''),[theme,setTheme]=useState('light'),[mobile,setMobile]=useState(false),[templates,setTemplates]=useState([]),[records,setRecords]=useState([]),[templateTitle,setTemplateTitle]=useState(''),[templateBody,setTemplateBody]=useState(''),[templateHasDate,setTemplateHasDate]=useState(false),[selectedTemplateId,setSelectedTemplateId]=useState(null),[recipient,setRecipient]=useState(''),[sendDate,setSendDate]=useState(today()),[generated,setGenerated]=useState(''),[showTemplateForm,setShowTemplateForm]=useState(false),[showRecordForm,setShowRecordForm]=useState(false),[recordType,setRecordType]=useState('company'),[recordTitle,setRecordTitle]=useState(''),[recordDescription,setRecordDescription]=useState(''),[company,setCompany]=useState({razao:'',fantasia:'',cnpj:'',ie:'',cep:'',street:'',number:'',complement:'',district:'',city:'',state:'',phone:'',email:'',responsible:''}),[contact,setContact]=useState({phone:'',name:'',email:''}),[login,setLogin]=useState({username:'',password:'',other:''});
+ const [vacancyTarget,setVacancyTarget]=useState('');
  const [historyError,setHistoryError]=useState('');
  const [viewingRecord,setViewingRecord]=useState(null);
  const [deadlineDays,setDeadlineDays]=useState([]);
@@ -99,10 +102,9 @@ function App(){
   return()=>{document.removeEventListener('pointerdown',onPointer);document.removeEventListener('keydown',onKey)};
  },[profileOpen,notificationOpen,query]);
  const notify=t=>{setToast(t);setTimeout(()=>setToast(''),3500)};
- const dateToday=today(),todayDate=new Date(dateToday+'T12:00:00'),dayNumber=todayDate.getDate(),weekday=todayDate.getDay();
- const occursToday=t=>t.task_type==='routine'&&t.is_active!==false&&(!t.due_date||t.due_date<=dateToday)&&(!t.recurrence_end||t.recurrence_end>=dateToday)&&(t.recurrence_type==='daily'||(t.recurrence_type==='weekly'&&(t.recurrence_days||[]).includes(weekday))||(t.recurrence_type==='monthly'&&(t.recurrence_days||[]).includes(dayNumber)));
- const overdueTasks=tasks.filter(t=>t.status==='pending'&&t.is_active!==false&&t.recurrence_type==='none'&&t.due_date&&t.due_date<dateToday);
- const todayTasks=tasks.filter(t=>t.status!=='cancelled'&&t.is_active!==false&&(occursToday(t)||(t.recurrence_type==='none'&&t.due_date&&t.due_date<=dateToday&&(t.status==='pending'||t.due_date===dateToday))));
+ const dateToday=today();
+ const todayTasks=dayActivities(tasks,dateToday,routineOccurs);
+ const overdueTasks=todayTasks.filter(task=>task.task_type!=='routine'&&task.status!=='completed'&&activityDeadline(task)&&activityDeadline(task)<dateToday);
  const todayMeetings=meetings.filter(m=>m.meeting_date===dateToday);
  const todayEvents=deadlineEvents.filter(e=>!isDeadline(e)&&eventOccursOn(e,dateToday));
  const isDone=t=>t.recurrence_type && t.recurrence_type!=='none'
@@ -223,9 +225,9 @@ function App(){
   const steps=process.checklist||defaultProcessChecklist(process);
   return Math.round(steps.filter(step=>step.done).length/Math.max(steps.length,1)*100);
  };
- const vacancyFilledCount=id=>processes.filter(p=>p.vacancy_id===id&&p.process_type==='admission'&&p.status!=='cancelled').length;
- const vacancyOpenCount=v=>Math.max(0,(v.quantity||1)-vacancyFilledCount(v.id));
+ const vacancyOpenCount=vacancy=>vacancyRemaining(vacancy,processes);
  const openVacancies=vacancies.filter(v=>v.status==='open'&&vacancyOpenCount(v)>0);
+ const hasFollowUps=openVacancies.length>0||processes.some(process=>!['completed','cancelled'].includes(process.status));
  async function createVacancy(event){
   event.preventDefault();
   if(savingVacancy)return;
@@ -235,12 +237,12 @@ function App(){
   try{
    const {data,error}=await supabase.from('vacancies').insert({
     user_id:user.id,title:vacancyTitle.trim(),unit:vacancyUnit.trim(),department:vacancyDepartment.trim(),
-    contract_type:vacancyContractType,quantity:Math.max(1,Number(vacancyQuantity)||1),status:'open',notes:vacancyNotes
+    contract_type:vacancyContractType,quantity:Math.max(1,Number(vacancyQuantity)||1),status:'open',notes:vacancyNotes,target_date:vacancyTarget||null
    }).select().single();
    if(error)throw error;
    setVacancies(old=>[data,...old]);
    setVacancyTitle('');setVacancyUnit('');setVacancyDepartment('');setVacancyContractType('CLT');
-   setVacancyQuantity('1');setVacancyNotes('');setShowVacancyForm(false);
+   setVacancyQuantity('1');setVacancyNotes('');setVacancyTarget('');setShowVacancyForm(false);
    notify('Vaga aberta');
   }catch(error){setVacancyError(error.message);}
   finally{setSavingVacancy(false);}
@@ -349,9 +351,16 @@ function App(){
    meetings={meetings} holidaysForMonth={holidaysForMonth} events={deadlineEvents.filter(event=>!isDeadline(event))} occursOn={eventOccursOn}
    onReminder={openReminder} onMeeting={id=>{setMeetingSelection(id);setSection('Reuniões')}} onEvent={openDeadlineEditor} onEdit={setEditingActivity} renderTaskDescription={task=><TaskDescription description={task.description}/>}/>}
  </>}
- {section==='Meu Dia'&&agendaView==='list'&&<section className="myday-shell"><div className="myday-progress"><div><b>Seu progresso</b><span>{completed}/{todayTasks.length} concluídas · {progress}%</span></div><div className="myday-track" role="progressbar" aria-label="Progresso das tarefas de hoje" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><i style={{width:progress+'%'}}/></div></div><div className="myday-list-head"><div><h2>Minha lista de hoje</h2><p>Atividades em atraso aparecem destacadas em vermelho.</p></div><span className="myday-count">{todayTasks.length-completed} pendentes</span></div><div className="myday-list">{[...overdueTasks,...todayTasks.filter(t=>!overdueTasks.some(o=>o.id===t.id))].map((t,i)=><div key={t.id} className={`myday-task ${isDone(t)?'is-done':''} ${!isDone(t)&&t.due_date<dateToday&&t.recurrence_type==='none'?'is-overdue':''}`}><button className={`myday-check ${isDone(t)?'checked':''}`} onClick={()=>toggle(t)} aria-label={isDone(t)?'Desmarcar tarefa':'Concluir tarefa'}>{isDone(t)?<Check size={17}/>:null}</button><span className={`myday-task-icon task-tone-${i%6}`}>{t.task_type==='routine'?<CalendarCheck size={19}/>:<ClipboardList size={19}/>}</span><div className="myday-task-copy"><b>{t.title}</b><small>{t.task_type==='routine'?'Rotina':'Demanda'} · {t.recurrence_type==='daily'?'Diária':t.recurrence_type==='weekly'?'Semanal':t.recurrence_type==='monthly'?'Mensal':t.due_date?new Date(t.due_date+'T12:00:00').toLocaleDateString('pt-BR'):'Sem prazo'}</small><TaskDescription description={t.description}/></div><span className="myday-task-status">{isDone(t)?'Concluída':t.due_date<dateToday&&t.recurrence_type==='none'?'Em atraso':'A fazer'}</span>{activityActions(t)}</div>)}{!todayTasks.length&&!overdueTasks.length&&<div className="myday-empty"><span><Check size={26}/></span><b>Sua lista está livre!</b><p>Adicione uma rotina ou demanda para organizar seu dia.</p><button className="primary" onClick={()=>setShowAdd(true)}><Plus size={16}/> Adicionar atividade</button></div>}</div><div className="day-agenda"><h2>Agenda de hoje</h2>{todayMeetings.map(m=><div className="agenda-item meeting" key={m.id}><CalendarDays/><div><b>{m.title}</b><small>Reunião · {m.agenda||'Sem pauta'}</small><button className="secondary" onClick={()=>{setMeetingSelection(m.id);setSection('Reuniões')}}>Abrir reunião</button></div></div>)}{todayEvents.map(ev=><div className="agenda-item" key={ev.id}><CalendarCheck/><div>
+ {section==='Meu Dia'&&agendaView==='list'&&<section className="myday-shell"><div className="myday-progress"><div><b>Seu progresso</b><span>{completed}/{todayTasks.length} concluídas · {progress}%</span></div><div className="myday-track" role="progressbar" aria-label="Progresso das tarefas de hoje" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><i style={{width:progress+'%'}}/></div></div><div className="myday-list-head"><div><h2>Minha lista de hoje</h2><p>Atividades em atraso aparecem destacadas em vermelho.</p></div><span className="myday-count">{todayTasks.length-completed} pendentes</span></div><div className="myday-list">{[...overdueTasks,...todayTasks.filter(t=>!overdueTasks.some(o=>o.id===t.id))].map((t,i)=><div key={t.id} className={`myday-task ${isDone(t)?'is-done':''} ${!isDone(t)&&activityDeadline(t)<dateToday&&t.task_type!=='routine'?'is-overdue':''}`}><button className={`myday-check ${isDone(t)?'checked':''}`} onClick={()=>toggle(t)} aria-label={isDone(t)?'Desmarcar tarefa':'Concluir tarefa'}>{isDone(t)?<Check size={17}/>:null}</button><span className={`myday-task-icon task-tone-${i%6}`}>{t.task_type==='routine'?<CalendarCheck size={19}/>:<ClipboardList size={19}/>}</span><div className="myday-task-copy"><b>{t.title}</b><small>{t.task_type==='routine'?'Rotina':'Tarefa'} · {t.recurrence_type==='daily'?'Diária':t.recurrence_type==='weekly'?'Semanal':t.recurrence_type==='monthly'?'Mensal':activityDeadline(t)?'Prazo '+new Date(activityDeadline(t)+'T12:00:00').toLocaleDateString('pt-BR'):'Sem prazo'}</small><TaskDescription description={t.description}/></div><span className="myday-task-status">{isDone(t)?'Concluída':activityDeadline(t)<dateToday&&t.task_type!=='routine'?'Em atraso':activityDeadline(t)>dateToday?'Prazo futuro':'A fazer'}</span>{activityActions(t)}</div>)}{!todayTasks.length&&!overdueTasks.length&&!hasFollowUps&&<div className="myday-empty"><span><Check size={26}/></span><b>Sua lista está livre!</b><p>Adicione uma rotina ou demanda para organizar seu dia.</p><button className="primary" onClick={()=>setShowAdd(true)}><Plus size={16}/> Adicionar atividade</button></div>}</div><div className="day-agenda"><h2>Agenda de hoje</h2>{todayMeetings.map(m=><div className="agenda-item meeting" key={m.id}><CalendarDays/><div><b>{m.title}</b><small>Reunião · {m.agenda||'Sem pauta'}</small><button className="secondary" onClick={()=>{setMeetingSelection(m.id);setSection('Reuniões')}}>Abrir reunião</button></div></div>)}{todayEvents.map(ev=><div className="agenda-item" key={ev.id}><CalendarCheck/><div>
  {ev.event_type==='other'?<button className="agenda-reminder-link" onClick={()=>openReminder(dateToday,ev)}>{ev.description||ev.title}</button>:<><b>{ev.title}</b><small>{ev.description||ev.event_type}</small></>}
  </div>{ev.event_type!=='other'&&<EntryActions label={ev.title} onEdit={()=>openDeadlineEditor(ev)} onDelete={()=>deleteDeadline(ev)}/>}</div>)}{!todayMeetings.length&&!todayEvents.length&&<p className="muted">Nenhum compromisso adicional para hoje.</p>}</div></section>}
+ {section==='Meu Dia'&&<DayFollowUps vacancies={openVacancies} processes={processes} date={dateToday}
+  vacancyOpenCount={vacancyOpenCount} processProgress={processProgress}
+  onVacancy={entry=>setEditingEntry({table:'vacancies',entry})}
+  onProcess={process=>{
+   setSection('Processos');
+   requestAnimationFrame(()=>document.getElementById('process-'+process.id)?.scrollIntoView({block:'nearest'}));
+  }}/>}
  {section==='Meu Dia'&&<details className="task-panel neemias-all-activities">
   <summary>Todas as tarefas e rotinas</summary>
   {tasks.filter(task=>task.is_active!==false&&task.status!=='cancelled').map(task=><div className="task-row" key={task.id}>
@@ -418,6 +427,7 @@ function App(){
      </select></label>
      <label>Quantidade<input type="number" min="1" step="1" value={vacancyQuantity} onChange={event=>setVacancyQuantity(event.target.value)} required/></label>
     </div>
+    <label>Prazo da contratação<input type="date" value={vacancyTarget} onChange={event=>setVacancyTarget(event.target.value)}/></label>
     <label>Observações<textarea rows="3" value={vacancyNotes} onChange={event=>setVacancyNotes(event.target.value)}/></label>
    </fieldset>
    {vacancyError&&<p role="alert">{vacancyError}</p>}
@@ -449,7 +459,7 @@ function App(){
  {!anelisa&&editingEntry&&<NeemiasEntryEditor key={editingEntry.entry.id} {...editingEntry}
   encryptValue={password=>encryptCredential(supabase,user.id,password)} onSave={values=>saveEntry(editingEntry.table,editingEntry.entry,values)}
   onDelete={()=>removeEntry(editingEntry.table,editingEntry.entry)} onClose={()=>setEditingEntry(null)}/>}
- {showAdd&&<div className="overlay" onClick={()=>setShowAdd(false)}><form className="modal" onClick={e=>e.stopPropagation()} onSubmit={addTask}><div className="modal-head"><div><p className="eyebrow">NOVA ATIVIDADE</p><h2>O que precisa ser feito?</h2></div><button type="button" className="icon-btn" onClick={()=>setShowAdd(false)}><X/></button></div><label>Título<input autoFocus value={title} onChange={e=>setTitle(e.target.value)} placeholder="Ex.: Revisar planejamento da semana" required/></label><div className="form-grid"><label>Tipo<select value={taskType} onChange={e=>setTaskType(e.target.value)}><option value="demand">Demanda</option><option value="routine">Rotina</option></select></label><label>Data de início<input type="date" value={due} onChange={e=>setDue(e.target.value)} required/></label></div>{taskType==='routine'&&<><label>Periodicidade<select value={recurrence} onChange={e=>setRecurrence(e.target.value)}><option value="daily">Todos os dias</option><option value="weekly">Dias da semana</option><option value="monthly">Mensal</option></select></label>{recurrence==='monthly'&&<label>Dia do mês<select value={monthDay} onChange={e=>setMonthDay(Number(e.target.value))}>{Array.from({length:31},(_,i)=>i+1).map(d=><option key={d} value={d}>{d}º dia</option>)}</select><small className="field-hint">A rotina será programada para o dia {monthDay} de cada mês.</small></label>}{recurrence==='weekly'&&<div className="weekday-picker"><span>Dias da semana</span><div>{[['Dom',0],['Seg',1],['Ter',2],['Qua',3],['Qui',4],['Sex',5],['Sáb',6]].map(([day,n])=><label key={n} className="weekday"><input type="checkbox" checked={recurrenceDays.includes(n)} onChange={e=>setRecurrenceDays(e.target.checked?[...recurrenceDays,n]:recurrenceDays.filter(x=>x!==n))}/>{day}</label>)}</div></div>}</>}<div className="modal-actions"><button type="button" className="secondary" onClick={()=>setShowAdd(false)}>Cancelar</button><button className="primary">Salvar atividade</button></div></form></div>}
+ {showAdd&&<div className="overlay" onClick={()=>setShowAdd(false)}><form className="modal" onClick={e=>e.stopPropagation()} onSubmit={addTask}><div className="modal-head"><div><p className="eyebrow">NOVA ATIVIDADE</p><h2>O que precisa ser feito?</h2></div><button type="button" className="icon-btn" onClick={()=>setShowAdd(false)}><X/></button></div><label>Título<input autoFocus value={title} onChange={e=>setTitle(e.target.value)} placeholder="Ex.: Revisar planejamento da semana" required/></label><div className="form-grid"><label>Tipo<select value={taskType} onChange={e=>setTaskType(e.target.value)}><option value="demand">Demanda</option><option value="routine">Rotina</option></select></label><label>{taskType==='routine'?'Data de início':'Prazo de conclusão'}<input type="date" value={due} onChange={e=>setDue(e.target.value)} required/></label></div>{taskType==='routine'&&<><label>Periodicidade<select value={recurrence} onChange={e=>setRecurrence(e.target.value)}><option value="daily">Todos os dias</option><option value="weekly">Dias da semana</option><option value="monthly">Mensal</option></select></label>{recurrence==='monthly'&&<label>Dia do mês<select value={monthDay} onChange={e=>setMonthDay(Number(e.target.value))}>{Array.from({length:31},(_,i)=>i+1).map(d=><option key={d} value={d}>{d}º dia</option>)}</select><small className="field-hint">A rotina será programada para o dia {monthDay} de cada mês.</small></label>}{recurrence==='weekly'&&<div className="weekday-picker"><span>Dias da semana</span><div>{[['Dom',0],['Seg',1],['Ter',2],['Qua',3],['Qui',4],['Sex',5],['Sáb',6]].map(([day,n])=><label key={n} className="weekday"><input type="checkbox" checked={recurrenceDays.includes(n)} onChange={e=>setRecurrenceDays(e.target.checked?[...recurrenceDays,n]:recurrenceDays.filter(x=>x!==n))}/>{day}</label>)}</div></div>}</>}<div className="modal-actions"><button type="button" className="secondary" onClick={()=>setShowAdd(false)}>Cancelar</button><button className="primary">Salvar atividade</button></div></form></div>}
  {toast&&<div className="toast">{toast}</div>}</div>
 }
 createRoot(document.getElementById('root')).render(<App/>);

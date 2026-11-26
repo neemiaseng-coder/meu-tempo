@@ -32,8 +32,15 @@ export function upcomingReminders(events, date, occursOn) {
 
 export function MiniCalendar({ today, selected, holidaysForMonth, onSelect, hasEvent, dayOff, events = [], occursOn, onEvent }) {
   const calendarId = useId();
+  const calendarRef = useRef(null);
   const [hoveredDay, setHoveredDay] = useState(null);
   const [month, setMonth] = useState(() => new Date(today + 'T12:00:00'));
+  useEffect(() => {
+    if (!hoveredDay) return;
+    const closeOutside = event => { if (!calendarRef.current?.contains(event.target)) setHoveredDay(null); };
+    document.addEventListener('pointerdown', closeOutside);
+    return () => document.removeEventListener('pointerdown', closeOutside);
+  }, [hoveredDay]);
   const year = month.getFullYear();
   const index = month.getMonth();
   const first = new Date(year, index, 1).getDay();
@@ -42,7 +49,7 @@ export function MiniCalendar({ today, selected, holidaysForMonth, onSelect, hasE
   const heading = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(month);
   const dateLabel = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'full' });
 
-  return <section className="neemias-mini-calendar" aria-label="Calendário rápido">
+  return <section className="neemias-mini-calendar" ref={calendarRef} aria-label="Calendário rápido">
     <h2><CalendarDays size={17}/> Calendário</h2>
     <div className="mini-calendar-toolbar">
       <button aria-label="Mês anterior" onClick={() => { setHoveredDay(null); setMonth(new Date(year, index - 1, 1)); }}><ChevronLeft size={16}/></button>
@@ -76,7 +83,7 @@ export function MiniCalendar({ today, selected, holidaysForMonth, onSelect, hasE
             aria-haspopup={hasDeadlines ? 'dialog' : undefined}
             aria-expanded={hasDeadlines ? hoveredDay === iso : undefined} aria-controls={hasDeadlines ? panelId : undefined}
             data-holiday={holiday ? true : undefined} data-weekend={[0, 6].includes(day.getDay()) ? true : undefined}
-            onClick={() => { if (hasDeadlines) setHoveredDay(iso); onSelect(iso); }}>
+            onClick={() => { if (hasDeadlines) { setHoveredDay(iso); return; } onSelect(iso); }}>
             {i + 1}{withEvent && <span className="aw-mini-dot" aria-hidden="true"/>}
           </button>
           {hasDeadlines && hoveredDay === iso && <div className="mini-calendar-deadlines" id={panelId}

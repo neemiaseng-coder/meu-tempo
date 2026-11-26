@@ -9,13 +9,8 @@ import DailyQuotes from './DailyQuotes.jsx';
 import { isBirthday as birthday, MiniCalendar, upcomingReminders } from './AgendaExtras.jsx';
 import AnelisaContacts from './AnelisaContacts.jsx';
 import './anelisa.css';
-
-const appearance = {
-  google: { label: 'Google', Brand: Grid2X2, Task: ListTodo, Routine: Calendar, Meeting: VideoIcon, Alert: Bell, Birthday: Cake, Date: Calendar },
-  facebook: { label: 'Facebook', Brand: House, Task: ClipboardList, Routine: CalendarCheck, Meeting: CalendarDays, Alert: Bell, Birthday: Cake, Date: CalendarDays },
-  instagram: { label: 'Instagram', Brand: Camera, Task: SquarePen, Routine: Repeat2, Meeting: MessageCircle, Alert: BellRing, Birthday: Cake, Date: Calendar },
-  tiktok: { label: 'TikTok', Brand: Music2, Task: CirclePlus, Routine: Repeat2, Meeting: Video, Alert: BellRing, Birthday: Cake, Date: CalendarCheck },
-};
+import { appearances as appearance, ThemePicker } from './Appearance.jsx';
+import TaskDescription from './TaskDescription.jsx';
 
 const shortWeekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const frequencies = { daily: 'Diária', weekly: 'Semanal', monthly: 'Mensal' };
@@ -59,11 +54,11 @@ function TaskRows({ tasks, date, isDone, toggle, onEdit, onDelete, routineRule =
       : variableMonth && task.scheduled_date ? toDate(task.scheduled_date).toLocaleDateString('pt-BR') : '';
     const subtitle = task.occurrenceDay ? toDate(task.occurrenceDay).toLocaleDateString('pt-BR') : routine ? [frequencies[task.recurrence_type], scheduledLabel].filter(Boolean).join(' · ')
       : taskDay(task) && toDate(taskDay(task)).toLocaleDateString('pt-BR');
-    return <div className="anelisa-task" data-overdue={late || undefined} key={task.occurrenceDay ? task.id + ':' + task.occurrenceDay : task.id}>
+    return <div className="anelisa-task" data-overdue={late || undefined} data-done={done || undefined} key={task.occurrenceDay ? task.id + ':' + task.occurrenceDay : task.id}>
       <button className={'myday-check' + (done ? ' checked' : '')} disabled={!scheduled}
-        aria-pressed={done} aria-label={task.title} onClick={() => toggle(task, task.occurrenceDay)}>{done && <Check size={16}/>}</button>
+        aria-pressed={done} aria-label={(done ? 'Desmarcar: ' : 'Concluir: ') + task.title} onClick={() => toggle(task, task.occurrenceDay)}>{done && <Check size={16}/>}</button>
       <div><strong>{late && <CircleAlert size={15} aria-hidden="true"/>}{task.title}</strong><small>{subtitle}</small>
-        {task.description && <details className="aw-task-description"><summary>Detalhes</summary><p>{task.description}</p></details>}
+        <TaskDescription description={task.description}/>
       </div>
       <span className={status === 'Em atraso' ? 'aw-late' : undefined}>{status}</span>
       <div className="aw-task-actions">
@@ -147,21 +142,9 @@ export function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holid
 }
 
 export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveActivity,
-  meetings, renderMeetings, signOut, userId, email, holidaysForMonth, events, occursOn, onReminder, reminderDialog, contacts, onSaveContact, onDeleteActivity, weekStart, occurrences, accountPhoto, onSavePhoto, workCalendar, routineRule = routineOccurs, workSchedule, onSaveWorkSchedule, onTimeOff, timeOffDialog }) {
-  const themeKey = 'meu-tempo-theme-' + userId;
-  const [theme, setTheme] = useState(() => {
-    try {
-      const saved = localStorage.getItem(themeKey);
-      return Object.hasOwn(appearance, saved) ? saved : 'facebook';
-    } catch {
-      return 'facebook';
-    }
-  });
+  meetings, renderMeetings, signOut, userId, email, holidaysForMonth, events, occursOn, onReminder, reminderDialog, contacts, onSaveContact, onDeleteActivity, weekStart, occurrences, accountPhoto, onSavePhoto, workCalendar, routineRule = routineOccurs, workSchedule, onSaveWorkSchedule, onTimeOff, timeOffDialog, theme = 'facebook', onSelectTheme }) {
   const { Brand, Task, Routine, Meeting, Alert, Birthday, Date: CalendarIcon } = appearance[theme];
-  function selectTheme(next) {
-    setTheme(next);
-    try { localStorage.setItem(themeKey, next); } catch { /* A escolha continua valendo na sessão. */ }
-  }
+  const [mobileTools, setMobileTools] = useState(false);
 
   const notesKey = 'meu-tempo-notes-' + userId;
   const [notes, setNotes] = useState(() => {
@@ -241,6 +224,7 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
   }, []);
 
   function openRoute(next) {
+    setMobileTools(false);
     const state = { ...window.history.state, meuTempoRoute: next };
     if (window.history.state?.meuTempoRoute) window.history.replaceState(state, '');
     else window.history.pushState(state, '');
@@ -248,8 +232,18 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
   }
 
   function goHome() {
+    setMobileTools(false);
     if (window.history.state?.meuTempoRoute) window.history.back();
   }
+
+  useEffect(() => {
+    if (!meetingMenu) return;
+    const dismiss = event => {
+      if (event.type === 'keydown' ? event.key === 'Escape' : !event.target.closest('.aw-meeting-nav')) goHome();
+    };
+    document.addEventListener('pointerdown', dismiss); document.addEventListener('keydown', dismiss);
+    return () => { document.removeEventListener('pointerdown', dismiss); document.removeEventListener('keydown', dismiss); };
+  }, [meetingMenu]);
 
   const openMeeting = id => openRoute({ screen: 'meeting', mode: 'detail', id });
   const onEdit = task => openRoute({ screen: 'activity', id: task.id, module });
@@ -301,7 +295,7 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
     }
   }
 
-  return <main className="anelisa-workspace" data-aw-theme={theme}>
+  return <main className="anelisa-workspace" data-aw-theme={theme} data-mobile-tools={mobileTools || undefined}>
     <header className="aw-header">
       <button className="aw-brand" aria-label="Início do Meu Tempo" onClick={goHome}>
         <span className="aw-logo"><Brand size={19}/></span> <span>Meu Tempo</span>
@@ -443,6 +437,13 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
       </aside>
     </div>
 
+    <nav className="social-mobile-nav" aria-label="Navegação principal">
+      <button aria-current={!mobileTools && module === 'day' ? 'page' : undefined} onClick={goHome}><Brand/><span>Meu dia</span></button>
+      <button aria-current={!mobileTools && module === 'tasks' ? 'page' : undefined} onClick={() => openRoute({ screen: 'module', module: 'tasks' })}><Task/><span>Tarefas</span></button>
+      <button aria-current={!mobileTools && module === 'routines' ? 'page' : undefined} onClick={() => openRoute({ screen: 'module', module: 'routines' })}><Routine/><span>Rotinas</span></button>
+      <button aria-current={!mobileTools && module === 'meetings' ? 'page' : undefined} onClick={() => openRoute({ screen: 'meeting', mode: 'history' })}><Meeting/><span>Reuniões</span></button>
+      <button aria-current={mobileTools ? 'page' : undefined} onClick={() => { setMobileTools(value => !value); window.scrollTo({ top: 0 }); }}><Grid2X2/><span>Mais</span></button>
+    </nav>
     <dialog className="aw-notification-panel" ref={notificationPanel} aria-labelledby="aw-notification-title"
       onClick={event => { if (event.target === event.currentTarget) notificationPanel.current.close(); }}>
       <div className="aw-notification-body">
@@ -488,13 +489,7 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
           <span className="aw-avatar">{photo ? <img src={photo} alt=""/> : 'A'}</span>
           <p><strong>Anelisa</strong><br/>{email}</p>
         </div>
-        <fieldset className="aw-theme-picker">
-          <legend>Tema</legend>
-          {Object.entries(appearance).map(([key, option]) => <label key={key}>
-            <input type="radio" name="aw-theme" value={key} checked={theme === key} onChange={() => selectTheme(key)}/>
-            <option.Brand size={17} aria-hidden="true"/> {option.label}
-          </label>)}
-        </fieldset>
+        <ThemePicker theme={theme} onChange={onSelectTheme}/>
         <WorkScheduleForm schedule={workSchedule} onSave={onSaveWorkSchedule}/>
         <label>{savingPhoto ? 'Salvando foto…' : 'Alterar foto do perfil'}<input disabled={savingPhoto} type="file" accept="image/jpeg,image/png,image/webp" onChange={changePhoto}/></label>
         {photoError && <p role="alert">{photoError}</p>}

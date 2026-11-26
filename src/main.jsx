@@ -418,15 +418,6 @@ function App(){
  </nav>
  <div className="content"><div className="welcome"><div><p className="eyebrow">{dateLabel.toUpperCase()}</p><h1>{section}</h1></div></div>
  {section==='Meu Dia'&&<>
-  <section className="neemias-actions" aria-labelledby="neemias-actions-title">
-   <h2 id="neemias-actions-title">Ações rápidas</h2>
-   <div className="neemias-shortcuts">
-    {shortcuts.map(([Icon,label,action],index)=><button key={label} data-tone={index} onClick={action}>
-     <span className="neemias-shortcut-icon"><Icon size={22} aria-hidden="true"/></span>
-     <span>{label}</span>
-    </button>)}
-   </div>
-  </section>
   <div className="agenda-view-switch" role="group" aria-label="Visualização da agenda">
    <button className="secondary" aria-pressed={agendaView==='list'} onClick={()=>setAgendaView('list')}><ClipboardList size={16}/> Lista</button>
    <button className="secondary" aria-pressed={agendaView==='calendar'} onClick={()=>setAgendaView('calendar')}><CalendarDays size={16}/> Calendário</button>

@@ -1,8 +1,13 @@
 import React,{useEffect,useMemo,useState} from 'react';
 import{createRoot}from'react-dom/client';
 import{createClient}from'@supabase/supabase-js';
-import{LayoutDashboard,CalendarCheck,ClipboardList,Sunrise,Briefcase,UserPlus,MessageSquareText,FolderKanban,Settings,Plus,Search,Bell,Check,Clock,ChevronLeft,ChevronRight,Sun,MoreHorizontal,Target,CalendarDays,Menu,X,Filter,Flag,ArrowUpRight,Leaf,Building2,KeyRound,Phone,Copy,Save,Home,Trash2}from'lucide-react';
+import{LayoutDashboard,CalendarCheck,ClipboardList,Sunrise,Briefcase,UserPlus,MessageSquareText,FolderKanban,Settings,Plus,Search,Bell,Check,Clock,ChevronLeft,ChevronRight,Sun,MoreHorizontal,Target,CalendarDays,Menu,X,Filter,Flag,ArrowUpRight,Leaf,Building2,KeyRound,Phone,Copy,Save,Home,Trash2,CalendarX2}from'lucide-react';
 import'./style.css';
+import { workHolidaysForMonth } from './holidays.js';
+import { createWorkCalendar, projectDeadline, loadCalendarEvents } from './workCalendar.js';
+import useCalendarDay from './useCalendarDay.js';
+import WorkScheduleForm from './WorkScheduleForm.jsx';
+import TimeOffDialog from './TimeOffDialog.jsx';
 import { createProcessChecklist } from './processChecklists.js';
 import { loadTaskOccurrences } from './taskOccurrences.js';
 import { activityDeadline, dayActivities, vacancyRemaining } from './dayActivities.js';
@@ -14,7 +19,7 @@ import ActivityEditor from './ActivityEditor.jsx';
 import NeemiasEntryEditor, { EntryActions } from './NeemiasEntryEditor.jsx';
 import Meetings from './Meetings.jsx';
 import AnelisaWorkspace, { AgendaCalendar, routineOccurs } from './AnelisaWorkspace.jsx';
-import { AgendaSidebar, isDeadline, MiniCalendar, ReminderDialog } from './AgendaExtras.jsx';
+import { AgendaSidebar, isDeadline, isReminder, isTimeOff, MiniCalendar, ReminderDialog } from './AgendaExtras.jsx';
 import './agenda-extras.css';
 import Login from './Login.jsx';
 const supabaseUrl=import.meta.env.VITE_SUPABASE_URL;
@@ -28,12 +33,11 @@ function weekStart(date){
  return day.toLocaleDateString('en-CA');
 }
 const monthThemes=['Janeiro Branco','Fevereiro Roxo / Laranja','Março Lilás','Abril Azul','Maio Amarelo','Junho Vermelho','Julho Amarelo','Agosto Lilás','Setembro Amarelo','Outubro Rosa','Novembro Azul','Dezembro Vermelho'];
-const brHolidays={'01-01':'Confraternização Universal','04-21':'Tiradentes','05-01':'Dia do Trabalho','09-07':'Independência do Brasil','10-12':'Nossa Senhora Aparecida','11-02':'Finados','11-15':'Proclamação da República','11-20':'Consciência Negra','12-25':'Natal'};
-function easterDate(y){const a=y%19,b=Math.floor(y/100),cc=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(cc/4),k=cc%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),day=(h+l-7*m+114)%31+1;return new Date(y,mo-1,day)}
-function holidaysForMonth(y,m){const out={};Object.entries(brHolidays).forEach(([md,n])=>{if(Number(md.slice(0,2))===m+1)out[y+'-'+md]=n});const easter=easterDate(y);const offsets=[-2,60];const add=(d,n)=>{const x=new Date(easter);x.setDate(x.getDate()+d);if(x.getMonth()===m)out[x.toLocaleDateString('en-CA')]=n};add(-2,'Paixão de Cristo');add(60,'Corpus Christi');return out}
+
 
 function App(){
- const [section,setSection]=useState('Meu Dia'),[tasks,setTasks]=useState([]),[occurrences,setOccurrences]=useState([]),[busy,setBusy]=useState(true),[user,setUser]=useState(null),[sessionReady,setSessionReady]=useState(false),[query,setQuery]=useState(''),[showAdd,setShowAdd]=useState(false),[title,setTitle]=useState(''),[taskType,setTaskType]=useState('demand'),[due,setDue]=useState(today()),[recurrence,setRecurrence]=useState('daily'),[recurrenceDays,setRecurrenceDays]=useState([new Date().getDay()]),[monthDay,setMonthDay]=useState(Number(today().slice(-2))),[toast,setToast]=useState(''),[theme,setTheme]=useState('light'),[mobile,setMobile]=useState(false),[templates,setTemplates]=useState([]),[records,setRecords]=useState([]),[templateTitle,setTemplateTitle]=useState(''),[templateBody,setTemplateBody]=useState(''),[templateHasDate,setTemplateHasDate]=useState(false),[selectedTemplateId,setSelectedTemplateId]=useState(null),[recipient,setRecipient]=useState(''),[sendDate,setSendDate]=useState(today()),[generated,setGenerated]=useState(''),[showTemplateForm,setShowTemplateForm]=useState(false),[showRecordForm,setShowRecordForm]=useState(false),[recordType,setRecordType]=useState('company'),[recordTitle,setRecordTitle]=useState(''),[recordDescription,setRecordDescription]=useState(''),[company,setCompany]=useState({razao:'',fantasia:'',cnpj:'',ie:'',cep:'',street:'',number:'',complement:'',district:'',city:'',state:'',phone:'',email:'',responsible:''}),[contact,setContact]=useState({phone:'',name:'',email:''}),[login,setLogin]=useState({username:'',password:'',other:''});
+ const dateToday=useCalendarDay();
+ const [section,setSection]=useState('Meu Dia'),[taskRecords,setTasks]=useState([]),[occurrences,setOccurrences]=useState([]),[busy,setBusy]=useState(true),[user,setUser]=useState(null),[sessionReady,setSessionReady]=useState(false),[query,setQuery]=useState(''),[showAdd,setShowAdd]=useState(false),[title,setTitle]=useState(''),[taskType,setTaskType]=useState('demand'),[due,setDue]=useState(today()),[recurrence,setRecurrence]=useState('daily'),[recurrenceDays,setRecurrenceDays]=useState([new Date().getDay()]),[monthDay,setMonthDay]=useState(Number(today().slice(-2))),[toast,setToast]=useState(''),[theme,setTheme]=useState('light'),[mobile,setMobile]=useState(false),[templates,setTemplates]=useState([]),[records,setRecords]=useState([]),[templateTitle,setTemplateTitle]=useState(''),[templateBody,setTemplateBody]=useState(''),[templateHasDate,setTemplateHasDate]=useState(false),[selectedTemplateId,setSelectedTemplateId]=useState(null),[recipient,setRecipient]=useState(''),[sendDate,setSendDate]=useState(today()),[generated,setGenerated]=useState(''),[showTemplateForm,setShowTemplateForm]=useState(false),[showRecordForm,setShowRecordForm]=useState(false),[recordType,setRecordType]=useState('company'),[recordTitle,setRecordTitle]=useState(''),[recordDescription,setRecordDescription]=useState(''),[company,setCompany]=useState({razao:'',fantasia:'',cnpj:'',ie:'',cep:'',street:'',number:'',complement:'',district:'',city:'',state:'',phone:'',email:'',responsible:''}),[contact,setContact]=useState({phone:'',name:'',email:''}),[login,setLogin]=useState({username:'',password:'',other:''});
  const [vacancyTarget,setVacancyTarget]=useState('');
  const [historyError,setHistoryError]=useState('');
  const [viewingRecord,setViewingRecord]=useState(null);
@@ -49,9 +53,23 @@ function App(){
  const [agendaView,setAgendaView]=useState('list');
  const [calendarSelection,setCalendarSelection]=useState(null);
  const [reminder,setReminder]=useState(null);
- const [meetings,setMeetings]=useState([]),[deadlineEvents,setDeadlineEvents]=useState([]);
+ const [meetings,setMeetings]=useState([]),[eventRecords,setDeadlineEvents]=useState([]);
  const [showDeadlineForm,setShowDeadlineForm]=useState(false),[editingDeadlineId,setEditingDeadlineId]=useState(null),[deadlineTitle,setDeadlineTitle]=useState(''),[deadlineDate,setDeadlineDate]=useState(today()),[deadlineType,setDeadlineType]=useState('payment'),[deadlineDescription,setDeadlineDescription]=useState(''),[deadlineRecurrence,setDeadlineRecurrence]=useState('none'),[deadlineEnd,setDeadlineEnd]=useState('');
- const [processes,setProcesses]=useState([]),[vacancies,setVacancies]=useState([]),[showVacancyForm,setShowVacancyForm]=useState(false),[vacancyTitle,setVacancyTitle]=useState(''),[vacancyUnit,setVacancyUnit]=useState(''),[vacancyDepartment,setVacancyDepartment]=useState(''),[vacancyContractType,setVacancyContractType]=useState('CLT'),[vacancyQuantity,setVacancyQuantity]=useState('1'),[vacancyNotes,setVacancyNotes]=useState(''),[processVacancyId,setProcessVacancyId]=useState(''),[showProcessForm,setShowProcessForm]=useState(false),[processType,setProcessType]=useState('admission'),[processName,setProcessName]=useState(''),[processRole,setProcessRole]=useState(''),[processUnit,setProcessUnit]=useState(''),[processDue,setProcessDue]=useState(today()),[processNotes,setProcessNotes]=useState(''),[profileOpen,setProfileOpen]=useState(false),[notificationOpen,setNotificationOpen]=useState(false),[profilePhoto,setProfilePhoto]=useState('');
+ const [processRecords,setProcesses]=useState([]),[vacancyRecords,setVacancies]=useState([]),[showVacancyForm,setShowVacancyForm]=useState(false),[vacancyTitle,setVacancyTitle]=useState(''),[vacancyUnit,setVacancyUnit]=useState(''),[vacancyDepartment,setVacancyDepartment]=useState(''),[vacancyContractType,setVacancyContractType]=useState('CLT'),[vacancyQuantity,setVacancyQuantity]=useState('1'),[vacancyNotes,setVacancyNotes]=useState(''),[processVacancyId,setProcessVacancyId]=useState(''),[showProcessForm,setShowProcessForm]=useState(false),[processType,setProcessType]=useState('admission'),[processName,setProcessName]=useState(''),[processRole,setProcessRole]=useState(''),[processUnit,setProcessUnit]=useState(''),[processDue,setProcessDue]=useState(today()),[processNotes,setProcessNotes]=useState(''),[profileOpen,setProfileOpen]=useState(false),[notificationOpen,setNotificationOpen]=useState(false),[profilePhoto,setProfilePhoto]=useState('');
+ const [showTimeOff,setShowTimeOff]=useState(false);
+ const calendarEnabled=Boolean(user);
+ const storedWorkSchedule=user?.user_metadata?.work_calendar||{};
+ const workSchedule={
+  work_saturday:storedWorkSchedule.work_saturday===true,
+  work_sunday:storedWorkSchedule.work_sunday===true,
+  work_holidays:storedWorkSchedule.work_holidays===true,
+ };
+ const workCalendar=createWorkCalendar(workHolidaysForMonth,eventRecords.filter(isTimeOff),workSchedule);
+ const tasks=calendarEnabled?taskRecords.map(task=>task.task_type==='routine'?task:projectDeadline(task,'due_date',workCalendar,task.scheduled_date)):taskRecords;
+ const processes=calendarEnabled?processRecords.map(process=>projectDeadline(process,'due_date',workCalendar)):processRecords;
+ const vacancies=calendarEnabled?vacancyRecords.map(vacancy=>projectDeadline(vacancy,'target_date',workCalendar)):vacancyRecords;
+ const deadlineEvents=eventRecords;
+ const routineRule=(task,date)=>calendarEnabled?workCalendar.routineDates(task,date,routineOccurs).length>0:routineOccurs(task,date);
  useEffect(()=>{if(!supabase){setBusy(false);setSessionReady(true);return}
  let active=true;
  const timeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error('Tempo limite ao conectar com a autenticação.')),12000));
@@ -64,9 +82,11 @@ function App(){
  setHistoryError('');
  try{
   const timeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error('Tempo limite ao carregar os dados. Verifique a conexão com o Supabase.')),15000));
-  const results=await Promise.race([Promise.all([supabase.from('tasks').select('*').order('created_at',{ascending:false}),supabase.from('message_templates').select('*').order('created_at',{ascending:false}),supabase.from('quick_records').select('*').order('created_at',{ascending:false}),loadTaskOccurrences(supabase,user.id,today()),supabase.from('meetings').select('*').order('meeting_date',{ascending:true}),supabase.from('deadline_events').select('*').order('event_date',{ascending:true}),supabase.from('hr_processes').select('*').order('created_at',{ascending:false}),supabase.from('vacancies').select('*').order('created_at',{ascending:false})]),timeout]);
+  const results=await Promise.race([Promise.all([supabase.from('tasks').select('*').order('created_at',{ascending:false}),supabase.from('message_templates').select('*').order('created_at',{ascending:false}),supabase.from('quick_records').select('*').order('created_at',{ascending:false}),loadTaskOccurrences(supabase,user.id,today()),supabase.from('meetings').select('*').order('meeting_date',{ascending:true}),loadCalendarEvents(supabase,user.id),supabase.from('hr_processes').select('*').order('created_at',{ascending:false}),supabase.from('vacancies').select('*').order('created_at',{ascending:false}),supabase.auth.getUser()]),timeout]);
   if(!isCurrent())return;
-  const [a,b,c,d,e,f,g,h]=results;
+  const [a,b,c,d,e,f,g,h,profile]=results;
+  if(profile.error||!profile.data?.user)throw profile.error||new Error('Não foi possível carregar o perfil.');
+  setUser(profile.data.user);
   if(a.error){setTasks([]);notify(a.error.message)}else setTasks(a.data||[]);
   if(b.error){setTemplates([]);notify(b.error.message)}else{setTemplates(b.data||[]);setSelectedTemplateId(b.data?.[0]?.id||null)}
   if(c.error){setRecords([]);notify(c.error.message)}else setRecords(c.data||[]);
@@ -75,7 +95,11 @@ function App(){
    setHistoryError('Não foi possível carregar o histórico de conclusões. Atualize para tentar novamente.');
   }else setOccurrences(d.data||[]);
   if(e.error){setMeetings([]);notify(e.error.message)}else setMeetings(e.data||[]);
-  if(f.error){setDeadlineEvents([]);notify(f.error.message)}else setDeadlineEvents(f.data||[]);
+  if(f.error){
+   setDeadlineEvents([]);
+   if(calendarEnabled)setHistoryError('Não foi possível carregar o calendário de trabalho. Atualize para tentar novamente.');
+   notify(f.error.message);
+  }else setDeadlineEvents(f.data||[]);
   if(g.error){setProcesses([]);notify(g.error.message)}else setProcesses(g.data||[]);
   if(h.error){setVacancies([]);notify(h.error.message)}else setVacancies(h.data||[]);
  }catch(error){if(isCurrent()){
@@ -88,7 +112,7 @@ function App(){
  };
  useEffect(()=>{
   let current=true;
-  setEditingActivity(null);setEditingEntry(null);setMeetingSelection(null);setViewingRecord(null);
+  setEditingActivity(null);setEditingEntry(null);setMeetingSelection(null);setViewingRecord(null);setShowTimeOff(false);
   if(sessionReady)load(()=>current);
   return()=>{current=false};
  },[user?.id,sessionReady]);
@@ -102,13 +126,13 @@ function App(){
   return()=>{document.removeEventListener('pointerdown',onPointer);document.removeEventListener('keydown',onKey)};
  },[profileOpen,notificationOpen,query]);
  const notify=t=>{setToast(t);setTimeout(()=>setToast(''),3500)};
- const dateToday=today();
- const todayTasks=dayActivities(tasks,dateToday,routineOccurs);
+ const isWorkingDayToday=!calendarEnabled||workCalendar.isWorkday(dateToday);
+ const todayTasks=isWorkingDayToday?dayActivities(tasks,dateToday,routineRule):[];
  const overdueTasks=todayTasks.filter(task=>task.task_type!=='routine'&&task.status!=='completed'&&activityDeadline(task)&&activityDeadline(task)<dateToday);
  const todayMeetings=meetings.filter(m=>m.meeting_date===dateToday);
- const todayEvents=deadlineEvents.filter(e=>!isDeadline(e)&&eventOccursOn(e,dateToday));
+ const todayEvents=deadlineEvents.filter(e=>isReminder(e)&&eventOccursOn(e,dateToday));
  const isDone=t=>t.recurrence_type && t.recurrence_type!=='none'
-  ?occurrences.some(o=>o.task_id===t.id&&o.occurrence_date===(t.occurrenceDay||dateToday)&&o.status==='completed')
+  ?occurrences.some(o=>o.task_id===t.id&&occurrenceDays(t,t.occurrenceDay||dateToday).includes(o.occurrence_date)&&o.status==='completed')
   :t.status==='completed';
  const completed=todayTasks.filter(isDone).length;
  const progress=todayTasks.length?Math.round(completed/todayTasks.length*100):0;
@@ -157,7 +181,7 @@ function App(){
   }catch(error){setDeadlineError(error.message);}
   finally{setSavingDeadline(false);}
  }
- function eventOccursOn(event,day){
+ function rawEventOccursOn(event,day){
   if(day<event.event_date||(event.recurrence_end&&day>event.recurrence_end))return false;
   const start=new Date(event.event_date+'T12:00:00');
   const current=new Date(day+'T12:00:00');
@@ -167,6 +191,33 @@ function App(){
   }
   if(day===event.event_date)return true;
   return event.recurrence_type==='monthly'&&start.getDate()===current.getDate();
+ }
+ function eventOccursOn(event,day){
+  if(isTimeOff(event))return event.event_date<=day&&day<=(event.end_date||event.event_date);
+  return calendarEnabled&&isDeadline(event)
+   ?workCalendar.eventOccurs(event,day,rawEventOccursOn):rawEventOccursOn(event,day);
+ }
+ function occurrenceDays(task,day){
+  return calendarEnabled
+   ?[...new Set([day,...workCalendar.routineDates(task,day,routineOccurs)])]:[day];
+ }
+ async function saveWorkSchedule(schedule){
+  const {data,error}=await supabase.auth.updateUser({data:{work_calendar:schedule}});
+  if(error)throw error;
+  setUser(data.user);
+ }
+ async function saveTimeOff(entry,values){
+  const payload={...values,entry_kind:'time_off',event_type:'other',recurrence_type:'none',recurrence_days:[],recurrence_end:null};
+  const table=supabase.from('deadline_events');
+  const request=entry?table.update(payload).eq('id',entry.id).eq('user_id',user.id):table.insert({...payload,user_id:user.id});
+  const {data,error}=await request.select().single();
+  if(error)throw error;
+  setDeadlineEvents(old=>[...old.filter(item=>item.id!==data.id),data]);
+ }
+ async function deleteTimeOff(id){
+  const {error}=await supabase.from('deadline_events').delete().eq('id',id).eq('user_id',user.id).select('id').single();
+  if(error)throw error;
+  setDeadlineEvents(old=>old.filter(item=>item.id!==id));
  }
  async function saveActivity(id,values){
   const {data,error}=await supabase.from('tasks').update(values).eq('id',id).eq('user_id',user.id).select().single();
@@ -203,7 +254,24 @@ function App(){
    onDelete={async()=>{try{await removeActivity(task)}catch(error){notify(error.message)}}}/>;
  }
  async function addTask(e){e.preventDefault();if(!title.trim())return;const item={title:title.trim(),task_type:taskType, due_date:due, scheduled_date:due, status:'pending', user_id:user.id, recurrence_type:taskType==='routine'?recurrence:'none', recurrence_days:taskType==='routine'&&recurrence==='weekly'?recurrenceDays:taskType==='routine'&&recurrence==='monthly'?[monthDay]:[]};const{data,error}=await supabase.from('tasks').insert(item).select().single();if(error){notify(error.message);return}setTasks(old=>[data,...old]);if(anelisa)setSection(taskType==='routine'?'Rotinas':'Tarefas');setTitle('');setShowAdd(false);notify('Atividade adicionada')}
- async function toggle(t,day=dateToday){if(t.recurrence_type && t.recurrence_type!=='none'){const current=occurrences.find(o=>o.task_id===t.id&&o.occurrence_date===day),status=current?.status==='completed'?'pending':'completed';const{data,error}=await supabase.from('task_occurrences').upsert({user_id:user.id,task_id:t.id,occurrence_date:day,status,completed_at:status==='completed'?new Date().toISOString():null},{onConflict:'task_id,occurrence_date'}).select().single();if(error){notify(error.message);return}setOccurrences(old=>[...old.filter(o=>o.task_id!==t.id||o.occurrence_date!==day),data]);return}const status=t.status==='completed'?'pending':'completed';const{error}=await supabase.from('tasks').update({status,completed_at:status==='completed'?new Date().toISOString():null}).eq('id',t.id);if(error){notify(error.message);return}setTasks(old=>old.map(x=>x.id===t.id?{...x,status}:x))}
+ async function toggle(task,day=dateToday){
+  if(task.recurrence_type&&task.recurrence_type!=='none'){
+   const days=occurrenceDays(task,day);
+   const done=occurrences.some(item=>item.task_id===task.id&&days.includes(item.occurrence_date)&&item.status==='completed');
+   const status=done?'pending':'completed';
+   const values=days.map(date=>({user_id:user.id,task_id:task.id,occurrence_date:date,status,completed_at:done?null:new Date().toISOString()}));
+   const {data,error}=await supabase.from('task_occurrences').upsert(values,{onConflict:'task_id,occurrence_date'}).select();
+   if(error){notify(error.message);return;}
+   setOccurrences(old=>[...old.filter(item=>item.task_id!==task.id||!days.includes(item.occurrence_date)),...data]);
+   return;
+  }
+  const status=task.status==='completed'?'pending':'completed';
+  const completed_at=status==='completed'?new Date().toISOString():null;
+  const {error}=await supabase.from('tasks').update({status,completed_at}).eq('id',task.id).eq('user_id',user.id);
+  if(error){notify(error.message);return;}
+  setTasks(old=>old.map(item=>item.id===task.id?{...item,status,completed_at}:item));
+ }
+
  async function saveTemplate(e){e.preventDefault();if(!templateTitle.trim()||!templateBody.trim())return;const variables=['nome',...(templateHasDate?['data']:[])];const{data,error}=await supabase.from('message_templates').insert({user_id:user.id,title:templateTitle.trim(),body:templateBody,variables}).select().single();if(error){notify(error.message);return}setTemplates([data,...templates]);setSelectedTemplateId(data.id);setTemplateTitle('');setTemplateBody('');setTemplateHasDate(false);setShowTemplateForm(false);notify('Modelo salvo')}
  function makeMessage(t){const msg=t.body.replaceAll('{{nome}}',recipient.trim()).replaceAll('{{data}}',new Date(sendDate+'T12:00:00').toLocaleDateString('pt-BR'));setGenerated(msg)}
  async function saveRecord(e){e.preventDefault();if(!recordTitle.trim())return;let content='',metadata={description:recordDescription};let encrypted_payload=null;if(recordType==='company')content=JSON.stringify(company);if(recordType==='contact')content=JSON.stringify(contact);if(recordType==='credential'){if(!login.password){notify('Preencha a senha');return}metadata={...metadata,login:login.username,other:login.other,credential_encryption:'account-v1'};try{encrypted_payload=await encryptCredential(supabase,user.id,login.password)}catch(error){notify(error.message);return}}
@@ -211,8 +279,8 @@ function App(){
 
  function mask(value,type){let v=value.replace(/\D/g,'');if(type==='cnpj')return v.slice(0,14).replace(/^(\d{2})(\d)/,'$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/,'$1.$2.$3').replace(/\.(\d{3})(\d)/,'.$1/$2').replace(/(\d{4})(\d)/,'$1-$2');if(type==='cep')return v.slice(0,8).replace(/^(\d{5})(\d)/,'$1-$2');if(type==='phone'){v=v.slice(0,11);return v.length>10?v.replace(/^(\d{2})(\d{5})(\d{0,4}).*/,'($1) $2-$3'):v.replace(/^(\d{2})(\d{4})(\d{0,4}).*/,'($1) $2-$3')}return value}
  async function copyValue(value){try{await navigator.clipboard.writeText(value);notify('Copiado para a área de transferência')}catch{notify('Não foi possível copiar')}}
- const searchItems=useMemo(()=>[...tasks.map(x=>({label:x.title,detail:'Atividade',section:'Meu Dia',search:x.title+' '+(x.description||'')})),...meetings.map(x=>({label:x.title,detail:'Reunião',section:'Reuniões',search:x.title+' '+(x.agenda||'')})),...deadlineEvents.filter(x=>!isDeadline(x)).map(x=>({label:x.title,detail:'Calendário',section:'Meu Dia',search:x.title+' '+(x.description||'')})),...templates.map(x=>({label:x.title,detail:'Mensagem pronta',section:'Mensagens prontas',search:x.title+' '+x.body})),...records.filter(x=>!['profile_photo','credential_key'].includes(x.metadata?.kind)).map(x=>({label:x.title,detail:'Cadastro',section:'Cadastros',search:x.title+' '+(x.metadata?.description||'')})),...processes.map(x=>({label:x.person_name,detail:x.process_type==='admission'?'Admissão':'Rescisão',section:'Processos',search:x.person_name+' '+(x.role||'')+' '+(x.unit||'')})),...searchableSections.map(label=>({label,detail:'Seção',section:label,search:label}))].filter(x=>query.trim()&&x.search.toLowerCase().includes(query.toLowerCase())).slice(0,8),[query,tasks,meetings,deadlineEvents,templates,records,processes]);
- const overdueNotifications=[...overdueTasks.map(t=>({title:t.title,detail:'Atividade em atraso',date:t.due_date,section:'Meu Dia'})),...deadlineEvents.filter(e=>!isDeadline(e)&&e.event_date<dateToday).map(e=>({title:e.title,detail:'Lançamento do calendário em atraso',date:e.event_date,section:'Meu Dia'})),...processes.filter(p=>p.status!=='completed'&&p.due_date&&p.due_date<dateToday).map(p=>({title:p.person_name,detail:'Processo com prazo vencido',date:p.due_date,section:'Processos'}))];
+ const searchItems=useMemo(()=>[...tasks.map(x=>({label:x.title,detail:'Atividade',section:'Meu Dia',search:x.title+' '+(x.description||'')})),...meetings.map(x=>({label:x.title,detail:'Reunião',section:'Reuniões',search:x.title+' '+(x.agenda||'')})),...deadlineEvents.filter(x=>isReminder(x)).map(x=>({label:x.title,detail:'Calendário',section:'Meu Dia',search:x.title+' '+(x.description||'')})),...templates.map(x=>({label:x.title,detail:'Mensagem pronta',section:'Mensagens prontas',search:x.title+' '+x.body})),...records.filter(x=>!['profile_photo','credential_key'].includes(x.metadata?.kind)).map(x=>({label:x.title,detail:'Cadastro',section:'Cadastros',search:x.title+' '+(x.metadata?.description||'')})),...processes.map(x=>({label:x.person_name,detail:x.process_type==='admission'?'Admissão':'Rescisão',section:'Processos',search:x.person_name+' '+(x.role||'')+' '+(x.unit||'')})),...searchableSections.map(label=>({label,detail:'Seção',section:label,search:label}))].filter(x=>query.trim()&&x.search.toLowerCase().includes(query.toLowerCase())).slice(0,8),[query,tasks,meetings,deadlineEvents,templates,records,processes]);
+ const overdueNotifications=[...overdueTasks.map(t=>({title:t.title,detail:'Atividade em atraso',date:t.due_date,section:'Meu Dia'})),...deadlineEvents.filter(e=>isReminder(e)&&e.event_date<dateToday).map(e=>({title:e.title,detail:'Lançamento do calendário em atraso',date:e.event_date,section:'Meu Dia'})),...processes.filter(p=>p.status!=='completed'&&p.due_date&&p.due_date<dateToday).map(p=>({title:p.person_name,detail:'Processo com prazo vencido',date:p.due_date,section:'Processos'}))];
  const meetingNotifications=meetings.filter(m=>m.meeting_date>=dateToday&&m.meeting_date<=new Date(Date.now()+86400000).toLocaleDateString('en-CA')).map(m=>({title:m.title,detail:'Lembrete de reunião',date:m.meeting_date,section:'Reuniões'}));
  const notifications=[...overdueNotifications,...meetingNotifications];
 
@@ -273,6 +341,8 @@ function App(){
     setMeetings(old=>old.filter(meeting=>meeting.id!==id));
    }}
    onTask={task=>setTasks(old=>[task,...old.filter(item=>item.id!==task.id)])}/>;
+ const timeOffDialog=showTimeOff&&<TimeOffDialog events={eventRecords.filter(isTimeOff)} today={dateToday}
+   onSave={saveTimeOff} onDelete={deleteTimeOff} onClose={()=>setShowTimeOff(false)}/>;
  const reminderDialog=reminder&&<ReminderDialog reminder={reminder} onSave={saveReminder}
    onDelete={deleteReminder} onClose={()=>setReminder(null)}/>;
  const shortcuts=[
@@ -282,12 +352,13 @@ function App(){
   [Bell,'Incluir lembrete',()=>openReminder(dateToday)],
   [Flag,'Incluir prazo',()=>{closeDeadlineForm();setDeadlineDate(dateToday);setShowDeadlineForm(true)}],
   [UserPlus,'Abrir vaga',openVacancy],
+  [CalendarX2,'Sem expediente',()=>setShowTimeOff(true)],
   [Briefcase,'Processos',()=>setSection('Processos')],
   [MessageSquareText,'Mensagens prontas',()=>setSection('Mensagens prontas')],
   [FolderKanban,'Cadastros',()=>setSection('Cadastros')],
  ];
  return <div className={`app theme-${theme}${anelisa?' aw-app':''}`}>
- {anelisa?<AnelisaWorkspace holidaysForMonth={holidaysForMonth} key={user.id} userId={user.id} email={user.email} tasks={tasks} date={dateToday}
+ {anelisa?<AnelisaWorkspace holidaysForMonth={workHolidaysForMonth} key={user.id} userId={user.id} email={user.email} tasks={tasks} date={dateToday}
    isDone={isDone} toggle={toggle} meetings={meetings} renderMeetings={renderMeetings}
    weekStart={weekStart(dateToday)} occurrences={occurrences}
    accountPhoto={records.find(record=>record.id===user.id&&record.metadata?.kind==='profile_photo')?.content}
@@ -305,6 +376,8 @@ function App(){
     setTasks(old=>old.map(item=>item.id===id?data:item));
    }}
    events={deadlineEvents} occursOn={eventOccursOn} onReminder={openReminder} reminderDialog={reminderDialog}
+   workCalendar={workCalendar} routineRule={routineRule} workSchedule={workSchedule} onSaveWorkSchedule={saveWorkSchedule}
+   onTimeOff={()=>setShowTimeOff(true)} timeOffDialog={timeOffDialog}
    contacts={records.filter(record=>record.record_type==='contact')}
    onSaveContact={async(contact)=>{
     const {data,error}=await supabase.from('quick_records').insert({user_id:user.id,record_type:'contact',
@@ -348,19 +421,22 @@ function App(){
    <button className="secondary" aria-pressed={agendaView==='calendar'} onClick={()=>setAgendaView('calendar')}><CalendarDays size={16}/> Calendário</button>
   </div>
   {agendaView==='calendar'&&<AgendaCalendar key={calendarSelection?.version} date={dateToday} initialDate={calendarSelection?.day} tasks={tasks.filter(t=>t.is_active!==false&&t.status!=='cancelled')}
-   meetings={meetings} holidaysForMonth={holidaysForMonth} events={deadlineEvents.filter(event=>!isDeadline(event))} occursOn={eventOccursOn}
+   meetings={meetings} holidaysForMonth={workHolidaysForMonth} routineRule={routineRule} events={deadlineEvents.filter(isReminder)} occursOn={eventOccursOn}
    onReminder={openReminder} onMeeting={id=>{setMeetingSelection(id);setSection('Reuniões')}} onEvent={openDeadlineEditor} onEdit={setEditingActivity} renderTaskDescription={task=><TaskDescription description={task.description}/>}/>}
  </>}
- {section==='Meu Dia'&&agendaView==='list'&&<section className="myday-shell"><div className="myday-progress"><div><b>Seu progresso</b><span>{completed}/{todayTasks.length} concluídas · {progress}%</span></div><div className="myday-track" role="progressbar" aria-label="Progresso das tarefas de hoje" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><i style={{width:progress+'%'}}/></div></div><div className="myday-list-head"><div><h2>Minha lista de hoje</h2><p>Atividades em atraso aparecem destacadas em vermelho.</p></div><span className="myday-count">{todayTasks.length-completed} pendentes</span></div><div className="myday-list">{[...overdueTasks,...todayTasks.filter(t=>!overdueTasks.some(o=>o.id===t.id))].map((t,i)=><div key={t.id} className={`myday-task ${isDone(t)?'is-done':''} ${!isDone(t)&&activityDeadline(t)<dateToday&&t.task_type!=='routine'?'is-overdue':''}`}><button className={`myday-check ${isDone(t)?'checked':''}`} onClick={()=>toggle(t)} aria-label={isDone(t)?'Desmarcar tarefa':'Concluir tarefa'}>{isDone(t)?<Check size={17}/>:null}</button><span className={`myday-task-icon task-tone-${i%6}`}>{t.task_type==='routine'?<CalendarCheck size={19}/>:<ClipboardList size={19}/>}</span><div className="myday-task-copy"><b>{t.title}</b><small>{t.task_type==='routine'?'Rotina':'Tarefa'} · {t.recurrence_type==='daily'?'Diária':t.recurrence_type==='weekly'?'Semanal':t.recurrence_type==='monthly'?'Mensal':activityDeadline(t)?'Prazo '+new Date(activityDeadline(t)+'T12:00:00').toLocaleDateString('pt-BR'):'Sem prazo'}</small><TaskDescription description={t.description}/></div><span className="myday-task-status">{isDone(t)?'Concluída':activityDeadline(t)<dateToday&&t.task_type!=='routine'?'Em atraso':activityDeadline(t)>dateToday?'Prazo futuro':'A fazer'}</span>{activityActions(t)}</div>)}{!todayTasks.length&&!overdueTasks.length&&!hasFollowUps&&<div className="myday-empty"><span><Check size={26}/></span><b>Sua lista está livre!</b><p>Adicione uma rotina ou demanda para organizar seu dia.</p><button className="primary" onClick={()=>setShowAdd(true)}><Plus size={16}/> Adicionar atividade</button></div>}</div><div className="day-agenda"><h2>Agenda de hoje</h2>{todayMeetings.map(m=><div className="agenda-item meeting" key={m.id}><CalendarDays/><div><b>{m.title}</b><small>Reunião · {m.agenda||'Sem pauta'}</small><button className="secondary" onClick={()=>{setMeetingSelection(m.id);setSection('Reuniões')}}>Abrir reunião</button></div></div>)}{todayEvents.map(ev=><div className="agenda-item" key={ev.id}><CalendarCheck/><div>
+ {section==='Meu Dia'&&agendaView==='list'&&isWorkingDayToday&&<section className="myday-shell"><div className="myday-progress"><div><b>Seu progresso</b><span>{completed}/{todayTasks.length} concluídas · {progress}%</span></div><div className="myday-track" role="progressbar" aria-label="Progresso das tarefas de hoje" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><i style={{width:progress+'%'}}/></div></div><div className="myday-list-head"><div><h2>Minha lista de hoje</h2><p>Atividades em atraso aparecem destacadas em vermelho.</p></div><span className="myday-count">{todayTasks.length-completed} pendentes</span></div><div className="myday-list">{[...overdueTasks,...todayTasks.filter(t=>!overdueTasks.some(o=>o.id===t.id))].map((t,i)=><div key={t.id} className={`myday-task ${isDone(t)?'is-done':''} ${!isDone(t)&&activityDeadline(t)<dateToday&&t.task_type!=='routine'?'is-overdue':''}`}><button className={`myday-check ${isDone(t)?'checked':''}`} onClick={()=>toggle(t)} aria-label={isDone(t)?'Desmarcar tarefa':'Concluir tarefa'}>{isDone(t)?<Check size={17}/>:null}</button><span className={`myday-task-icon task-tone-${i%6}`}>{t.task_type==='routine'?<CalendarCheck size={19}/>:<ClipboardList size={19}/>}</span><div className="myday-task-copy"><b>{t.title}</b><small>{t.task_type==='routine'?'Rotina':'Tarefa'} · {t.recurrence_type==='daily'?'Diária':t.recurrence_type==='weekly'?'Semanal':t.recurrence_type==='monthly'?'Mensal':activityDeadline(t)?'Prazo '+new Date(activityDeadline(t)+'T12:00:00').toLocaleDateString('pt-BR'):'Sem prazo'}</small><TaskDescription description={t.description}/></div><span className="myday-task-status">{isDone(t)?'Concluída':activityDeadline(t)<dateToday&&t.task_type!=='routine'?'Em atraso':activityDeadline(t)>dateToday?'Prazo futuro':'A fazer'}</span>{activityActions(t)}</div>)}{!todayTasks.length&&!overdueTasks.length&&!hasFollowUps&&<div className="myday-empty"><span><Check size={26}/></span><b>Sua lista está livre!</b><p>Adicione uma rotina ou demanda para organizar seu dia.</p><button className="primary" onClick={()=>setShowAdd(true)}><Plus size={16}/> Adicionar atividade</button></div>}</div><div className="day-agenda"><h2>Agenda de hoje</h2>{todayMeetings.map(m=><div className="agenda-item meeting" key={m.id}><CalendarDays/><div><b>{m.title}</b><small>Reunião · {m.agenda||'Sem pauta'}</small><button className="secondary" onClick={()=>{setMeetingSelection(m.id);setSection('Reuniões')}}>Abrir reunião</button></div></div>)}{todayEvents.map(ev=><div className="agenda-item" key={ev.id}><CalendarCheck/><div>
  {ev.event_type==='other'?<button className="agenda-reminder-link" onClick={()=>openReminder(dateToday,ev)}>{ev.description||ev.title}</button>:<><b>{ev.title}</b><small>{ev.description||ev.event_type}</small></>}
  </div>{ev.event_type!=='other'&&<EntryActions label={ev.title} onEdit={()=>openDeadlineEditor(ev)} onDelete={()=>deleteDeadline(ev)}/>}</div>)}{!todayMeetings.length&&!todayEvents.length&&<p className="muted">Nenhum compromisso adicional para hoje.</p>}</div></section>}
- {section==='Meu Dia'&&<DayFollowUps vacancies={openVacancies} processes={processes} date={dateToday}
+ {section==='Meu Dia'&&isWorkingDayToday&&<DayFollowUps vacancies={openVacancies} processes={processes} date={dateToday}
   vacancyOpenCount={vacancyOpenCount} processProgress={processProgress}
   onVacancy={entry=>setEditingEntry({table:'vacancies',entry})}
   onProcess={process=>{
    setSection('Processos');
    requestAnimationFrame(()=>document.getElementById('process-'+process.id)?.scrollIntoView({block:'nearest'}));
   }}/>}
+ {section==='Meu Dia'&&!isWorkingDayToday&&<section className="task-panel no-work-banner">
+  <CalendarX2 size={22}/><div><h2>Sem expediente hoje</h2><p>{workCalendar.dayOffLabel(dateToday)}</p></div>
+ </section>}
  {section==='Meu Dia'&&<details className="task-panel neemias-all-activities">
   <summary>Todas as tarefas e rotinas</summary>
   {tasks.filter(task=>task.is_active!==false&&task.status!=='cancelled').map(task=><div className="task-row" key={task.id}>
@@ -370,15 +446,15 @@ function App(){
  </details>}
  {section==='Processos'&&<section className="task-panel processes-panel"><div className="panel-head"><div><h2>Processos de RH</h2><p className="muted">Acompanhe admissões e rescisões por etapas e gerencie as vagas abertas.</p></div><div className="process-actions"><button className="secondary" onClick={openVacancy}><Plus size={16}/> Abrir vaga</button><button className="primary" onClick={()=>{setProcessType('admission');setProcessVacancyId('');setShowProcessForm(true)}}><Plus size={17}/> Novo processo</button></div></div><div className="vacancy-board"><div className="vacancy-board-head"><b>Vagas em aberto</b><small>{openVacancies.reduce((n,v)=>n+vacancyOpenCount(v),0)} posição(ões) disponível(is)</small></div>{openVacancies.length?openVacancies.map(v=><div className="vacancy-row" key={v.id}><span className="vacancy-pulse"/><div><b>{v.title} - {v.unit||'Unidade não informada'}</b><small>{v.department||'Área não informada'} · {v.contract_type||'CLT'} · {v.quantity} prevista(s)</small></div><strong>{vacancyOpenCount(v)} aberta(s)</strong>{entryActions('vacancies',v)}</div>):<p className="vacancy-empty">Nenhuma vaga aberta no momento. Use “Abrir vaga” para cadastrar.</p>}</div><details className="neemias-all-activities"><summary>Todas as vagas</summary>
  {vacancies.map(v=><div className="task-row" key={v.id}><div className="task-info"><b>{v.title}</b><small>{v.unit} · {v.status}</small></div>{entryActions('vacancies',v)}</div>)}
- </details><div className="process-tabs"><span>{processes.filter(p=>p.process_type==='admission'&&p.status!=='completed').length} Admissões abertas</span><span>{processes.filter(p=>p.process_type==='termination'&&p.status!=='completed').length} Rescisões abertas</span><span>{processes.filter(p=>p.status==='completed').length} Concluídos</span></div>{processes.length?processes.map(p=>{const steps=p.checklist||defaultProcessChecklist(p);const pct=processProgress(p);return <article className="process-card" id={'process-'+p.id} key={p.id}><div className="process-card-head"><div><span className={'process-type '+(p.process_type==='termination'?'termination':'')}>{p.process_type==='termination'?'Rescisão':'Admissão'}</span><h3>{p.person_name}</h3><small>{[p.role,p.unit].filter(Boolean).join(' · ')||'Cargo/unidade não informados'}</small></div><b>{pct}%</b></div><div className="process-progress"><i style={{width:pct+'%'}}/></div><div className="process-checklist">{steps.map((step,i)=><div className="process-step" key={i}>
+ </details><div className="process-tabs"><span>{processes.filter(p=>p.process_type==='admission'&&p.status!=='completed').length} Admissões abertas</span><span>{processes.filter(p=>p.process_type==='termination'&&p.status!=='completed').length} Rescisões abertas</span><span>{processes.filter(p=>p.status==='completed').length} Concluídos</span></div>{processes.length?<div className="process-card-grid">{processes.map(p=>{const steps=p.checklist||defaultProcessChecklist(p);const pct=processProgress(p);return <article className="process-card" id={'process-'+p.id} key={p.id}><div className="process-card-head"><div><span className={'process-type '+(p.process_type==='termination'?'termination':'')}>{p.process_type==='termination'?'Rescisão':'Admissão'}</span><h3>{p.person_name}</h3><small>{[p.role,p.unit].filter(Boolean).join(' · ')||'Cargo/unidade não informados'}</small></div><b>{pct}%</b></div><div className="process-progress"><i style={{width:pct+'%'}}/></div><div className="process-checklist">{steps.map((step,i)=><div className="process-step" key={i}>
  <label>
   <input type="checkbox" checked={!!step.done} onChange={e=>updateProcess(p,steps.map((x,j)=>j===i?{...x,done:e.target.checked}:x))}/>
   <span className="process-step-copy"><span>{step.label}</span>
    {step.detail&&<span className="process-step-detail">{step.detail}</span>}
   </span>
  </label>
- </div>)}</div>{p.due_date&&<small className="process-deadline">Prazo previsto: {new Date(p.due_date+'T12:00:00').toLocaleDateString('pt-BR')}</small>}{p.notes&&<p className="process-notes">{p.notes}</p>}{entryActions('hr_processes',p)}</article>}) : <div className="empty"><b>Nenhum processo cadastrado</b><p>Use “Novo processo” para incluir uma admissão ou rescisão.</p><button className="primary" onClick={()=>setShowProcessForm(true)}><Plus size={16}/> Incluir primeiro processo</button></div>}</section>}
- {section==='Meus dados'&&<section className="task-panel profile-data"><div className="panel-head"><div><h2>Meus dados de cadastro</h2><p className="muted">Informações da conta utilizada no Meu Tempo.</p></div></div><div className="profile-data-body"><div className="profile-large">{profilePhoto?<img src={profilePhoto}/>:((user.email||'U')[0].toUpperCase())}</div><div><b>{user.email}</b><small>Conta autenticada</small></div><label className="photo-upload">Alterar foto de perfil<input type="file" accept="image/*" onChange={e=>{const file=e.target.files?.[0];if(file){const reader=new FileReader();reader.onload=()=>setProfilePhoto(reader.result);reader.readAsDataURL(file)}}}/></label></div></section>}
+ </div>)}</div>{p.due_date&&<small className="process-deadline">Prazo previsto: {new Date(p.due_date+'T12:00:00').toLocaleDateString('pt-BR')}</small>}{p.notes&&<p className="process-notes">{p.notes}</p>}{entryActions('hr_processes',p)}</article>})}</div> : <div className="empty"><b>Nenhum processo cadastrado</b><p>Use “Novo processo” para incluir uma admissão ou rescisão.</p><button className="primary" onClick={()=>setShowProcessForm(true)}><Plus size={16}/> Incluir primeiro processo</button></div>}</section>}
+ {section==='Meus dados'&&<section className="task-panel profile-data"><div className="panel-head"><div><h2>Meus dados de cadastro</h2><p className="muted">Informações da conta utilizada no Meu Tempo.</p></div></div><div className="profile-data-body"><div className="profile-large">{profilePhoto?<img src={profilePhoto}/>:((user.email||'U')[0].toUpperCase())}</div><div><b>{user.email}</b><small>Conta autenticada</small></div><label className="photo-upload">Alterar foto de perfil<input type="file" accept="image/*" onChange={e=>{const file=e.target.files?.[0];if(file){const reader=new FileReader();reader.onload=()=>setProfilePhoto(reader.result);reader.readAsDataURL(file)}}}/></label></div><WorkScheduleForm schedule={workSchedule} onSave={saveWorkSchedule}/></section>}
  {section==='Reuniões'&&renderMeetings(meetingSelection)}
  {section==='Mensagens prontas'&&<div className="task-panel"><div className="panel-head"><div><h2>Modelos de mensagens</h2><p className="muted">Preencha os dados e gere o texto para copiar</p></div><button className="primary" onClick={()=>setShowTemplateForm(true)}><Plus size={16}/> Novo modelo</button></div><div className="template-workspace"><div className="template-list">{templates.map(t=><button key={t.id} className={selectedTemplateId===t.id?'template-option selected':'template-option'} onClick={()=>{setSelectedTemplateId(t.id);setGenerated('');setRecipient('')}}><MessageSquareText/><span><b>{t.title}</b><small>{t.body.slice(0,70)}{t.body.length>70?'…':''}</small></span></button>)}{!templates.length&&<p className="muted">Nenhum modelo cadastrado.</p>}</div>{templates.filter(t=>t.id===selectedTemplateId).map(t=><section className="template-editor" key={t.id}><h3>{t.title}</h3>{entryActions('message_templates',t)}<label>Nome de quem vai receber<input value={recipient} onChange={e=>setRecipient(e.target.value)} placeholder="Nome do destinatário"/></label>{(t.variables||[]).includes('data')&&<label>Data do agendamento<input type="date" value={sendDate} onChange={e=>setSendDate(e.target.value)}/></label>}<button className="primary" onClick={()=>makeMessage(t)}>Gerar mensagem</button>{generated&&<><label>Mensagem gerada<textarea rows="6" value={generated} readOnly/></label><button className="secondary" onClick={()=>copyValue(generated)}><Copy size={16}/> Copiar mensagem</button></>}</section>)}</div></div>}
  {section==='Cadastros'&&<div className="task-panel"><div className="panel-head"><div><h2>Central de cadastros</h2><p className="muted">Organize empresas, acessos e contatos</p></div></div><div className="record-grid"><button className="record-category" onClick={()=>{setRecordType('company');setShowRecordForm(true)}}><Building2/><b>Empresas</b><small>{records.filter(r=>r.record_type==='company').length} cadastradas</small></button><button className="record-category" onClick={()=>{setRecordType('credential');setShowRecordForm(true)}}><KeyRound/><b>Logins e senhas</b><small>{records.filter(r=>r.record_type==='credential').length} cadastrados</small></button><button className="record-category" onClick={()=>{setRecordType('contact');setShowRecordForm(true)}}><Phone/><b>Contatos</b><small>{records.filter(r=>r.record_type==='contact').length} cadastrados</small></button></div><div className="task-list">{records.filter(r=>!['profile_photo','credential_key'].includes(r.metadata?.kind)).map(r=><div className="task-row" key={r.id}><div className="task-info"><b>{r.title}</b><small>{r.record_type==='company'?'Empresa':r.record_type==='credential'?'Login':'Contato'} · {r.metadata?.description||''}</small></div><button className="secondary" onClick={()=>setViewingRecord(r)}>Visualizar</button>{entryActions('quick_records',r)}</div>)}</div>{!records.length&&<div className="empty"><b>Nenhum cadastro realizado</b><p>Escolha uma categoria acima para começar.</p></div>}</div>}
@@ -400,7 +476,7 @@ function App(){
   </div>:<p>Nenhum processo cadastrado.</p>}
  </section>} events={deadlineEvents} date={dateToday} occursOn={eventOccursOn} onReminder={openReminder}
   calendar={<MiniCalendar today={dateToday} selected={agendaView==='calendar'&&section==='Meu Dia'?calendarSelection?.day:null}
-   holidaysForMonth={holidaysForMonth} events={deadlineEvents.filter(isDeadline)} occursOn={eventOccursOn} onEvent={openDeadlineEditor}
+   holidaysForMonth={workHolidaysForMonth} dayOff={workCalendar.dayOffLabel} events={deadlineEvents.filter(isDeadline)} occursOn={eventOccursOn} onEvent={openDeadlineEditor}
    hasEvent={day=>deadlineEvents.some(event=>isDeadline(event)&&eventOccursOn(event,day))}
    onSelect={day=>{
     setCalendarSelection(old=>({day,version:(old?.version??0)+1}));
@@ -413,6 +489,7 @@ function App(){
  </div></main>
  {reminderDialog}
 
+ {!anelisa&&timeOffDialog}
  {showVacancyForm&&<div className="overlay" onClick={()=>{if(!savingVacancy)setShowVacancyForm(false)}}>
   <form className="modal" role="dialog" aria-modal="true" aria-labelledby="vacancy-form-title"
    onClick={event=>event.stopPropagation()} onSubmit={createVacancy}>
@@ -442,7 +519,7 @@ function App(){
   </form>
  </div>}
  {showProcessForm&&<div className="overlay" onClick={()=>setShowProcessForm(false)}><form className="modal" onClick={e=>e.stopPropagation()} onSubmit={createProcess}><div className="modal-head"><div><p className="eyebrow">PROCESSOS DE RH</p><h2>Novo processo</h2></div><button type="button" className="icon-btn" onClick={()=>setShowProcessForm(false)}><X/></button></div><label>Tipo<select value={processType} onChange={e=>setProcessType(e.target.value)}><option value="admission">Admissão</option><option value="termination">Rescisão</option></select></label><label>Nome da pessoa<input value={processName} onChange={e=>setProcessName(e.target.value)} required/></label>{processType==='admission'&&<label>Vaga vinculada<select value={processVacancyId} onChange={e=>{setProcessVacancyId(e.target.value);const v=vacancies.find(x=>x.id===e.target.value);if(v){setProcessRole(v.title);setProcessUnit(v.unit||'')}}}><option value="">Admissão sem vaga vinculada</option>{openVacancies.map(v=><option key={v.id} value={v.id}>{v.title} - {v.unit||'Sem unidade'} ({vacancyOpenCount(v)} disponível)</option>)}</select></label>}<div className="form-grid"><label>Cargo<input value={processRole} onChange={e=>setProcessRole(e.target.value)}/></label><label>Unidade<input value={processUnit} onChange={e=>setProcessUnit(e.target.value)}/></label></div><label>Prazo previsto<input type="date" value={processDue} onChange={e=>setProcessDue(e.target.value)}/></label><label>Observações<textarea rows="3" value={processNotes} onChange={e=>setProcessNotes(e.target.value)}/></label><div className="modal-actions"><button type="button" className="secondary" onClick={()=>setShowProcessForm(false)}>Cancelar</button><button className="primary"><Save size={16}/> Criar processo</button></div></form></div>}
- {showDeadlineForm&&<div className="overlay" onClick={closeDeadlineForm}><form className="modal" onClick={e=>e.stopPropagation()} onSubmit={saveDeadline}><div className="modal-head"><div><p className="eyebrow">CALENDÁRIO DE PRAZOS</p><h2>{editingDeadlineId?'Editar lançamento':'Novo lançamento'}</h2></div><button type="button" className="icon-btn" onClick={closeDeadlineForm}><X/></button></div><label>Descrição<input value={deadlineTitle} onChange={e=>setDeadlineTitle(e.target.value)} placeholder="Ex.: Pagamento de aluguel" required/></label><div className="form-grid"><label>Data<input type="date" value={deadlineDate} onChange={e=>setDeadlineDate(e.target.value)} required/></label><label>Tipo<select value={deadlineType} onChange={e=>setDeadlineType(e.target.value)}><option value="payment">Pagamento</option><option value="commitment">Compromisso</option><option value="task">Tarefa</option><option value="other">Outro</option></select></label></div><label>Recorrência<select disabled={savingDeadline} value={deadlineRecurrence} onChange={event=>{
+ {showDeadlineForm&&<div className="overlay" onClick={closeDeadlineForm}><form className="modal" onClick={e=>e.stopPropagation()} onSubmit={saveDeadline}><div className="modal-head"><div><p className="eyebrow">CALENDÁRIO DE PRAZOS</p><h2>{editingDeadlineId?'Editar lançamento':'Novo lançamento'}</h2></div><button type="button" className="icon-btn" onClick={closeDeadlineForm}><X/></button></div><label>Descrição<input value={deadlineTitle} onChange={e=>setDeadlineTitle(e.target.value)} placeholder="Ex.: Pagamento de aluguel" required/></label><div className="form-grid"><label>Data<input type="date" value={deadlineDate} onChange={e=>setDeadlineDate(e.target.value)} required/></label>{calendarEnabled&&workCalendar.adjustDeadline(deadlineDate)!==deadlineDate&&<p className="deadline-adjustment">Prazo antecipado para {new Date(workCalendar.adjustDeadline(deadlineDate)+'T12:00:00').toLocaleDateString('pt-BR')}</p>}<label>Tipo<select value={deadlineType} onChange={e=>setDeadlineType(e.target.value)}><option value="payment">Pagamento</option><option value="commitment">Compromisso</option><option value="task">Tarefa</option><option value="other">Outro</option></select></label></div><label>Recorrência<select disabled={savingDeadline} value={deadlineRecurrence} onChange={event=>{
  setDeadlineRecurrence(event.target.value);
  if(event.target.value==='weekly'&&!deadlineDays.length)setDeadlineDays([new Date(deadlineDate+'T12:00:00').getDay()]);
  }}><option value="none">Não se repete</option><option value="weekly">Semanal</option><option value="monthly">Mensal</option></select></label>{deadlineRecurrence==='weekly'&&<fieldset className="deadline-weekdays" disabled={savingDeadline}>
@@ -459,11 +536,11 @@ function App(){
   onClose={()=>setViewingRecord(null)}
   onEdit={()=>{setEditingEntry({table:'quick_records',entry:viewingRecord});setViewingRecord(null)}}/>}
  {!anelisa&&editingActivity&&<ActivityEditor key={editingActivity.id} task={editingActivity} date={dateToday}
-  onSave={saveActivity} onDelete={()=>removeActivity(editingActivity)} onClose={()=>setEditingActivity(null)}/>}
+  workdaysOnly onSave={saveActivity} onDelete={()=>removeActivity(editingActivity)} onClose={()=>setEditingActivity(null)}/>}
  {!anelisa&&editingEntry&&<NeemiasEntryEditor key={editingEntry.entry.id} {...editingEntry}
   encryptValue={password=>encryptCredential(supabase,user.id,password)} onSave={values=>saveEntry(editingEntry.table,editingEntry.entry,values)}
   onDelete={()=>removeEntry(editingEntry.table,editingEntry.entry)} onClose={()=>setEditingEntry(null)}/>}
- {showAdd&&<div className="overlay" onClick={()=>setShowAdd(false)}><form className="modal" onClick={e=>e.stopPropagation()} onSubmit={addTask}><div className="modal-head"><div><p className="eyebrow">NOVA ATIVIDADE</p><h2>O que precisa ser feito?</h2></div><button type="button" className="icon-btn" onClick={()=>setShowAdd(false)}><X/></button></div><label>Título<input autoFocus value={title} onChange={e=>setTitle(e.target.value)} placeholder="Ex.: Revisar planejamento da semana" required/></label><div className="form-grid"><label>Tipo<select value={taskType} onChange={e=>setTaskType(e.target.value)}><option value="demand">Demanda</option><option value="routine">Rotina</option></select></label><label>{taskType==='routine'?'Data de início':'Prazo de conclusão'}<input type="date" value={due} onChange={e=>setDue(e.target.value)} required/></label></div>{taskType==='routine'&&<><label>Periodicidade<select value={recurrence} onChange={e=>setRecurrence(e.target.value)}><option value="daily">Todos os dias</option><option value="weekly">Dias da semana</option><option value="monthly">Mensal</option></select></label>{recurrence==='monthly'&&<label>Dia do mês<select value={monthDay} onChange={e=>setMonthDay(Number(e.target.value))}>{Array.from({length:31},(_,i)=>i+1).map(d=><option key={d} value={d}>{d}º dia</option>)}</select><small className="field-hint">A rotina será programada para o dia {monthDay} de cada mês.</small></label>}{recurrence==='weekly'&&<div className="weekday-picker"><span>Dias da semana</span><div>{[['Dom',0],['Seg',1],['Ter',2],['Qua',3],['Qui',4],['Sex',5],['Sáb',6]].map(([day,n])=><label key={n} className="weekday"><input type="checkbox" checked={recurrenceDays.includes(n)} onChange={e=>setRecurrenceDays(e.target.checked?[...recurrenceDays,n]:recurrenceDays.filter(x=>x!==n))}/>{day}</label>)}</div></div>}</>}<div className="modal-actions"><button type="button" className="secondary" onClick={()=>setShowAdd(false)}>Cancelar</button><button className="primary">Salvar atividade</button></div></form></div>}
+ {showAdd&&<div className="overlay" onClick={()=>setShowAdd(false)}><form className="modal" onClick={e=>e.stopPropagation()} onSubmit={addTask}><div className="modal-head"><div><p className="eyebrow">NOVA ATIVIDADE</p><h2>O que precisa ser feito?</h2></div><button type="button" className="icon-btn" onClick={()=>setShowAdd(false)}><X/></button></div><label>Título<input autoFocus value={title} onChange={e=>setTitle(e.target.value)} placeholder="Ex.: Revisar planejamento da semana" required/></label><div className="form-grid"><label>Tipo<select value={taskType} onChange={e=>setTaskType(e.target.value)}><option value="demand">Demanda</option><option value="routine">Rotina</option></select></label><label>{taskType==='routine'?'Data de início':'Prazo de conclusão'}<input type="date" value={due} onChange={e=>setDue(e.target.value)} required/></label></div>{taskType==='routine'&&<><label>Periodicidade<select value={recurrence} onChange={e=>setRecurrence(e.target.value)}><option value="daily">{calendarEnabled?'Todos os dias de trabalho':'Todos os dias'}</option><option value="weekly">Dias da semana</option><option value="monthly">Mensal</option></select></label>{recurrence==='monthly'&&<label>Dia do mês<select value={monthDay} onChange={e=>setMonthDay(Number(e.target.value))}>{Array.from({length:31},(_,i)=>i+1).map(d=><option key={d} value={d}>{d}º dia</option>)}</select><small className="field-hint">A rotina será programada para o dia {monthDay} de cada mês.</small></label>}{recurrence==='weekly'&&<div className="weekday-picker"><span>Dias da semana</span><div>{[['Dom',0],['Seg',1],['Ter',2],['Qua',3],['Qui',4],['Sex',5],['Sáb',6]].map(([day,n])=><label key={n} className="weekday"><input type="checkbox" checked={recurrenceDays.includes(n)} onChange={e=>setRecurrenceDays(e.target.checked?[...recurrenceDays,n]:recurrenceDays.filter(x=>x!==n))}/>{day}</label>)}</div></div>}</>}<div className="modal-actions"><button type="button" className="secondary" onClick={()=>setShowAdd(false)}>Cancelar</button><button className="primary">Salvar atividade</button></div></form></div>}
  {toast&&<div className="toast">{toast}</div>}</div>
 }
 createRoot(document.getElementById('root')).render(<App/>);

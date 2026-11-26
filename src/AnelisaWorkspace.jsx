@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Bell, BellRing, Cake, Calendar, CircleAlert, Compass, FileText, Grid2X2, ListTodo, Newspaper, NotebookPen, VideoIcon, CalendarCheck, CalendarDays, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ClipboardList,
-  CirclePlus, House, List, LogOut, MessageCircle, Music2, Pencil, Repeat2, Settings, SquarePen, Trash2, Video, X } from 'lucide-react';
+  CalendarX2, CirclePlus, House, List, LogOut, MessageCircle, Music2, Pencil, Repeat2, Settings, SquarePen, Trash2, Video, X } from 'lucide-react';
 import { dayActivities } from './dayActivities.js';
 import { WORKSPACE_START } from './taskOccurrences.js';
+import WorkScheduleForm from './WorkScheduleForm.jsx';
 import ActivityEditor from './ActivityEditor.jsx';
 import DailyQuotes from './DailyQuotes.jsx';
 import { isBirthday as birthday, MiniCalendar, upcomingReminders } from './AgendaExtras.jsx';
@@ -43,11 +44,11 @@ export function routineOccurs(task, date) {
     || (task.recurrence_type === 'monthly' && (schedule.length ? schedule.includes(day.getDate()) : task.scheduled_date === date));
 }
 
-function TaskRows({ tasks, date, isDone, toggle, onEdit, onDelete }) {
+function TaskRows({ tasks, date, isDone, toggle, onEdit, onDelete, routineRule = routineOccurs }) {
   if (!tasks.length) return <p className="aw-empty">Nenhuma atividade nesta lista.</p>;
-  return tasks.map(task => {
+  return <div className="aw-task-grid">{tasks.map(task => {
     const routine = isRoutine(task);
-    const scheduled = !routine || Boolean(task.occurrenceDay) || routineOccurs(task, date);
+    const scheduled = !routine || Boolean(task.occurrenceDay) || routineRule(task, date);
     const done = isDone(task);
     const late = !done && Boolean(task.occurrenceDay || (!routine && taskDay(task) && taskDay(task) < date));
     const variableMonth = routine && task.recurrence_type === 'monthly' && !task.recurrence_days?.length;
@@ -61,6 +62,7 @@ function TaskRows({ tasks, date, isDone, toggle, onEdit, onDelete }) {
     return <div className="anelisa-task" data-overdue={late || undefined} key={task.occurrenceDay ? task.id + ':' + task.occurrenceDay : task.id}>
       <button className={'myday-check' + (done ? ' checked' : '')} disabled={!scheduled}
         aria-pressed={done} aria-label={task.title} onClick={() => toggle(task, task.occurrenceDay)}>{done && <Check size={16}/>}</button>
+      <span className="aw-card-kind">{routine ? <CalendarCheck size={16}/> : <ClipboardList size={16}/>} {routine ? 'Rotina' : 'Tarefa'}</span>
       <div><strong>{late && <CircleAlert size={15} aria-hidden="true"/>}{task.title}</strong><small>{subtitle}</small>
         {task.description && <details className="aw-task-description"><summary>Detalhes</summary><p>{task.description}</p></details>}
       </div>
@@ -70,10 +72,10 @@ function TaskRows({ tasks, date, isDone, toggle, onEdit, onDelete }) {
         {onDelete && <button className="aw-edit aw-delete" aria-label={'Excluir ' + task.title} onClick={() => onDelete(task)}><Trash2 size={16}/></button>}
       </div>
     </div>;
-  });
+  })}</div>;
 }
 
-export function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holidaysForMonth, events = [], occursOn, onReminder, onEvent, renderTaskDescription, showBirthday = false, initialDate = date }) {
+export function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holidaysForMonth, events = [], occursOn, onReminder, onEvent, renderTaskDescription, showBirthday = false, routineRule = routineOccurs, initialDate = date }) {
   const [selected, setSelected] = useState(initialDate);
   const [month, setMonth] = useState(() => new Date(toDate(initialDate).getFullYear(), toDate(initialDate).getMonth(), 1, 12));
   const year = month.getFullYear();
@@ -83,7 +85,7 @@ export function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holid
 
   function entries(day) {
     return [
-      ...tasks.filter(task => isRoutine(task) ? routineOccurs(task, day) : taskDay(task) === day)
+      ...tasks.filter(task => isRoutine(task) ? routineRule(task, day) : taskDay(task) === day)
         .map(task => ({ ...task, kind: isRoutine(task) ? 'Rotina' : 'Tarefa' })),
       ...events.filter(event => occursOn(event, day)).map(event => ({ ...event, kind: event.event_type === 'other' ? 'Lembrete' : 'Evento' })),
       ...meetings.filter(meeting => meeting.meeting_date === day).map(meeting => ({ ...meeting, kind: 'Reunião' })),
@@ -146,7 +148,7 @@ export function AgendaCalendar({ date, tasks, meetings, onMeeting, onEdit, holid
 }
 
 export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveActivity,
-  meetings, renderMeetings, signOut, userId, email, holidaysForMonth, events, occursOn, onReminder, reminderDialog, contacts, onSaveContact, onDeleteActivity, weekStart, occurrences, accountPhoto, onSavePhoto }) {
+  meetings, renderMeetings, signOut, userId, email, holidaysForMonth, events, occursOn, onReminder, reminderDialog, contacts, onSaveContact, onDeleteActivity, weekStart, occurrences, accountPhoto, onSavePhoto, workCalendar, routineRule = routineOccurs, workSchedule, onSaveWorkSchedule, onTimeOff, timeOffDialog }) {
   const themeKey = 'meu-tempo-theme-' + userId;
   const [theme, setTheme] = useState(() => {
     try {
@@ -201,25 +203,24 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
   const active = tasks.filter(task => task.is_active !== false && task.status !== 'cancelled');
   const pendingTasks = active.filter(task => !isRoutine(task) && taskDay(task)
     && taskDay(task) < date && !isDone(task));
-  const plannedToday = dayActivities(active, date, routineOccurs);
+  const workingToday=!workCalendar||workCalendar.isWorkday(date);
+  const plannedToday = workingToday?dayActivities(active, date, routineRule):[];
   const completedToday = plannedToday.filter(isDone).length;
   const weekDays = Array.from({ length: 7 }, (_, offset) => {
     const day = toDate(weekStart);
     day.setDate(day.getDate() + offset);
     return isoDate(day);
   });
-  const doneOccurrences = new Set(occurrences.filter(item => item.status === 'completed')
-    .map(item => item.task_id + ':' + item.occurrence_date));
-  const plannedWeek = weekDays.flatMap(day => active.filter(task => isRoutine(task)
-    ? routineOccurs(task, day) : taskDay(task) === day).map(task => ({ task, day })));
+  const plannedWeek = weekDays.flatMap(day => active.filter(task => (!workCalendar||workCalendar.isWorkday(day))&&(isRoutine(task)
+    ? routineRule(task, day) : taskDay(task) === day)).map(task => ({ task, day })));
   const completedWeek = plannedWeek.filter(({ task, day }) => isRoutine(task)
-    ? doneOccurrences.has(task.id + ':' + day) : isDone(task)).length;
+    ? isDone({...task,occurrenceDay:day}) : isDone(task)).length;
   const progress = plannedToday.length ? Math.round(completedToday / plannedToday.length * 100) : 0;
   const todaysMeetings = meetings.filter(meeting => meeting.meeting_date === date);
   const lateRoutines = previousDays(date).flatMap(day => active
-    .filter(task => routineOccurs(task, day) && !doneOccurrences.has(task.id + ':' + day))
+    .filter(task => routineRule(task, day) && !isDone({...task,occurrenceDay:day}))
     .map(task => ({ ...task, occurrenceDay: day })));
-  const lateTasks = [...pendingTasks, ...lateRoutines]
+  const lateTasks = (workingToday?[...pendingTasks, ...lateRoutines]:[])
     .sort((a, b) => (a.occurrenceDay || taskDay(a)).localeCompare(b.occurrenceDay || taskDay(b)));
   const agendaToday = plannedToday.filter(task => !pendingTasks.includes(task));
   const reminders = upcomingReminders(events, date, occursOn);
@@ -325,6 +326,7 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
           <button aria-current={module === 'tasks' ? 'page' : undefined} onClick={() => openRoute({ screen: 'module', module: 'tasks' })}><Task/> Tarefas</button>
           <button aria-current={module === 'routines' ? 'page' : undefined} onClick={() => openRoute({ screen: 'module', module: 'routines' })}><Routine/> Rotinas</button>
           <button aria-current={module === 'meetings' ? 'page' : undefined} onClick={() => openRoute({ screen: 'meeting', mode: 'history' })}><Meeting/> Reuniões</button>
+          <button onClick={onTimeOff}><CalendarX2/> Sem expediente</button>
         </nav>
         <section className="aw-desk-card aw-notes" data-card="notes">
           <h2><label htmlFor="aw-notes"><NotebookPen/> Anotações</label></h2>
@@ -356,7 +358,7 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
               {module === 'tasks' ? 'Incluir tarefa' : 'Incluir rotina'}
             </button>
           </div>
-          <TaskRows tasks={active.filter(task => isRoutine(task) === (module === 'routines'))}
+          <TaskRows routineRule={routineRule} tasks={active.filter(task => isRoutine(task) === (module === 'routines'))}
             date={date} isDone={isDone} toggle={toggle} onEdit={onEdit} onDelete={removeActivity}/>
         </section> : <>
           <div className="aw-heading aw-greeting">
@@ -387,16 +389,18 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
             <button onClick={() => onAdd('demand')}><span className="aw-action-icon"><Task size={20}/></span> Incluir tarefa</button>
             <button onClick={() => onAdd('routine')}><span className="aw-action-icon"><Routine size={20}/></span> Incluir rotina</button>
             <button onClick={() => onReminder(date)}><span className="aw-action-icon"><Alert size={20}/></span> Incluir lembrete</button>
+            <button onClick={onTimeOff}><span className="aw-action-icon"><CalendarX2 size={20}/></span> Sem expediente</button>
           </div>
           <div className="aw-home-agenda">
           {lateTasks.length > 0 && <section className="task-panel aw-overdue-panel">
             <div className="panel-head"><h2><CircleAlert/> Em atraso</h2><span>{lateTasks.length}</span></div>
-            <TaskRows tasks={lateTasks} date={date} isDone={isDone} toggle={toggle} onEdit={onEdit}/>
+            <TaskRows routineRule={routineRule} tasks={lateTasks} date={date} isDone={isDone} toggle={toggle} onEdit={onEdit}/>
           </section>}
           {view === 'calendar' ? <AgendaCalendar key={selectedDay} initialDate={selectedDay} date={date} tasks={active} holidaysForMonth={holidaysForMonth}
-            meetings={meetings} onEdit={onEdit} onMeeting={openMeeting} events={events} occursOn={occursOn} onReminder={onReminder} showBirthday/> : <section className="task-panel">
+            meetings={meetings} onEdit={onEdit} onMeeting={openMeeting} events={events} occursOn={occursOn} onReminder={onReminder} routineRule={routineRule} showBirthday/> : <section className="task-panel">
             <div className="panel-head"><h2><Task/> Minha agenda de hoje</h2></div>
-            <TaskRows tasks={agendaToday} date={date} isDone={isDone} toggle={toggle} onEdit={onEdit}/>
+            {!workingToday&&<div className="no-work-banner"><CalendarX2 size={20}/><span>Sem expediente · {workCalendar.dayOffLabel(date)}</span></div>}
+            <TaskRows routineRule={routineRule} tasks={agendaToday} date={date} isDone={isDone} toggle={toggle} onEdit={onEdit}/>
             {events.filter(event => event.event_type === 'other' && occursOn(event, date)).map(event =>
               <button className="aw-meeting-row" key={event.id} onClick={() => onReminder(date, event)}>
                 {birthday(event) ? <Birthday size={18}/> : <Alert size={18}/>}<strong>{event.description || event.title}</strong><span>{birthday(event) ? 'Aniversário' : 'Lembrete'}</span>
@@ -407,7 +411,7 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
           </section>}
           {remainingActivities.length > 0 && <details className="task-panel aw-other-activities">
             <summary>Outras tarefas e rotinas</summary>
-            <TaskRows tasks={remainingActivities} date={date} isDone={isDone} toggle={toggle} onEdit={onEdit}/>
+            <TaskRows routineRule={routineRule} tasks={remainingActivities} date={date} isDone={isDone} toggle={toggle} onEdit={onEdit}/>
           </details>}
           </div>
           </div>
@@ -416,13 +420,14 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
       <aside className="aw-desktop-right" aria-label="Calendário e atualizações">
         <DailyQuotes key={date} date={date}/>
         <div className="aw-desk-card" data-card="calendar">
-          <MiniCalendar today={date} selected={selectedDay} holidaysForMonth={holidaysForMonth}
+          <MiniCalendar dayOff={workCalendar?.dayOffLabel} today={date} selected={selectedDay} holidaysForMonth={holidaysForMonth}
             hasEvent={day => events.some(event => occursOn(event, day)) || meetings.some(meeting => meeting.meeting_date === day)}
             onSelect={day => { goHome(); setSelectedDay(day); setView('calendar'); }}/>
           <div className="aw-calendar-actions">
             <button className="secondary" onClick={() => onReminder(selectedDay, undefined, 'birthday')}><Birthday/> Aniversário</button>
             <button className="secondary" onClick={() => onReminder(selectedDay)}><Alert/> Lembrete</button>
           </div>
+          <button className="secondary" onClick={onTimeOff}><CalendarX2 size={17}/> Sem expediente</button>
         </div>
         <section className="aw-desk-card" data-card="birthdays">
           <h2><Birthday/> Aniversariantes do mês</h2>
@@ -470,7 +475,8 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
       </div>
     </dialog>
     {reminderDialog}
-    {activity && <ActivityEditor task={activity} date={date} onSave={onSaveActivity} onClose={closeActivity}/>}
+    {timeOffDialog}
+    {activity && <ActivityEditor task={activity} date={date} workdaysOnly={Boolean(workCalendar)} onSave={onSaveActivity} onClose={closeActivity}/>}
 
     <dialog ref={menu} className="aw-profile" aria-labelledby="aw-profile-title"
       onClick={event => { if (event.target === event.currentTarget) menu.current.close(); }}>
@@ -490,6 +496,7 @@ export default function AnelisaWorkspace({ tasks, date, isDone, toggle, onSaveAc
             <option.Brand size={17} aria-hidden="true"/> {option.label}
           </label>)}
         </fieldset>
+        <WorkScheduleForm schedule={workSchedule} onSave={onSaveWorkSchedule}/>
         <label>{savingPhoto ? 'Salvando foto…' : 'Alterar foto do perfil'}<input disabled={savingPhoto} type="file" accept="image/jpeg,image/png,image/webp" onChange={changePhoto}/></label>
         {photoError && <p role="alert">{photoError}</p>}
         <button className="secondary" onClick={signOut}><LogOut size={17}/> Sair da conta</button>

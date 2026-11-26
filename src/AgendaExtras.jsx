@@ -6,7 +6,15 @@ const toDate = date => new Date(date + 'T12:00:00Z');
 
 const birthdayPrefix = /^anivers[aá]rio\b(?:\s+d[aeo]\b)?[\s:–-]*/i;
 export function isBirthday(event) {
-  return event?.event_type === 'other' && birthdayPrefix.test((event.description || event.title || '').trim());
+  return event && isReminder(event) && birthdayPrefix.test((event.description || event.title || '').trim());
+}
+
+export function isTimeOff(event) {
+  return event.entry_kind === 'time_off';
+}
+
+export function isReminder(event) {
+  return !isTimeOff(event) && !isDeadline(event);
 }
 
 export function isDeadline(event) {
@@ -18,11 +26,11 @@ export function upcomingReminders(events, date, occursOn) {
     const day = toDate(date);
     day.setUTCDate(day.getUTCDate() + offset);
     return day.toISOString().slice(0, 10);
-  }).flatMap(day => events.filter(event => !isDeadline(event) && occursOn(event, day))
+  }).flatMap(day => events.filter(event => isReminder(event) && occursOn(event, day))
     .map(event => ({ event, day })));
 }
 
-export function MiniCalendar({ today, selected, holidaysForMonth, onSelect, hasEvent, events = [], occursOn, onEvent }) {
+export function MiniCalendar({ today, selected, holidaysForMonth, onSelect, hasEvent, dayOff, events = [], occursOn, onEvent }) {
   const calendarId = useId();
   const [hoveredDay, setHoveredDay] = useState(null);
   const [month, setMonth] = useState(() => new Date(today + 'T12:00:00'));
@@ -48,6 +56,7 @@ export function MiniCalendar({ today, selected, holidaysForMonth, onSelect, hasE
         const day = new Date(year, index, i + 1, 12);
         const iso = day.toLocaleDateString('en-CA');
         const holiday = holidays[iso];
+        const off = dayOff?.(iso);
         const deadlines = onEvent && occursOn
           ? events.filter(event => isDeadline(event) && occursOn(event, iso)) : [];
         const hasDeadlines = deadlines.length > 0;
@@ -63,7 +72,7 @@ export function MiniCalendar({ today, selected, holidaysForMonth, onSelect, hasE
           }}>
           <button className="mini-calendar-date"
             aria-label={dateLabel.format(day) + (holiday ? ', ' + holiday : '') + (hasDeadlines ? ', ' + deadlines.length + ' prazo(s)' : withEvent ? ', com evento' : '')}
-            title={holiday} aria-current={iso === today ? 'date' : undefined} aria-pressed={iso === selected}
+            title={off || holiday} data-nonworking={Boolean(off) || undefined} aria-current={iso === today ? 'date' : undefined} aria-pressed={iso === selected}
             aria-haspopup={hasDeadlines ? 'dialog' : undefined}
             aria-expanded={hasDeadlines ? hoveredDay === iso : undefined} aria-controls={hasDeadlines ? panelId : undefined}
             data-holiday={holiday ? true : undefined} data-weekend={[0, 6].includes(day.getDay()) ? true : undefined}

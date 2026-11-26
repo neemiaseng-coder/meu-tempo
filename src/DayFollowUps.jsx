@@ -12,16 +12,16 @@ export default function DayFollowUps({ vacancies, processes, date, vacancyOpenCo
       {vacancies.map(vacancy => <article className="day-followup-card" key={vacancy.id}
         data-overdue={Boolean(vacancy.target_date && vacancy.target_date < date) || undefined}>
         <span className="day-followup-kind"><Briefcase size={17}/> Vaga aberta</span>
-        <h3>{vacancy.title}</h3>
+        <div className="day-followup-body"><h3>{vacancy.title}</h3>
         <p>{[vacancy.unit, vacancyOpenCount(vacancy) + ' posição(ões) em aberto'].filter(Boolean).join(' · ')}</p>
         <small>Prazo da contratação · {dateLabel(vacancy.target_date)}</small>
         {vacancy.target_date && vacancy.target_date < date && <span className="day-followup-late">Prazo vencido</span>}
-        <button className="secondary" onClick={() => onVacancy(vacancy)}>Editar vaga</button>
+        </div><button className="secondary" onClick={() => onVacancy(vacancy)}>Editar vaga</button>
       </article>)}
       {pending.map(process => <article className="day-followup-card" key={process.id}
         data-overdue={Boolean(process.due_date && process.due_date < date) || undefined}>
         <span className="day-followup-kind"><ClipboardList size={17}/> {process.process_type === 'termination' ? 'Rescisão' : 'Admissão'}</span>
-        <h3>{process.person_name}</h3>
+        <div className="day-followup-body"><h3>{process.person_name}</h3>
         <p>{[process.role, process.unit].filter(Boolean).join(' · ')}</p>
         <small>Prazo · {dateLabel(process.due_date)}</small>
         {process.due_date && process.due_date < date && <span className="day-followup-late">Prazo vencido</span>}
@@ -29,7 +29,7 @@ export default function DayFollowUps({ vacancies, processes, date, vacancyOpenCo
           <progress aria-label={'Andamento de ' + process.person_name} value={processProgress(process)} max="100"/>
           <span>{processProgress(process)}%</span>
         </div>
-        <button className="secondary" onClick={() => onProcess(process)}>Acompanhar processo</button>
+        </div><button className="secondary" onClick={() => onProcess(process)}>Acompanhar processo</button>
       </article>)}
     </div>
   </section>;

@@ -98,7 +98,10 @@ export default function NeemiasEntryEditor({ entry, table, onSave, onDelete, onC
             ? <textarea name={key} rows={5} required={!record && index === 0} defaultValue={entry[key] || ''}/>
             : <input name={key} type={type} min={type === 'number' ? 1 : undefined} step={type === 'number' ? 1 : undefined}
                 required={table === 'vacancies' && key === 'quantity' || !record && index === 0}
-                defaultValue={(record ? content?.[key] : entry[key]) ?? ''}/>}
+                defaultValue={(record ? content?.[key] : entry['requested_' + key] ?? entry[key]) ?? ''}/>}
+          {entry['requested_' + key]&&entry['requested_' + key]!==entry[key]&&<small className="deadline-adjustment">
+            Prazo antecipado para {new Date(entry[key]+'T12:00:00').toLocaleDateString('pt-BR')}
+          </small>}
         </label>)}
         {record && !credential && !inputs.length && <label>Conteúdo<textarea name="content" rows={6} defaultValue={entry.content || ''}/></label>}
         {credential && <>

@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 
 const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-export default function ActivityEditor({ task, date, onSave, onDelete, onClose }) {
+export default function ActivityEditor({ task, date, onSave, onDelete, onClose, workdaysOnly = false }) {
   const routine = task.task_type === 'routine';
   const [frequency, setFrequency] = useState(task.recurrence_type || 'daily');
   const [days, setDays] = useState(task.recurrence_days || []);
@@ -56,7 +56,7 @@ export default function ActivityEditor({ task, date, onSave, onDelete, onClose }
         <label>Título<input name="title" defaultValue={task.title ?? ''} required autoFocus/></label>
         <label>Descrição<textarea name="description" rows="2" defaultValue={task.description ?? ''}/></label>
         {routine && <label>Periodicidade<select value={frequency} onChange={event => setFrequency(event.target.value)}>
-          <option value="daily">Todos os dias</option>
+          <option value="daily">{workdaysOnly ? 'Todos os dias de trabalho' : 'Todos os dias'}</option>
           <option value="weekly">Semanal</option>
           <option value="monthly">Mensal</option>
         </select></label>}
@@ -77,8 +77,11 @@ export default function ActivityEditor({ task, date, onSave, onDelete, onClose }
         </>}
         <label>{variableMonth ? 'Próxima data (opcional)' : routine ? 'Data de início' : 'Prazo de conclusão'}
           <input key={variableMonth ? 'variable' : 'fixed'} name="date" type="date" required={!variableMonth}
-            defaultValue={variableMonth ? task.scheduled_date ?? '' : task.due_date ?? date}/>
+            defaultValue={variableMonth ? task.scheduled_date ?? '' : task.requested_due_date ?? task.due_date ?? date}/>
         </label>
+        {task.requested_due_date&&task.requested_due_date!==task.due_date&&<p className="deadline-adjustment">
+          Prazo antecipado para {new Date(task.due_date+'T12:00:00').toLocaleDateString('pt-BR')}
+        </p>}
       </fieldset>
       {error && <p role="alert">{error}</p>}
       {onDelete && <button type="button" className="secondary" disabled={saving} onClick={async () => {

@@ -126,3 +126,132 @@ html body .app[data-ui-theme] .process-tabs>*{ background:var(--ui-soft); color:
 @media (min-width:1025px){ html .app[data-ui-theme] .agenda-layout.neemias-layout>.content{ align-self:start; width:100%; } }
 @media (min-width:1025px){ html .app[data-ui-theme] .agenda-layout.neemias-layout>.content{ margin-block:0; margin-inline:auto; } }
 html .app[data-ui-theme] .agenda-sidebar .content, html .app[data-ui-theme] .aw-desk-card .secondary{ overflow-wrap:normal; word-break:normal; font-size:12px; padding-inline:8px; }
+
+/* ===== Fonte única dos sistemas ===== */
+@font-face{ font-family:"Figtree"; src:url("/fonts/figtree.woff2") format("woff2"); font-weight:300 900; font-display:swap; }
+html:root{ --ui-font:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif; font-family:var(--ui-font); }
+html body, html body :is(.app,.login,.loading,.setup), html body :is(.app,.login,.loading,.setup) *{ font-family:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif!important; }
+
+/* ===== Temas com as cores de cada rede ===== */
+html .app[data-ui-theme="facebook"]{ --ui-page:#f0f2f5; --ui-ink:#1c1e21; --ui-muted:#606770; --ui-line:#dadde1; --ui-accent:#1877f2; --ui-on-accent:#fff; --ui-soft:#e7f3ff;
+  --nav-bg:#1877f2; --nav-ink:#e7f1ff; --nav-strong:#fff; --nav-mark:#fff; --nav-hover:#ffffff24; --nav-line:#ffffff30; --nav-on:#ffffff30; --hero:linear-gradient(115deg,#0a5bd0,#1877f2); --hero-mark:#fff; --on-mark:#1877f2; }
+html .app[data-ui-theme="instagram"]{ --ui-page:#fafafa; --ui-ink:#262626; --ui-muted:#6e6e6e; --ui-line:#dbdbdb; --ui-accent:#d62976; --ui-on-accent:#fff; --ui-soft:#fdeef5; --ui-alt:#f2e9fb; --ui-alt-ink:#833ab4; --ui-third:#fff2e5; --ui-third-ink:#b45309;
+  --nav-bg:linear-gradient(135deg,#515bd4,#8134af 30%,#dd2a7b 68%,#f58529); --nav-ink:#fff; --nav-strong:#fff; --nav-mark:#fff; --nav-hover:#ffffff24; --nav-line:#ffffff33; --nav-on:#ffffff33; --hero:linear-gradient(115deg,#515bd4,#8134af 30%,#dd2a7b 70%,#f58529); --hero-mark:#fff; --on-mark:#c13584; }
+html .app[data-ui-theme="tiktok"]{ --ui-page:#000; --ui-surface:#121212; --ui-ink:#fff; --ui-muted:#a8a8ad; --ui-line:#2f2f2f; --ui-accent:#fe2c55; --ui-on-accent:#fff; --ui-soft:#2a1218; --ui-alt:#0d2a29; --ui-alt-ink:#25f4ee; --ui-third:#1c1c1e; --ui-third-ink:#25f4ee;
+  --nav-bg:#010101; --nav-ink:#d0d0d4; --nav-strong:#fff; --nav-mark:#25f4ee; --nav-hover:#ffffff14; --nav-line:#2f2f2f; --nav-on:linear-gradient(90deg,#fe2c5559,#25f4ee26); --hero:linear-gradient(115deg,#062b2a,#010101 45%,#3a0a16); --hero-mark:#25f4ee; --on-mark:#010101; }
+html .app[data-ui-theme="google"]{ --ui-page:#f8f9fa; --ui-ink:#202124; --ui-muted:#5f6368; --ui-line:#dadce0; --ui-accent:#1a73e8; --ui-on-accent:#fff; --ui-soft:#e8f0fe; --ui-alt:#fce8e6; --ui-alt-ink:#c5221f; --ui-third:#e6f4ea; --ui-third-ink:#137333;
+  --nav-bg:#fff; --nav-ink:#3c4043; --nav-strong:#202124; --nav-mark:#4285f4; --nav-hover:#f1f3f4; --nav-line:#dadce0; --nav-on:#e8f0fe; --hero:#fff; --hero-mark:#4285f4; --on-mark:#fff; }
+html .app[data-ui-theme] :is(.topbar,.aw-header,.neemias-desktop-menu,.aw-desk-card[data-card=menu]){ background:var(--nav-bg); }
+html .app[data-ui-theme] :is(.avatar-button,.aw-header .aw-avatar){ color:var(--on-mark); }
+html body .app[data-ui-theme] .day-progress-card{ background:var(--hero); }
+html .app[data-ui-theme] .day-progress-card :is(.day-progress-circuit,.day-progress-orbit){ color:var(--hero-mark); stroke:var(--hero-mark); }
+html .app[data-ui-theme] .day-progress-card :is(.day-progress-orbit-guide,.day-progress-tick,.day-progress-track,.day-progress-arc){ stroke:var(--hero-mark); }
+html .app[data-ui-theme] .day-progress-card .day-progress-orbit .day-progress-node{ fill:transparent; stroke:var(--hero-mark); }
+html .app[data-ui-theme] .day-progress-card :is(.day-progress-copy>small,.day-progress-orbit>span small,.day-progress-label){ color:#ffffffe0; }
+html body .app[data-ui-theme="instagram"] .primary{ background:linear-gradient(100deg,#8134af,#dd2a7b 60%,#e8590c)!important; }
+html .app[data-ui-theme="tiktok"] :is(.topbar,.aw-header) .home-button, html .app[data-ui-theme="tiktok"] .aw-brand{ text-shadow:-1.5px -1px #25f4ee,1.5px 1px #fe2c55; }
+/* Google: superfícies brancas e as quatro cores */
+html .app[data-ui-theme="google"] :is(.topbar,.aw-header){ border-bottom:3px solid transparent; border-image:linear-gradient(90deg,#4285f4 25%,#ea4335 0 50%,#fbbc05 0 75%,#34a853 0) 1; box-shadow:none; }
+html body .app[data-ui-theme="google"] .day-progress-card{ border:1px solid #dadce0; border-top:4px solid #4285f4; color:#202124; }
+html .app[data-ui-theme="google"] .day-progress-card :is(p,strong,.day-progress-orbit>span){ color:#202124; }
+html .app[data-ui-theme="google"] .day-progress-card :is(.day-progress-copy>small,.day-progress-orbit>span small,.day-progress-label){ color:#5f6368; }
+html .app[data-ui-theme="google"] .day-progress-card .day-progress-badge{ background:#e8f0fe; color:#1967d2; border-color:#d2e3fc; }
+html .app[data-ui-theme="google"] :is(.neemias-shortcuts button:nth-child(4n+2),.aw-desk-card[data-card=menu] button:nth-of-type(4n+2)) svg{ color:#ea4335; }
+html .app[data-ui-theme="google"] :is(.neemias-shortcuts button:nth-child(4n+3),.aw-desk-card[data-card=menu] button:nth-of-type(4n+3)) svg{ color:#e29700; }
+html .app[data-ui-theme="google"] :is(.neemias-shortcuts button:nth-child(4n),.aw-desk-card[data-card=menu] button:nth-of-type(4n)) svg{ color:#34a853; }
+[data-theme-option=facebook] .theme-swatch{ color:#1877f2; }
+[data-theme-option=instagram] .theme-swatch{ color:#dd2a7b; }
+[data-theme-option=google] .theme-swatch{ color:#4285f4; }
+
+/* ===== Celular compacto ===== */
+@media (max-width:620px){
+  html .app[data-ui-theme] :is(.topbar,.aw-header){ height:52px; min-height:52px; padding:0 10px; }
+  html .app[data-ui-theme] :is(.aw-notification-trigger,.top-actions>.header-pop>.icon-btn,.social-search-toggle,.avatar-button,.aw-header .aw-avatar){ width:36px; height:36px; min-height:36px; }
+  html .app[data-ui-theme] .top-actions{ gap:8px; }
+  html .app[data-ui-theme] :is(.aw-layout,.neemias-layout){ padding:10px 10px 12px; }
+  html .app[data-ui-theme] :is(.welcome,.aw-greeting){ margin-bottom:8px; }
+  html .app[data-ui-theme] :is(.welcome h1,.aw-heading h1,.aw-greeting h1){ font-size:19px; margin:0; }
+  html .app[data-ui-theme] .welcome .eyebrow{ font-size:10px; margin:0 0 2px; }
+  html .app[data-ui-theme] .aw-greeting :is(.aw-logo,.aw-action-icon){ width:34px; height:34px; }
+  html .app[data-ui-theme] .agenda-view-switch{ margin-bottom:8px; }
+  html .app[data-ui-theme] :is(.agenda-view-switch button,.aw-greeting button,.aw-view button.secondary){ min-height:32px; padding:4px 10px; font-size:12px; }
+  html .app[data-ui-theme] .day-progress-card{ grid-template-columns:44px minmax(0,1fr) auto; min-height:0; padding:8px 12px; gap:0 10px; margin-bottom:8px; }
+  html .app[data-ui-theme] .day-progress-orbit{ width:44px; height:44px; grid-row:auto; }
+  html .app[data-ui-theme] .day-progress-orbit>span{ font-size:13px; }
+  html .app[data-ui-theme] .day-progress-copy p{ margin:0; font-size:12px; }
+  html .app[data-ui-theme] .day-progress-copy strong{ font-size:16px; }
+  html .app[data-ui-theme] .day-progress-copy>small{ font-size:10px; margin:0; }
+  html .app[data-ui-theme] .day-progress-label{ font-size:9px; }
+  html .app[data-ui-theme] .day-progress-badge{ grid-column:3; margin:0; padding:3px 7px; font-size:10px; }
+  html .app[data-ui-theme] .day-progress-badge svg{ display:none; }
+  html .app[data-ui-theme] .myday-shell{ gap:6px; }
+  html .app[data-ui-theme] .myday-list-head h2{ font-size:14px; margin:0; }
+  html .app[data-ui-theme] .myday-list-head p{ display:none; }
+  html .app[data-ui-theme] :is(.myday-task,.anelisa-task){ padding:8px 10px; gap:8px; min-height:0; }
+  html .app[data-ui-theme] :is(.myday-check,.check){ width:24px; height:24px; min-height:24px; border-radius:6px; }
+  html .app[data-ui-theme] .anelisa-task{ grid-template-columns:24px minmax(0,1fr) auto auto; }
+  html .app[data-ui-theme] :is(.myday-task-copy b,.anelisa-task strong,.task-info b){ font-size:13px; line-height:1.3; }
+  html .app[data-ui-theme] :is(.myday-task-copy small,.anelisa-task small){ font-size:11px; margin-top:1px; }
+  html .app[data-ui-theme] :is(.myday-task-status,.anelisa-task>span){ font-size:9px; padding:2px 6px; }
+  html .app[data-ui-theme] .entry-actions{ flex-direction:row; flex-wrap:nowrap; gap:4px; }
+  html .app[data-ui-theme] :is(.entry-actions button,.anelisa-task .aw-edit){ font-size:0; width:32px; min-width:32px; height:32px; min-height:32px; padding:0; justify-content:center; }
+  html .app[data-ui-theme] .entry-actions button svg{ width:15px; height:15px; }
+  html .app[data-ui-theme] :is(.aw-action-cards,.neemias-shortcuts){ gap:6px; }
+  html .app[data-ui-theme] :is(.aw-action-cards button,.neemias-shortcuts button){ min-height:40px; padding:5px 8px; gap:7px; font-size:12px; }
+  html .app[data-ui-theme] :is(.aw-action-icon,.neemias-shortcut-icon){ width:28px; height:28px; border-radius:7px; }
+  html .app[data-ui-theme] :is(.aw-action-icon,.neemias-shortcut-icon) svg{ width:15px; height:15px; }
+  html .app[data-ui-theme] .aw-view .day-followup-card, html .app[data-ui-theme] .day-followup-card{ padding:10px; }
+  html .app[data-ui-theme] :is(.panel-head,.process-card){ padding:10px 12px!important; }
+  html .app[data-ui-theme] :is(.agenda-sidebar>section,.aw-desk-card){ padding:10px; }
+  html .app[data-ui-theme] .social-mobile-nav{ padding-top:4px; padding-bottom:calc(4px + env(safe-area-inset-bottom)); }
+  html .app[data-ui-theme] .social-mobile-nav button{ min-height:44px; gap:2px; }
+  html .app[data-ui-theme] .social-mobile-nav svg{ width:18px; height:18px; }
+  html .app[data-ui-theme] .social-mobile-nav span{ font-size:10px; }
+  html body .login .login-card{ padding:22px 18px; }
+  html body .login h1{ font-size:22px; }
+}
+
+/* Cartões de tarefa baixos no celular e item concluído em qualquer tema */
+html body .app[data-ui-theme] :is(.myday-task,.anelisa-task).is-done, html body .app[data-ui-theme] .is-done{ background:color-mix(in srgb,var(--ui-third) 45%,var(--ui-surface)); border-radius:0; }
+@media (max-width:620px){
+  html body .app[data-ui-theme] :is(.myday-task,.anelisa-task){ display:grid; grid-template-columns:24px minmax(0,1fr) auto; grid-template-rows:auto auto; align-items:center; gap:2px 8px; padding:7px 10px; }
+  html body .app[data-ui-theme] .myday-task>.myday-task-icon{ display:none; }
+  html body .app[data-ui-theme] :is(.myday-check,.check){ grid-column:1; grid-row:1 / span 2; align-self:center; }
+  html body .app[data-ui-theme] :is(.myday-task-copy,.anelisa-task>div:not(.aw-task-actions)){ grid-column:2; grid-row:1; min-width:0; }
+  html body .app[data-ui-theme] :is(.myday-task-status,.anelisa-task>span){ grid-column:2; grid-row:2; justify-self:start; margin:0; line-height:1.4; }
+  html body .app[data-ui-theme] :is(.myday-task>.entry-actions,.aw-task-actions,.anelisa-task>.aw-edit){ grid-column:3; grid-row:1 / span 2; display:flex; flex-direction:row; align-self:center; width:auto; margin:0; gap:4px; }
+  html body .app[data-ui-theme] :is(.entry-actions button,.anelisa-task .aw-edit){ width:30px; min-width:30px; height:30px; min-height:30px; }
+  html body .app[data-ui-theme] .anelisa-task>.aw-edit{ display:inline-flex; align-items:center; justify-content:center; }
+  /* Topo do espaço da Anelisa mais baixo */
+  html body .app[data-ui-theme] .aw-greeting h1{ font-size:17px; }
+  html body .app[data-ui-theme] .aw-greeting :is(p,small){ font-size:11px; margin:0; }
+  html body .app[data-ui-theme] :is(.aw-quote,.anelisa-quote,.aw-motivation){ padding:8px 10px; gap:6px; min-height:0; font-size:12px; margin-block:0; }
+  html body .app[data-ui-theme] :is(.aw-quote,.anelisa-quote,.aw-motivation) button{ width:28px; height:28px; min-height:28px; }
+}
+@media (max-width:620px){
+  html body .app[data-ui-theme] .aw-daily-quote{ display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:8px; padding:6px 10px; min-height:0; margin:0; }
+  html body .app[data-ui-theme] .aw-daily-quote>*{ margin:0; min-width:0; }
+  html body .app[data-ui-theme] .aw-daily-quote p{ font-size:12px; line-height:1.35; }
+  html body .app[data-ui-theme] .aw-quote-controls{ margin:0; gap:3px; }
+  html body .app[data-ui-theme] .aw-quote-controls button{ width:26px; height:26px; min-width:26px; min-height:26px; padding:0; }
+  html body .app[data-ui-theme] .aw-greeting-doc{ width:34px; height:34px; }
+}
+
+/* Agenda e acompanhamentos compactos no celular */
+@media (max-width:620px){
+  html body .app[data-ui-theme] .day-agenda{ padding:10px 12px; min-height:0; }
+  html body .app[data-ui-theme] .day-agenda h2{ font-size:14px; margin:0 0 6px; }
+  html body .app[data-ui-theme] .day-agenda .agenda-item{ display:grid; grid-template-columns:18px minmax(0,1fr); align-items:start; gap:8px; padding:6px 0; margin:0; min-height:0; }
+  html body .app[data-ui-theme] .day-agenda .agenda-item>svg{ width:18px; height:18px; }
+  html body .app[data-ui-theme] .day-agenda .agenda-item>div:not(:last-child),html body .app[data-ui-theme] .day-agenda .agenda-item>div{ min-width:0; }
+  html body .app[data-ui-theme] .day-agenda .agenda-item :is(b,small){ display:block; font-size:12px; line-height:1.4; margin:0; }
+  html body .app[data-ui-theme] .day-agenda .agenda-item button.secondary{ min-height:28px; height:28px; padding:0 10px; font-size:11px; margin-top:5px; }
+  html body .app[data-ui-theme] .day-followups .panel-head{ padding:8px 12px; min-height:0; }
+  html body .app[data-ui-theme] .day-followups h2{ font-size:14px; margin:0; }
+  html body .app[data-ui-theme] .day-followup-list{ padding:8px; gap:6px; }
+  html body .app[data-ui-theme] .day-followup-card{ padding:8px 10px; gap:3px; min-height:0; }
+  html body .app[data-ui-theme] .day-followup-card>*{ margin:0; }
+  html body .app[data-ui-theme] .day-followup-card h3{ font-size:13px; }
+  html body .app[data-ui-theme] .day-followup-card :is(p,small,.day-followup-kind){ font-size:11px; line-height:1.35; }
+  html body .app[data-ui-theme] .day-followup-card button.secondary{ min-height:28px; height:28px; padding:0 10px; font-size:11px; justify-self:start; align-self:flex-start; }
+}

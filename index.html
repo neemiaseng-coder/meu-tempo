@@ -11,22 +11,34 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-title" content="Meu Tempo"/>
 <style>
-#lunex-intro{position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 42%,#102a50 0%,#07172f 48%,#040c1b 100%);color:#f4f7ff;overflow:hidden;pointer-events:all}
+@font-face{font-family:"Figtree";src:url("/meu-tempo/fonts/figtree.woff2") format("woff2");font-weight:300 900;font-display:swap}
+#lunex-intro{position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;overflow:hidden;color:#f4f7ff;background:radial-gradient(ellipse 90% 60% at 50% 46%,#123a7a 0%,#071a3d 38%,#020611 72%,#000 100%);transition:opacity .38s ease;isolation:isolate}
 #lunex-intro *{box-sizing:border-box}
-#lunex-intro .brand{position:relative;display:flex;align-items:center;justify-content:center;height:115px;font:700 clamp(64px,13vw,112px)/1 Arial,Helvetica,sans-serif;letter-spacing:-.085em}
-#lunex-intro .letter-l,#lunex-intro .letter-x{position:relative;z-index:2;display:inline-block}
-#lunex-intro .letter-l{color:#f3f6fc;animation:lunex-l 3.5s cubic-bezier(.22,.75,.18,1) both}
-#lunex-intro .letter-x{color:#4d91fb;animation:lunex-x 3.5s cubic-bezier(.22,.75,.18,1) both}
-#lunex-intro .middle{display:inline-block;max-width:0;opacity:0;white-space:nowrap;overflow:hidden;color:#f3f6fc;animation:lunex-middle 3.5s cubic-bezier(.22,.75,.18,1) both}
-#lunex-intro .tagline{font:500 clamp(8px,1.7vw,12px)/1.5 Arial,Helvetica,sans-serif;letter-spacing:.26em;text-align:center;text-transform:uppercase;opacity:0;animation:lunex-tag 3.5s ease both}
-#lunex-intro .stage{display:flex;flex-direction:column;align-items:center;gap:16px;animation:lunex-stage 3.5s ease both}
-#lunex-intro.lunex-done{opacity:0;pointer-events:none;transition:opacity .38s ease}
-@keyframes lunex-l{0%,30%{transform:translateX(24px)}52%,100%{transform:translateX(0)}}
-@keyframes lunex-x{0%,30%{transform:translateX(-24px)}52%,100%{transform:translateX(0)}}
-@keyframes lunex-middle{0%,31%{max-width:0;opacity:0}58%,100%{max-width:360px;opacity:1}}
-@keyframes lunex-tag{0%,62%{opacity:0;transform:translateY(8px)}82%,100%{opacity:1;transform:translateY(0)}}
-@keyframes lunex-stage{0%{opacity:0;transform:scale(.97)}15%,92%{opacity:1;transform:scale(1)}100%{opacity:1}}
-@media(prefers-reduced-motion:reduce){#lunex-intro *,#lunex-intro .stage{animation-duration:.01ms!important;animation-delay:0ms!important}#lunex-intro .middle{max-width:360px;opacity:1}#lunex-intro .tagline{opacity:1}}
+#lunex-intro::before{content:"";position:absolute;z-index:-1;left:-60%;right:-60%;bottom:-8%;height:52%;background:repeating-linear-gradient(90deg,#4d91fb40 0 1px,transparent 1px 72px),repeating-linear-gradient(0deg,#4d91fb40 0 1px,transparent 1px 46px);transform:perspective(420px) rotateX(63deg);transform-origin:bottom;-webkit-mask:linear-gradient(transparent,#000 75%);mask:linear-gradient(transparent,#000 75%);animation:lx-floor 3.5s linear both}
+#lunex-intro::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 46%,#fff 0%,#8fc0ff99 14%,transparent 48%);opacity:0;animation:lx-flash 3.5s ease-out both}
+#lunex-intro .stage{position:relative;display:flex;flex-direction:column;align-items:center;gap:22px;animation:lx-stage 3.5s cubic-bezier(.2,.8,.2,1) both}
+#lunex-intro .stage::before,#lunex-intro .stage::after{content:"";position:absolute;left:50%;top:50%;width:140px;height:140px;margin:-70px;border-radius:50%;border:2px solid #7db4ff;opacity:0;pointer-events:none;animation:lx-ring 3.5s cubic-bezier(.1,.7,.3,1) both}
+#lunex-intro .stage::after{border-width:1px;animation-delay:.16s}
+#lunex-intro .brand{gap:0;margin:0;padding:0;position:relative;display:flex;align-items:center;justify-content:center;font:900 clamp(66px,19vw,196px)/1.05 "Figtree",system-ui,sans-serif;letter-spacing:-.055em;filter:drop-shadow(0 0 28px #2f7df780) drop-shadow(0 18px 30px #000a)}
+#lunex-intro .brand::after{content:"";position:absolute;left:-12%;right:-12%;bottom:-8px;height:3px;border-radius:3px;background:linear-gradient(90deg,transparent,#4d91fb 25%,#fff 50%,#4d91fb 75%,transparent);box-shadow:0 0 24px 3px #4d91fbaa;transform:scaleX(0);animation:lx-line 3.5s cubic-bezier(.2,.8,.2,1) both}
+#lunex-intro .letter-l,#lunex-intro .middle,#lunex-intro .letter-x{display:inline-block;padding:0 .015em;background-clip:text;-webkit-background-clip:text;color:transparent;-webkit-text-fill-color:transparent;background-size:100% 100%}
+#lunex-intro .letter-l,#lunex-intro .middle{background-image:linear-gradient(180deg,#fff 18%,#cfdcf2 52%,#8fa6cc 56%,#f4f8ff 92%)}
+#lunex-intro .letter-x{background-image:linear-gradient(180deg,#b9d8ff 8%,#4d91fb 48%,#1450c8 56%,#6fb0ff 95%)}
+#lunex-intro .letter-l{position:relative;z-index:2;animation:lx-l 3.5s cubic-bezier(.16,.9,.2,1) both}
+#lunex-intro .letter-x{position:relative;z-index:2;animation:lx-x 3.5s cubic-bezier(.16,.9,.2,1) both}
+#lunex-intro .middle{max-width:0;opacity:0;overflow:hidden;white-space:nowrap;animation:lx-mid 3.5s cubic-bezier(.2,.8,.2,1) both}
+#lunex-intro .tagline{font:600 clamp(10px,1.8vw,15px)/1.6 "Figtree",system-ui,sans-serif;letter-spacing:.46em;padding-left:.46em;text-transform:uppercase;text-align:center;color:#c4d8f8;opacity:0;animation:lx-tag 3.5s ease both}
+@keyframes lx-l{0%{opacity:0;transform:translateX(-60vw) skewX(-18deg) scale(1.5)}20%{opacity:1;transform:translateX(.04em) skewX(0) scale(1.06)}26%,100%{opacity:1;transform:none}}
+@keyframes lx-x{0%{opacity:0;transform:translateX(60vw) skewX(18deg) scale(1.5)}20%{opacity:1;transform:translateX(-.04em) skewX(0) scale(1.06)}26%,100%{opacity:1;transform:none}}
+@keyframes lx-mid{0%,34%{max-width:0;opacity:0}58%,100%{max-width:3.2em;opacity:1}}
+@keyframes lx-flash{0%,18%{opacity:0}22%{opacity:.85}40%,100%{opacity:0}}
+@keyframes lx-ring{0%,19%{opacity:0;transform:scale(.2)}22%{opacity:.9}55%,100%{opacity:0;transform:scale(9)}}
+@keyframes lx-stage{0%{transform:scale(1)}20%{transform:scale(1)}23%{transform:scale(1.07) translateY(4px)}30%{transform:scale(1)}88%{transform:scale(1.045);opacity:1}100%{transform:scale(1.16);opacity:1}}
+@keyframes lx-line{0%,48%{transform:scaleX(0)}70%,100%{transform:scaleX(1)}}
+@keyframes lx-tag{0%,60%{opacity:0;transform:translateY(14px);letter-spacing:.8em}80%,100%{opacity:1;transform:none;letter-spacing:.46em}}
+@keyframes lx-floor{from{background-position:0 0,0 0}to{background-position:0 0,0 184px}}
+@media(prefers-reduced-motion:reduce){#lunex-intro::before,#lunex-intro::after,#lunex-intro *,#lunex-intro *::before,#lunex-intro *::after{animation:none!important}#lunex-intro .middle{max-width:3.2em;opacity:1}#lunex-intro .tagline{opacity:1}#lunex-intro .brand::after{transform:none}}
+#lunex-intro{pointer-events:all}#lunex-intro.lunex-done{opacity:0;pointer-events:none}
 </style>
 </head>
 <body>

@@ -26,6 +26,7 @@ import QuickNotes from './QuickNotes.jsx';
 import DayProgress from './DayProgress.jsx';
 import useModalAccessibility from './useModalAccessibility.js';
 import './social-ui.css';
+import './pro-ui.css';
 import Login from './Login.jsx';
 const supabaseUrl=import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey=import.meta.env.VITE_SUPABASE_ANON_KEY;

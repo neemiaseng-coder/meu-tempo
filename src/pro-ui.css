@@ -1,0 +1,128 @@
+/* Visual "sistema corporativo". Somente apresentação: nenhuma regra, dado ou texto muda. */
+html .app[data-ui-theme]{
+  --ui-page:#eef1f6; --ui-surface:#fff; --ui-ink:#0f1b2d; --ui-muted:#56657a; --ui-line:#dde3ec;
+  --ui-accent:#1d5fd6; --ui-soft:#eaf1fd; --ui-radius:10px; --ui-shadow:0 1px 2px #0b1a330f,0 4px 14px #0b1a330a;
+  --nav-bg:#0a1730; --nav-ink:#b9c6de; --nav-strong:#fff; --nav-hover:#ffffff12; --nav-line:#ffffff17; --nav-mark:#4d91fb;
+  --nav-on:linear-gradient(90deg,#2563eb59,#2563eb1f);
+}
+html .app[data-ui-theme="instagram"]{ --ui-accent:#a12b73; --ui-soft:#f9eaf3; --nav-bg:#251432; --nav-mark:#f06cb5; --nav-on:linear-gradient(90deg,#c4358a66,#c4358a1f); }
+html .app[data-ui-theme="google"]{ --ui-accent:#0b57d0; --nav-bg:#17202b; --nav-mark:#8ab4f8; }
+html .app[data-ui-theme="tiktok"]{ --ui-page:#0d0f13; --ui-surface:#171a21; --ui-ink:#f5f6fa; --ui-muted:#aab4c5; --ui-line:#2b313d; --ui-accent:#69e4de; --ui-soft:#17302f; --ui-shadow:none; --nav-bg:#08090c; --nav-mark:#69e4de; --nav-on:linear-gradient(90deg,#69e4de33,#69e4de0d); }
+
+/* Barra superior */
+html .app[data-ui-theme] :is(.topbar,.aw-header){ background:var(--nav-bg); color:var(--nav-strong); border:0; border-radius:0; border-bottom:1px solid var(--nav-line); box-shadow:0 2px 10px #06102433; height:64px; min-height:64px; }
+html .app[data-ui-theme] :is(.home-button,.aw-header .aw-brand,.top-left b){ color:var(--nav-strong); font-weight:600; }
+html .app[data-ui-theme] .home-button{ display:inline-flex; align-items:center; gap:10px; }
+html .app[data-ui-theme] :is(.home-button svg,.aw-header .aw-brand svg){ color:var(--nav-mark); }
+html .app[data-ui-theme] .top-left>b{ color:var(--nav-ink); border-color:var(--nav-line); font-weight:400; }
+html .app[data-ui-theme] .aw-header .aw-logo{ background:var(--nav-hover); color:var(--nav-mark); }
+html .app[data-ui-theme] :is(.aw-notification-trigger,.top-actions>.header-pop>.icon-btn,.social-search-toggle){ background:var(--nav-hover); color:var(--nav-strong); border-radius:10px; width:40px; height:40px; min-height:40px; }
+html .app[data-ui-theme] :is(.avatar-button,.aw-header .aw-avatar){ width:40px; height:40px; min-height:40px; border-radius:10px; background:var(--nav-mark); color:var(--nav-bg); border:0; font-weight:700; overflow:hidden; }
+html .app[data-ui-theme] .topbar .search-live{ background:var(--nav-hover); border:1px solid var(--nav-line); border-radius:10px; color:var(--nav-ink); height:40px; }
+html .app[data-ui-theme] .topbar .search-live:focus-within{ border-color:var(--nav-mark); }
+html .app[data-ui-theme] .topbar .search-live input{ background:transparent; border:0; border-radius:0; box-shadow:none; color:var(--nav-strong); outline:0; }
+html .app[data-ui-theme] .topbar .search-live input::placeholder{ color:var(--nav-ink); }
+
+/* Tipografia e superfícies */
+html .app[data-ui-theme] :is(h1,h2,h3,.aw-desk-card h2,.agenda-sidebar h2){ font-weight:650; color:var(--ui-ink); }
+html .app[data-ui-theme] .welcome h1{ font-size:28px; font-weight:700; }
+html .app[data-ui-theme] .welcome .eyebrow{ text-transform:uppercase; letter-spacing:.09em; font-size:11px; font-weight:600; color:var(--ui-accent); }
+html .app[data-ui-theme] :is(.task-info b,.myday-task-copy b,.anelisa-task strong,.meeting-list-item strong){ font-weight:600; }
+html .app[data-ui-theme] :is(.task-panel,.myday-list,.process-card,.day-followups,.template-editor,.meeting-editor,.record-category,.vacancy-board,.day-agenda,.agenda-sidebar>section,.aw-desk-card){ border-radius:var(--ui-radius); box-shadow:var(--ui-shadow); }
+html .app[data-ui-theme] :is(.agenda-sidebar>section,.agenda-sidebar-news,.agenda-sidebar-processes,.aw-desk-card:not([data-card=menu])){ background:var(--ui-surface); border:1px solid var(--ui-line); }
+html .app[data-ui-theme] :is(.agenda-sidebar h2,.aw-desk-card:not([data-card=menu]) h2){ font-size:12px; text-transform:uppercase; letter-spacing:.07em; padding-bottom:10px; border-bottom:1px solid var(--ui-line); }
+html .app[data-ui-theme] .agenda-sidebar h2 svg{ color:var(--ui-accent); }
+html .app[data-ui-theme] .panel-head{ border-bottom:1px solid var(--ui-line); }
+
+/* Botões e campos */
+html .app[data-ui-theme] :is(.primary,.secondary,.icon-btn,.entry-actions button,.photo-upload,.aw-edit){ border-radius:8px; }
+html .app[data-ui-theme] .primary{ font-weight:600; box-shadow:0 1px 2px #0b1a3333; }
+html .app[data-ui-theme] .secondary{ background:var(--ui-surface); }
+html .app[data-ui-theme] :is(input:not([type=checkbox]):not([type=radio]),select,textarea){ border-radius:8px; }
+html .app[data-ui-theme] .agenda-view-switch{ display:inline-flex; gap:2px; padding:3px; background:var(--ui-surface); border:1px solid var(--ui-line); border-radius:10px; }
+html .app[data-ui-theme] .agenda-view-switch button{ border:0; min-height:36px; background:transparent; color:var(--ui-muted); }
+html .app[data-ui-theme] .agenda-view-switch button[aria-pressed=true]{ background:var(--ui-accent); color:var(--ui-on-accent); }
+html .app[data-ui-theme] .entry-actions button{ background:transparent; color:var(--ui-muted); border:1px solid var(--ui-line); min-height:36px; min-width:36px; padding:6px 10px; font-size:12px; }
+html .app[data-ui-theme] .entry-actions button:hover{ color:var(--ui-accent); border-color:var(--ui-accent); }
+html .app[data-ui-theme] .entry-actions .entry-delete:hover{ color:var(--ui-danger); border-color:var(--ui-danger); }
+
+/* Listas em formato de tabela */
+html .app[data-ui-theme] .myday-list{ padding:0; overflow:hidden; }
+html .app[data-ui-theme] .myday-task{ padding:12px 16px; margin:0; border-radius:0; border-width:0 0 1px; border-style:solid; border-color:var(--ui-line); box-shadow:inset 3px 0 0 var(--ui-accent); }
+html .app[data-ui-theme] .myday-task:last-child{ border-bottom:0; }
+html .app[data-ui-theme] .myday-task.is-overdue{ box-shadow:inset 3px 0 0 var(--ui-danger); }
+html .app[data-ui-theme] .myday-task.is-done{ box-shadow:inset 3px 0 0 var(--ui-third-ink); }
+html .app[data-ui-theme] .myday-task:not(.is-overdue):hover{ background:color-mix(in srgb,var(--ui-soft) 55%,var(--ui-surface)); }
+html .app[data-ui-theme] :is(.myday-check,.check){ width:28px; height:28px; min-height:28px; border-radius:8px; }
+html .app[data-ui-theme] :is(.myday-task-status,.anelisa-task>span,.priority,.process-type,.myday-count){ border-radius:6px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
+html .app[data-ui-theme] .myday-task.is-done .myday-task-status{ background:var(--ui-third); color:var(--ui-third-ink); }
+
+/* Painel de progresso */
+html .app[data-ui-theme] .day-progress-card{ background:linear-gradient(115deg,var(--nav-bg),color-mix(in srgb,var(--ui-accent) 38%,var(--nav-bg))); border:1px solid var(--nav-line); border-radius:var(--ui-radius); box-shadow:0 8px 22px #0a173026; color:#fff; }
+html .app[data-ui-theme] .day-progress-card :is(p,strong,.day-progress-orbit>span){ color:#fff; }
+html .app[data-ui-theme] .day-progress-card :is(.day-progress-copy>small,.day-progress-orbit>span small,.day-progress-label){ color:#c3d1ea; }
+html .app[data-ui-theme] .day-progress-card :is(.day-progress-circuit,.day-progress-orbit){ color:var(--nav-mark); stroke:var(--nav-mark); }
+.day-progress-card :is(.day-progress-orbit-guide,.day-progress-tick,.day-progress-track,.day-progress-arc){ stroke:var(--nav-mark); }
+html .app[data-ui-theme] .day-progress-card .day-progress-orbit-node,.app .day-progress-card .day-progress-orbit .day-progress-node{ fill:var(--nav-bg); stroke:var(--nav-mark); }
+html .app[data-ui-theme] .day-progress-card .day-progress-badge{ background:#ffffff17; border-color:#ffffff2e; color:#fff; border-radius:8px; }
+
+/* Calendário lateral */
+html .app[data-ui-theme] .agenda-sidebar .secondary{ background:var(--ui-surface); }
+
+/* Menus laterais escuros */
+html .app[data-ui-theme] :is(.neemias-desktop-menu,.aw-desk-card[data-card=menu]){ background:var(--nav-bg); border:1px solid var(--nav-line); border-radius:14px; box-shadow:0 8px 24px #0a173029; }
+html .app[data-ui-theme] :is(.neemias-desktop-menu,.aw-desk-card[data-card=menu]) h2{ color:var(--nav-strong); }
+html .app[data-ui-theme] :is(.neemias-menu-home,.neemias-desktop-menu .neemias-shortcuts button,.aw-desk-card[data-card=menu] button){ background:transparent; color:var(--nav-ink); border:0; border-radius:8px; min-height:42px; padding:6px 8px; font-weight:500; }
+html .app[data-ui-theme] :is(.neemias-menu-home,.neemias-desktop-menu .neemias-shortcuts button,.aw-desk-card[data-card=menu] button):hover{ background:var(--nav-hover); color:var(--nav-strong); }
+html .app[data-ui-theme] :is(.neemias-desktop-menu,.aw-desk-card[data-card=menu]) button[aria-current=page]{ background:var(--nav-on); color:var(--nav-strong); box-shadow:inset 3px 0 0 var(--nav-mark); }
+html .app[data-ui-theme] :is(.neemias-desktop-menu,.aw-desk-card[data-card=menu]) :is(.neemias-shortcut-icon,.aw-action-icon){ background:transparent; color:var(--nav-mark); }
+html .app[data-ui-theme] .neemias-menu-home svg{ color:var(--nav-mark); margin:0 6px; }
+html .app[data-ui-theme] .neemias-desktop-menu .social-notes{ background:var(--nav-hover); border-color:var(--nav-line); }
+html .app[data-ui-theme] .neemias-desktop-menu .social-notes :is(h2,small){ color:var(--nav-ink); }
+html .app[data-ui-theme] .neemias-desktop-menu .social-notes textarea{ background:#00000033; color:var(--nav-strong); border-color:var(--nav-line); }
+html .app[data-ui-theme] .neemias-desktop-menu .social-notes textarea::placeholder{ color:var(--nav-ink); }
+
+/* Celular: o painel "Mais" mantém o mesmo menu */
+html .app[data-ui-theme] .social-mobile-nav{ background:var(--ui-surface); }
+html .app[data-ui-theme] .social-mobile-nav button[aria-current=page]{ background:var(--ui-soft); color:var(--ui-accent); box-shadow:inset 0 3px 0 var(--ui-accent); }
+
+@media (min-width:1025px){
+  /* Menu encostado na lateral, como um sistema de gestão. */
+  html .app[data-ui-theme] .agenda-layout.neemias-layout{ max-width:none; margin:0; padding:0 24px 0 0; grid-template-columns:244px minmax(0,1fr) 300px; min-height:calc(100vh - 64px); align-items:stretch; }
+  html .app[data-ui-theme] .agenda-layout.neemias-layout>.neemias-desktop-menu{ border-radius:0; border:0; box-shadow:none; padding:14px 10px 24px; align-self:stretch; }
+  html .app[data-ui-theme] .agenda-layout.neemias-layout>.content{ padding:24px 0 32px !important; max-width:1100px; justify-self:center; }
+  html .app[data-ui-theme] .agenda-layout.neemias-layout>.agenda-sidebar{ padding:24px 0; align-self:start; }
+}
+@media (min-width:1025px) and (max-width:1250px){
+  html .app[data-ui-theme] .agenda-layout.neemias-layout{ grid-template-columns:210px minmax(0,1fr) 260px; padding-right:16px; gap:16px; }
+}
+@media (max-width:620px){
+  html .app[data-ui-theme] :is(.topbar,.aw-header){ height:60px; min-height:60px; }
+  html .app[data-ui-theme] .welcome h1{ font-size:23px; }
+  html .app[data-ui-theme] .myday-task{ padding:12px; }
+}
+
+/* Tela de acesso */
+html body .login{ background:radial-gradient(ellipse at 20% 10%,#16386b 0%,#0a1730 48%,#050d1f 100%); padding:24px 16px; }
+html body .login .login-card{ background:#fff; color:#0f1b2d; border:0; border-top:4px solid #2563eb; border-radius:14px; box-shadow:0 28px 70px #00000066; width:min(100%,420px); padding:36px 32px; }
+html body .login h1{ color:#0f1b2d; font-weight:700; }
+html body .login h1 em{ color:#1d5fd6; }
+html body .login .brand-mark{ background:#0a1730; color:#4d91fb; border-radius:10px; }
+html body .login .eyebrow{ color:#1d5fd6; }
+html body .login :is(.muted,small){ color:#56657a; }
+html body .login input{ border:1px solid #cfd7e4; border-radius:8px; min-height:46px; background:#f8fafc; }
+html body .login input:focus{ outline:3px solid #2563eb55; border-color:#2563eb; background:#fff; }
+html body .login .primary{ background:#1d5fd6; color:#fff; border-radius:8px; min-height:46px; font-weight:600; }
+html body .login .login-password-toggle{ background:transparent; color:#1d5fd6; }
+
+/* Substitui o verde e os cantos antigos, que estavam forçados no style.css */
+html body .app[data-ui-theme] :is(.topbar,.aw-header){ border-radius:0!important; }
+html body .app[data-ui-theme] :is(.task-panel,.myday-list,.day-agenda,.process-card,.modal){ border-radius:10px!important; }
+html body .app[data-ui-theme] :is(.task-panel,.day-agenda,.process-card){ border:1px solid var(--ui-line)!important; box-shadow:var(--ui-shadow)!important; }
+html body .app[data-ui-theme] .primary{ background:var(--ui-accent)!important; color:var(--ui-on-accent); box-shadow:0 1px 3px #0b1a3333!important; }
+html body .app[data-ui-theme] .primary:hover{ filter:brightness(1.08); }
+html body .login .primary{ background:#1d5fd6!important; box-shadow:0 2px 8px #1d5fd640!important; }
+html body .app[data-ui-theme] .process-tabs>*{ background:var(--ui-soft); color:var(--ui-accent); border-radius:8px; }
+@media (min-width:1025px){ html .app[data-ui-theme] .agenda-layout.neemias-layout>.content{ align-self:start; width:100%; } }
+@media (min-width:1025px){ html .app[data-ui-theme] .agenda-layout.neemias-layout>.content{ margin-block:0; margin-inline:auto; } }
+html .app[data-ui-theme] .agenda-sidebar .content, html .app[data-ui-theme] .aw-desk-card .secondary{ overflow-wrap:normal; word-break:normal; font-size:12px; padding-inline:8px; }
